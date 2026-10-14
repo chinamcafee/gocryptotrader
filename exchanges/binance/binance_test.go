@@ -3043,6 +3043,16 @@ func TestGetAssetsMode(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+// TestUGetDualSidePosition covers the position-mode read the LLM risk layer's
+// HedgeMode fact is sourced from (live test; skipped without credentials, the
+// same convention as its sibling reads).
+func TestUGetDualSidePosition(t *testing.T) {
+	t.Parallel()
+	sharedtestvalues.SkipTestIfCredentialsUnset(t, e)
+	_, err := e.UGetDualSidePosition(t.Context())
+	assert.NoError(t, err)
+}
+
 func TestGetCollateralMode(t *testing.T) {
 	t.Parallel()
 	sharedtestvalues.SkipTestIfCredentialsUnset(t, e, canManipulateRealOrders)

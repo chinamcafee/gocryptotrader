@@ -26,7 +26,6 @@ import (
 	"github.com/thrasher-corp/gocryptotrader/database/models/postgres"
 	"github.com/thrasher-corp/gocryptotrader/database/models/sqlite3"
 	"github.com/thrasher-corp/gocryptotrader/database/repository/audit"
-	exchangeDB "github.com/thrasher-corp/gocryptotrader/database/repository/exchange"
 	"github.com/thrasher-corp/gocryptotrader/encoding/json"
 	"github.com/thrasher-corp/gocryptotrader/exchange/accounts"
 	exchange "github.com/thrasher-corp/gocryptotrader/exchanges"
@@ -2034,6 +2033,9 @@ func (s *RPCServer) SetExchangePair(_ context.Context, r *gctrpc.SetExchangePair
 			}
 			return nil, err
 		}
+		// A pair leaving the enabled set must not keep being served from the
+		// LLM candle cache; re-enabling it later rebuilds from fresh fetches.
+		s.Engine.InvalidateLLMCachedPair(p, a)
 		pass = true
 	}
 
@@ -2368,32 +2370,16 @@ func (s *RPCServer) GetHistoricCandles(ctx context.Context, r *gctrpc.GetHistori
 		End:      end.UTC().Format(common.SimpleTimeFormatWithTimezone),
 	}
 
-	var klineItem *kline.Item
-	if r.UseDb {
-		klineItem, err = kline.LoadFromDatabase(r.Exchange,
-			pair,
-			a,
-			interval,
-			start,
-			end)
-	} else {
-		if r.ExRequest {
-			klineItem, err = exch.GetHistoricCandlesExtended(ctx, pair, a, interval, start, end)
-		} else {
-			klineItem, err = exch.GetHistoricCandles(ctx, pair, a, interval, start, end)
-		}
-	}
+	klineItem, err := getHistoricCandlesShared(ctx, exch, pair, a, interval, start, end, historicCandlesOptions{
+		ExchangeName:          r.Exchange,
+		UseDB:                 r.UseDb,
+		ExRequest:             r.ExRequest,
+		Sync:                  r.Sync,
+		Force:                 r.Force,
+		FillMissingWithTrades: r.FillMissingWithTrades,
+	})
 	if err != nil {
 		return nil, err
-	}
-
-	if r.FillMissingWithTrades {
-		var tradeDataKline *kline.Item
-		tradeDataKline, err = fillMissingCandlesWithStoredTrades(start, end, klineItem)
-		if err != nil {
-			return nil, err
-		}
-		klineItem.Candles = append(klineItem.Candles, tradeDataKline.Candles...)
 	}
 
 	resp.Exchange = klineItem.Exchange
@@ -2407,16 +2393,6 @@ func (s *RPCServer) GetHistoricCandles(ctx context.Context, r *gctrpc.GetHistori
 			Volume:    klineItem.Candles[i].Volume,
 			IsPartial: klineItem.Candles[i].ValidationIssues == kline.PartialCandle,
 		})
-	}
-
-	if r.Sync && !r.UseDb {
-		_, err = kline.StoreInDatabase(klineItem, r.Force)
-		if err != nil {
-			if errors.Is(err, exchangeDB.ErrNoExchangeFound) {
-				return nil, errors.New("exchange was not found in database, you can seed existing data or insert a new exchange via the dbseed")
-			}
-			return nil, err
-		}
 	}
 
 	return &resp, nil

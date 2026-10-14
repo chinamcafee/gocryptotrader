@@ -88,6 +88,91 @@
   "maxResultInsertions": 0,
   "verbose": false
  },
+ "llm": {
+  "enabled": false,
+  "verbose": false,
+  "runMode": "READ_ONLY",
+  "acknowledgeLiveTrading": "",
+  "accountId": "binance-usdtm-main",
+  "network": "binance-testnet",
+  "exchange": "Binance",
+  "asset": "usdtmarginedfutures",
+  "probeMaxAgeSeconds": 600,
+  "analysis": {
+   "pipelineDeadlineSeconds": 90,
+   "autoCandidateWindowSeconds": 60,
+   "requestTimeoutSeconds": 30,
+   "maxToolRounds": 4,
+   "maxToolCalls": 8,
+   "maxCumulativeTokens": 24000,
+   "maxDefaultOutputTokens": 1024,
+   "policyContextMaxMessages": 256,
+   "policyContextMaxChars": 16000
+  },
+  "triggers": {
+   "fundingWindow": false,
+   "fundingWindowLeadSeconds": 900,
+   "atrSpike": false,
+   "atrSpikeMultiple": 1.5
+  },
+  "indicators": {
+   "defaultInterval": "1h",
+   "macdFast": 12,
+   "macdSlow": 26,
+   "macdSignal": 9,
+   "emaPeriods": [
+    20
+   ],
+   "smaPeriods": [
+    200
+   ],
+   "enableRsi": true,
+   "rsiPeriod": 14,
+   "enableAtr": true,
+   "atrPeriod": 14,
+   "enableBollinger": true,
+   "bollingerPeriod": 20,
+   "bollingerStdDev": 2,
+   "maxSeriesPoints": 20,
+   "maxCandleRows": 50,
+   "excludePartialCandle": true,
+   "multiTimeframe": false
+  },
+  "coverage": {
+   "enabled": true,
+   "scope": "ALL_USDTM_PERPETUAL",
+   "rotationCycleMinutes": 10,
+   "klineIncrementLimit": 5,
+   "klineFullLimit": 250,
+   "fullReloadSpreadMinutes": 5,
+   "weightBudgetFraction": 0.6,
+   "persistIntervals": [
+    "1h",
+    "4h",
+    "1d"
+   ]
+  },
+  "budget": {
+   "llmReservationCap24h": 100,
+   "jevReservationCap24h": 100,
+   "reservationTtlMinutes": 30,
+   "jevMinIntervalSeconds": 60,
+   "dailyBudgetUsd": null
+  },
+  "halt": {
+   "haltOnClockDriftMs": 1000,
+   "haltOnReconcileMismatch": true,
+   "haltOnDatabaseError": true,
+   "haltOnDataStaleSeconds": 300,
+   "cancelRobotOrdersOnHalt": true,
+   "robotClientOrderPrefix": "gct-llm-",
+   "requireConfirmationToClear": true,
+   "reviewExpireHours": 12
+  },
+  "risk": {
+   "expectedMarginType": "CROSS"
+  }
+ },
  "currencyStateManager": {
   "enabled": true,
   "delay": 60000000000

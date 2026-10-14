@@ -8,6 +8,7 @@ import (
 	"github.com/thrasher-corp/gocryptotrader/communications/smsglobal"
 	"github.com/thrasher-corp/gocryptotrader/communications/smtpservice"
 	"github.com/thrasher-corp/gocryptotrader/communications/telegram"
+	"github.com/thrasher-corp/gocryptotrader/communications/webhook"
 )
 
 // Communications is the overarching type across the communications packages
@@ -47,6 +48,12 @@ func NewComm(cfg *base.CommunicationsConfig) (*Communications, error) {
 		Slack := new(slack.Slack)
 		Slack.Setup(cfg)
 		comm.IComm = append(comm.IComm, Slack)
+	}
+
+	if cfg.WebhookConfig.Enabled {
+		hook := new(webhook.Webhook)
+		hook.Setup(cfg)
+		comm.IComm = append(comm.IComm, hook)
 	}
 
 	comm.Setup()

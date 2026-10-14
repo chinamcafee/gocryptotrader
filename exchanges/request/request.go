@@ -282,6 +282,17 @@ func (r *Requester) executeRequest(ctx context.Context, p *Item, req *http.Reque
 // declined and drains and closes response bodies before retrying or returning
 // a retry-decision error.
 func (r *Requester) evaluateRetry(ctx context.Context, resp *http.Response, incomingErr error, attempt int, verbose bool) (bool, error) {
+	// The venue told us to back off: record the horizon the shared read face
+	// (RateLimitDegradedUntil) exposes -- retried or not, the fact stands.
+	// The horizon is the later of the venue's Retry-After and the requester's
+	// own backoff judgement; a zero-value requester has no backoff to ask.
+	if isRateLimitResponse(resp) {
+		horizon := RetryAfter(resp, time.Now())
+		if r.backoff != nil {
+			horizon = max(horizon, r.backoff(attempt))
+		}
+		MarkRateLimitDegraded(time.Now().Add(horizon))
+	}
 	if hasRetryNotAllowed(ctx) {
 		return false, incomingErr
 	}

@@ -199,6 +199,14 @@ func TestMain(m *testing.M) {
 			log.Fatal(err)
 		}
 	})
+	sm.HandleFunc("/retry-after-future", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Add("Retry-After", "7")
+		w.WriteHeader(http.StatusTooManyRequests)
+		_, err := io.WriteString(w, `{"response":false}`)
+		if err != nil {
+			log.Fatal(err)
+		}
+	})
 	sm.HandleFunc("/nocontent", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	})
@@ -1556,4 +1564,34 @@ func TestGetRateLimiterDefinitions(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, r.GetRateLimiterDefinitions())
 	assert.Equal(t, globalshell, r.GetRateLimiterDefinitions())
+}
+
+func TestRateLimitDegradedTracker(t *testing.T) {
+	rateLimitDegradedUntil.Store(0)
+	t.Cleanup(func() { rateLimitDegradedUntil.Store(0) })
+	assert.True(t, RateLimitDegradedUntil().IsZero(), "an unmarked tracker reads the zero time")
+
+	now := time.Now()
+	MarkRateLimitDegraded(now.Add(time.Minute))
+	assert.WithinDuration(t, now.Add(time.Minute), RateLimitDegradedUntil(), time.Millisecond)
+
+	// The horizon only moves forward: a shorter later reading must not
+	// un-degrade a longer earlier one.
+	MarkRateLimitDegraded(now.Add(30 * time.Second))
+	assert.WithinDuration(t, now.Add(time.Minute), RateLimitDegradedUntil(), time.Millisecond)
+	MarkRateLimitDegraded(now.Add(2 * time.Minute))
+	assert.WithinDuration(t, now.Add(2*time.Minute), RateLimitDegradedUntil(), time.Millisecond)
+}
+
+func TestDoRequest_MarksRateLimitDegraded(t *testing.T) {
+	t.Parallel()
+	r, err := New("test", new(http.Client), WithBackoff(func(int) time.Duration { return 0 }))
+	require.NoError(t, err, "New requester must not error")
+	before := time.Now()
+	err = r.SendPayload(t.Context(), Unset, func() (*Item, error) {
+		return &Item{Method: http.MethodGet, Path: testURL + "/retry-after-future"}, nil
+	}, UnauthenticatedRequest)
+	require.ErrorIs(t, err, errFailedToRetryRequest)
+	assert.True(t, RateLimitDegradedUntil().After(before.Add(6*time.Second)),
+		"a 429 with a seven-second Retry-After should leave the shared back-off horizon in the future")
 }

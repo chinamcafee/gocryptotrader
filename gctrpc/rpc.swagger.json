@@ -3539,6 +3539,1718 @@
         ]
       }
     },
+    "/v1/llm/activepair": {
+      "get": {
+        "operationId": "GoCryptoTraderService_LLMGetActiveModelPair",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMGetActiveModelPairResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      },
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMSwitchActiveModelPair",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMSwitchActiveModelPairResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMSwitchActiveModelPairRequest"
+            }
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/approvals/{id}/revoke": {
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMRevokeApproval",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcGenericResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GoCryptoTraderServiceLLMRevokeApprovalBody"
+            }
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/audit": {
+      "get": {
+        "operationId": "GoCryptoTraderService_LLMListAuditEvents",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMListAuditEventsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/chatstream": {
+      "get": {
+        "operationId": "GoCryptoTraderService_LLMChatStream",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "$ref": "#/definitions/gctrpcLLMChatStreamEvent"
+                },
+                "error": {
+                  "$ref": "#/definitions/rpcStatus"
+                }
+              },
+              "title": "Stream result of gctrpcLLMChatStreamEvent"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "conversationId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "content",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/conversations": {
+      "get": {
+        "operationId": "GoCryptoTraderService_LLMListConversations",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMListConversationsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "includeArchived",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      },
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMCreateConversation",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMConversation"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMCreateConversationRequest"
+            }
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/conversations/{conversationId}": {
+      "get": {
+        "operationId": "GoCryptoTraderService_LLMGetConversation",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMConversationDetail"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "conversationId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/conversations/{conversationId}/archive": {
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMArchiveConversation",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcGenericResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "conversationId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GoCryptoTraderServiceLLMArchiveConversationBody"
+            }
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/conversations/{conversationId}/messages": {
+      "get": {
+        "operationId": "GoCryptoTraderService_LLMListMessages",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMListMessagesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "conversationId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      },
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMSendMessage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMSendMessageResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "conversationId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GoCryptoTraderServiceLLMSendMessageBody"
+            }
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/coverage": {
+      "get": {
+        "operationId": "GoCryptoTraderService_LLMGetCoverageStatus",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMGetCoverageStatusResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/decisions": {
+      "get": {
+        "summary": "docs/llm-dev 08 §3.5: decisions and audit.",
+        "operationId": "GoCryptoTraderService_LLMListDecisionRuns",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMListDecisionRunsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "strategyVersionId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/decisions/preview": {
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMPreviewDecision",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMDecisionRun"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMPreviewDecisionRequest"
+            }
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/decisions/trigger": {
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMTriggerAnalysis",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMDecisionRun"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMTriggerAnalysisRequest"
+            }
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/decisions/{decisionRunId}/riskevidence": {
+      "get": {
+        "operationId": "GoCryptoTraderService_LLMGetRiskEvidence",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMGetRiskEvidenceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "decisionRunId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/decisions/{id}": {
+      "get": {
+        "operationId": "GoCryptoTraderService_LLMGetDecisionRun",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMGetDecisionRunResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/decisions/{id}/lineage": {
+      "get": {
+        "operationId": "GoCryptoTraderService_LLMGetDecisionLineage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMGetDecisionLineageResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/extractpolicy": {
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMExtractPolicy",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMExtractPolicyResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMExtractPolicyRequest"
+            }
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/halt": {
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMSetHalt",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMSetHaltResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMSetHaltRequest"
+            }
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/halt/{id}/clear": {
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMClearHalt",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcGenericResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GoCryptoTraderServiceLLMClearHaltBody"
+            }
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/halts": {
+      "get": {
+        "operationId": "GoCryptoTraderService_LLMListHalts",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMListHaltsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/marketgrants": {
+      "get": {
+        "operationId": "GoCryptoTraderService_LLMListMarketGrants",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMListMarketGrantsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      },
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMGrantMarket",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMGrantMarketResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMGrantMarketRequest"
+            }
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/marketgrants/{id}/revoke": {
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMRevokeMarketGrant",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMRevokeMarketGrantResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GoCryptoTraderServiceLLMRevokeMarketGrantBody"
+            }
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/metrics": {
+      "get": {
+        "operationId": "GoCryptoTraderService_LLMGetMetrics",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMGetMetricsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/notify": {
+      "get": {
+        "operationId": "GoCryptoTraderService_LLMGetNotifyStatus",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMGetNotifyStatusResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/notify/test": {
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMTestNotify",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMTestNotifyResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMTestNotifyRequest"
+            }
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/providers": {
+      "get": {
+        "operationId": "GoCryptoTraderService_LLMListProviderProfiles",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMListProviderProfilesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "includeArchived",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      },
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMCreateProviderProfile",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMCreateProviderProfileResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMCreateProviderProfileRequest"
+            }
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/providers/{id}": {
+      "delete": {
+        "operationId": "GoCryptoTraderService_LLMDeleteProviderProfile",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcGenericResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "actor",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      },
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMUpdateProviderProfile",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMUpdateProviderProfileResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "description": "id is the profile id; the update appends a new revision to it.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GoCryptoTraderServiceLLMUpdateProviderProfileBody"
+            }
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/providers/{id}/test": {
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMTestProviderProfile",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMTestProviderProfileResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "revisionId",
+            "description": "revision_id is optional; unset tests the profile's live revision.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/readiness": {
+      "get": {
+        "operationId": "GoCryptoTraderService_LLMGetReadiness",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMReadinessResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "network",
+            "description": "network is the admission target, e.g. binance-testnet.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "mode",
+            "description": "mode is the run mode to admit, e.g. TESTNET.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/reconcile": {
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMReconcile",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMReconcileResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMReconcileRequest"
+            }
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/riskswitch": {
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMSetRiskSwitch",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcGenericResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMSetRiskSwitchRequest"
+            }
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/riskswitches": {
+      "get": {
+        "operationId": "GoCryptoTraderService_LLMGetRiskSwitches",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMGetRiskSwitchesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/runmode": {
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMSetRunMode",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcGenericResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "08 §3.6 run control: the operator-facing caller of ModeSwitcher. The\npassword is re-authentication; switching to LIVE additionally needs the\ntyped acknowledgement phrase (the approval binding and envelope are read\nserver-side).",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMSetRunModeRequest"
+            }
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/status": {
+      "get": {
+        "operationId": "GoCryptoTraderService_LLMGetStatus",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMGetStatusResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/strategies": {
+      "get": {
+        "summary": "docs/llm-dev 08 §3.2: strategies and approvals.",
+        "operationId": "GoCryptoTraderService_LLMListStrategies",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMListStrategiesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "includeArchived",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      },
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMCreateStrategy",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMCreateStrategyResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "W5 workspace bootstrap: strategy creation, draft persistence, version\nbrowsing and approval reads.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMCreateStrategyRequest"
+            }
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/strategies/{strategyId}/drafts": {
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMSaveStrategyDraft",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMSaveStrategyDraftResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "strategyId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GoCryptoTraderServiceLLMSaveStrategyDraftBody"
+            }
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/strategies/{strategyId}/versions": {
+      "get": {
+        "operationId": "GoCryptoTraderService_LLMListStrategyVersions",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMListStrategyVersionsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "strategyId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/strategyversions/diff": {
+      "get": {
+        "operationId": "GoCryptoTraderService_LLMDiffStrategyVersions",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMDiffStrategyVersionsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "fromId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "toId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/strategyversions/{id}": {
+      "get": {
+        "operationId": "GoCryptoTraderService_LLMGetStrategyVersion",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMGetStrategyVersionResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/strategyversions/{id}/freeze": {
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMFreezeStrategyVersion",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMFreezeStrategyVersionResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GoCryptoTraderServiceLLMFreezeStrategyVersionBody"
+            }
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/strategyversions/{strategyVersionId}/approval": {
+      "get": {
+        "operationId": "GoCryptoTraderService_LLMGetStrategyApproval",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMGetStrategyApprovalResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "strategyVersionId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/strategyversions/{strategyVersionId}/approve": {
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMApproveStrategyVersion",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMApproveStrategyVersionResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "strategyVersionId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GoCryptoTraderServiceLLMApproveStrategyVersionBody"
+            }
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/strategyversions/{strategyVersionId}/pause": {
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMPauseStrategy",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcGenericResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "strategyVersionId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GoCryptoTraderServiceLLMPauseStrategyBody"
+            }
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/strategyversions/{strategyVersionId}/resume": {
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMResumeStrategy",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcGenericResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "strategyVersionId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GoCryptoTraderServiceLLMResumeStrategyBody"
+            }
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/usage": {
+      "get": {
+        "operationId": "GoCryptoTraderService_LLMGetUsage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMGetUsageResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "windowHours",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/vault": {
+      "get": {
+        "operationId": "GoCryptoTraderService_LLMVaultStatus",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMVaultStatusResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/vault/init": {
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMVaultInit",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcGenericResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/vault/secrets": {
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMVaultAddSecret",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMVaultAddSecretResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMVaultAddSecretRequest"
+            }
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
     "/v1/modifyorder": {
       "get": {
         "operationId": "GoCryptoTraderService_ModifyOrder",
@@ -4465,6 +6177,198 @@
     }
   },
   "definitions": {
+    "GoCryptoTraderServiceLLMApproveStrategyVersionBody": {
+      "type": "object",
+      "properties": {
+        "accountId": {
+          "type": "string"
+        },
+        "network": {
+          "type": "string"
+        },
+        "executionMode": {
+          "type": "string"
+        },
+        "approvedMarketIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "validMinutes": {
+          "type": "string",
+          "format": "int64"
+        },
+        "operatorPassword": {
+          "type": "string"
+        },
+        "idempotencyKey": {
+          "type": "string"
+        },
+        "expectedPairEpoch": {
+          "type": "string",
+          "format": "int64"
+        },
+        "actor": {
+          "type": "string"
+        }
+      }
+    },
+    "GoCryptoTraderServiceLLMArchiveConversationBody": {
+      "type": "object"
+    },
+    "GoCryptoTraderServiceLLMClearHaltBody": {
+      "type": "object",
+      "properties": {
+        "actor": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "operatorPassword": {
+          "type": "string"
+        }
+      }
+    },
+    "GoCryptoTraderServiceLLMFreezeStrategyVersionBody": {
+      "type": "object",
+      "properties": {
+        "actor": {
+          "type": "string"
+        },
+        "policyJson": {
+          "type": "string",
+          "description": "policy_json is the reviewed reviewable-v1 document the operator confirms;\nthe freeze stores exactly what was reviewed."
+        }
+      }
+    },
+    "GoCryptoTraderServiceLLMPauseStrategyBody": {
+      "type": "object",
+      "properties": {
+        "actor": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "GoCryptoTraderServiceLLMResumeStrategyBody": {
+      "type": "object",
+      "properties": {
+        "actor": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "GoCryptoTraderServiceLLMRevokeApprovalBody": {
+      "type": "object",
+      "properties": {
+        "actor": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "GoCryptoTraderServiceLLMRevokeMarketGrantBody": {
+      "type": "object",
+      "properties": {
+        "actor": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "GoCryptoTraderServiceLLMSaveStrategyDraftBody": {
+      "type": "object",
+      "properties": {
+        "parentVersionId": {
+          "type": "string"
+        },
+        "proposalJson": {
+          "type": "string",
+          "description": "proposal_json is a candidate.PolicyProposal document (the extraction\noutput); the server derives proposal_state from it."
+        },
+        "actor": {
+          "type": "string"
+        }
+      }
+    },
+    "GoCryptoTraderServiceLLMSendMessageBody": {
+      "type": "object",
+      "properties": {
+        "content": {
+          "type": "string"
+        }
+      }
+    },
+    "GoCryptoTraderServiceLLMUpdateProviderProfileBody": {
+      "type": "object",
+      "properties": {
+        "actor": {
+          "type": "string"
+        },
+        "baseUrl": {
+          "type": "string"
+        },
+        "modelId": {
+          "type": "string"
+        },
+        "apiKeyRef": {
+          "type": "string"
+        },
+        "apiKeyFingerprint": {
+          "type": "string"
+        },
+        "timeoutSeconds": {
+          "type": "string",
+          "format": "int64"
+        },
+        "maxOutputTokens": {
+          "type": "string",
+          "format": "int64"
+        },
+        "maxToolRounds": {
+          "type": "string",
+          "format": "int64"
+        },
+        "maxToolCalls": {
+          "type": "string",
+          "format": "int64"
+        },
+        "maxCumulativeTokens": {
+          "type": "string",
+          "format": "int64"
+        },
+        "promptVersion": {
+          "type": "string"
+        },
+        "questionTemplateVersion": {
+          "type": "string"
+        },
+        "dailyBudgetUsd": {
+          "type": "string"
+        },
+        "reservationCap24h": {
+          "type": "string",
+          "format": "int64"
+        },
+        "allowInsecureLocalhost": {
+          "type": "boolean"
+        },
+        "proxyAddress": {
+          "type": "string"
+        }
+      }
+    },
     "gctrpcAccount": {
       "type": "object",
       "properties": {
@@ -6306,6 +8210,1655 @@
           "items": {
             "type": "object",
             "$ref": "#/definitions/gctrpcTickers"
+          }
+        }
+      }
+    },
+    "gctrpcLLMApproveStrategyVersionResponse": {
+      "type": "object",
+      "properties": {
+        "approvalId": {
+          "type": "string"
+        },
+        "approvedAt": {
+          "type": "string"
+        },
+        "validUntil": {
+          "type": "string"
+        },
+        "idempotentReplay": {
+          "type": "boolean"
+        }
+      }
+    },
+    "gctrpcLLMAuditEvent": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "actor": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "detailJson": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMChatMessage": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "seq": {
+          "type": "string",
+          "format": "int64"
+        },
+        "role": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string",
+          "description": "content is decrypted for display; storage keeps it sealed."
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "errorCode": {
+          "type": "string"
+        },
+        "inputTokens": {
+          "type": "string",
+          "format": "int64"
+        },
+        "outputTokens": {
+          "type": "string",
+          "format": "int64"
+        },
+        "latencyMs": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "gctrpcLLMChatStreamEvent": {
+      "type": "object",
+      "properties": {
+        "delta": {
+          "type": "string",
+          "description": "delta is one content fragment as it arrived from the provider."
+        },
+        "final": {
+          "$ref": "#/definitions/gctrpcLLMSendMessageResponse",
+          "description": "final carries the completed turn; the last event of a successful stream."
+        },
+        "error": {
+          "type": "string",
+          "description": "error carries a stream failure the client must show."
+        }
+      }
+    },
+    "gctrpcLLMConversation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string"
+        },
+        "archived": {
+          "type": "boolean"
+        },
+        "messageCount": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "gctrpcLLMConversationDetail": {
+      "type": "object",
+      "properties": {
+        "conversation": {
+          "$ref": "#/definitions/gctrpcLLMConversation"
+        },
+        "messages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMChatMessage"
+          }
+        }
+      }
+    },
+    "gctrpcLLMCreateConversationRequest": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMCreateProviderProfileRequest": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "description": "kind is LLM_OPENAI_COMPAT or JEV."
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "actor": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMCreateProviderProfileResponse": {
+      "type": "object",
+      "properties": {
+        "profile": {
+          "$ref": "#/definitions/gctrpcLLMProviderProfile"
+        }
+      }
+    },
+    "gctrpcLLMCreateStrategyRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "actor": {
+          "type": "string"
+        }
+      },
+      "description": "W5 workspace bootstrap: strategy creation, draft persistence, version\nbrowsing and approval reads."
+    },
+    "gctrpcLLMCreateStrategyResponse": {
+      "type": "object",
+      "properties": {
+        "strategy": {
+          "$ref": "#/definitions/gctrpcLLMStrategy"
+        }
+      }
+    },
+    "gctrpcLLMDecisionRun": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "strategyVersionId": {
+          "type": "string"
+        },
+        "snapshotId": {
+          "type": "string"
+        },
+        "trigger": {
+          "type": "string"
+        },
+        "runMode": {
+          "type": "string"
+        },
+        "decision": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "inputHash": {
+          "type": "string"
+        },
+        "llmModel": {
+          "type": "string"
+        },
+        "jevModel": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "latencyMs": {
+          "type": "string",
+          "format": "int64"
+        },
+        "llmRoundCount": {
+          "type": "string",
+          "format": "int64"
+        },
+        "toolCallCount": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "gctrpcLLMDiffStrategyVersionsResponse": {
+      "type": "object",
+      "properties": {
+        "fromVersionId": {
+          "type": "string"
+        },
+        "toVersionId": {
+          "type": "string"
+        },
+        "changes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMPolicyChange"
+          }
+        }
+      }
+    },
+    "gctrpcLLMEvidenceCard": {
+      "type": "object",
+      "properties": {
+        "ref": {
+          "type": "string"
+        },
+        "tool": {
+          "type": "string"
+        },
+        "exchange": {
+          "type": "string"
+        },
+        "marketId": {
+          "type": "string"
+        },
+        "accountId": {
+          "type": "string"
+        },
+        "strategyVersionId": {
+          "type": "string"
+        },
+        "sourceTime": {
+          "type": "string",
+          "description": "source_time is the data source's own timestamp (asOf), RFC3339."
+        },
+        "quality": {
+          "type": "string"
+        },
+        "snapshotId": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "description": "sha256 is the hash of the exact result bytes the model saw."
+        }
+      }
+    },
+    "gctrpcLLMExtractPolicyRequest": {
+      "type": "object",
+      "properties": {
+        "conversationId": {
+          "type": "string"
+        },
+        "profileRevisionId": {
+          "type": "string"
+        },
+        "markets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "gctrpcLLMExtractPolicyResponse": {
+      "type": "object",
+      "properties": {
+        "proposalJson": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "clarifyingQuestions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "inputTokens": {
+          "type": "string",
+          "format": "int64"
+        },
+        "outputTokens": {
+          "type": "string",
+          "format": "int64"
+        },
+        "latencyMs": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "gctrpcLLMFreezeStrategyVersionResponse": {
+      "type": "object",
+      "properties": {
+        "strategyHash": {
+          "type": "string"
+        },
+        "riskEnvelopeHash": {
+          "type": "string"
+        },
+        "frozenJson": {
+          "type": "string"
+        },
+        "frozenAt": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMGetActiveModelPairResponse": {
+      "type": "object",
+      "properties": {
+        "found": {
+          "type": "boolean",
+          "description": "found is false when no pairing has ever been activated."
+        },
+        "llmProfileRevisionId": {
+          "type": "string"
+        },
+        "jevProfileRevisionId": {
+          "type": "string"
+        },
+        "pairEpoch": {
+          "type": "string",
+          "format": "int64"
+        },
+        "readiness": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string"
+        },
+        "updatedBy": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMGetCoverageStatusResponse": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "contractCount": {
+          "type": "string",
+          "format": "int64"
+        },
+        "rotationCycleMinutes": {
+          "type": "string",
+          "format": "int64"
+        },
+        "lastCycleCompletedAt": {
+          "type": "string"
+        },
+        "worstContractAgeSeconds": {
+          "type": "string",
+          "format": "int64"
+        },
+        "weightUsedPerMinute": {
+          "type": "string",
+          "format": "int64"
+        },
+        "weightBudgetPerMinute": {
+          "type": "string",
+          "format": "int64"
+        },
+        "cycleProgressPercent": {
+          "type": "number",
+          "format": "double"
+        },
+        "visitedThisCycle": {
+          "type": "string",
+          "format": "int64"
+        },
+        "cyclesCompleted": {
+          "type": "string",
+          "format": "int64"
+        },
+        "failures": {
+          "type": "string",
+          "format": "int64"
+        },
+        "reloadsThisHour": {
+          "type": "string",
+          "format": "int64"
+        },
+        "reloadMarkets": {
+          "type": "string",
+          "format": "int64"
+        },
+        "lastTickerRefresh": {
+          "type": "string"
+        },
+        "lastReload": {
+          "type": "string"
+        },
+        "incrementSpacingMs": {
+          "type": "string",
+          "format": "int64"
+        },
+        "checkedAt": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMGetDecisionLineageResponse": {
+      "type": "object",
+      "properties": {
+        "run": {
+          "$ref": "#/definitions/gctrpcLLMDecisionRun"
+        },
+        "riskEvaluations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMRiskEvidence"
+          }
+        },
+        "auditEvents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMAuditEvent"
+          }
+        }
+      }
+    },
+    "gctrpcLLMGetDecisionRunResponse": {
+      "type": "object",
+      "properties": {
+        "run": {
+          "$ref": "#/definitions/gctrpcLLMDecisionRun"
+        },
+        "candidateJson": {
+          "type": "string"
+        },
+        "jevJson": {
+          "type": "string"
+        },
+        "toolTranscriptJson": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMGetMetricsResponse": {
+      "type": "object",
+      "properties": {
+        "metricsJson": {
+          "type": "string",
+          "description": "metrics_json is the full metric snapshot (counters, gauges, histograms)."
+        },
+        "collectedAt": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMGetNotifyStatusResponse": {
+      "type": "object",
+      "properties": {
+        "channels": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMNotifyChannel"
+          }
+        },
+        "relayRunning": {
+          "type": "boolean"
+        },
+        "checkedAt": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMGetRiskEvidenceResponse": {
+      "type": "object",
+      "properties": {
+        "riskEvaluations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMRiskEvidence"
+          }
+        }
+      }
+    },
+    "gctrpcLLMGetRiskSwitchesResponse": {
+      "type": "object",
+      "properties": {
+        "switches": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMRiskSwitch"
+          }
+        }
+      }
+    },
+    "gctrpcLLMGetStatusResponse": {
+      "type": "object",
+      "properties": {
+        "runMode": {
+          "type": "string"
+        },
+        "liveUnlocked": {
+          "type": "boolean",
+          "description": "live_unlocked is true once the mode is LIVE: the triple gate is what let\nthe mode land, so the mode itself is the settled proof."
+        },
+        "pairReadiness": {
+          "type": "string"
+        },
+        "pairEpoch": {
+          "type": "string",
+          "format": "int64"
+        },
+        "llmProfileName": {
+          "type": "string"
+        },
+        "llmModel": {
+          "type": "string"
+        },
+        "jevProfileName": {
+          "type": "string"
+        },
+        "jevModel": {
+          "type": "string"
+        },
+        "llmProbeAgeSeconds": {
+          "type": "string",
+          "format": "int64"
+        },
+        "jevProbeAgeSeconds": {
+          "type": "string",
+          "format": "int64"
+        },
+        "halted": {
+          "type": "boolean"
+        },
+        "haltLevel": {
+          "type": "string"
+        },
+        "accountReconciled": {
+          "type": "boolean"
+        },
+        "reconciliationAgeSeconds": {
+          "type": "string",
+          "format": "int64"
+        },
+        "reservationsRemaining24h": {
+          "type": "string",
+          "format": "int64"
+        },
+        "approvedStrategies": {
+          "type": "string",
+          "format": "int64"
+        },
+        "checkedAt": {
+          "type": "string"
+        },
+        "reviewExpireHours": {
+          "type": "string",
+          "format": "int64",
+          "description": "review_expire_hours is the configured expiry window for unhandled REVIEW\ndecisions (default 12h); the UI derives the expired state from it, so a\ntightened window does not leave stale clients lying."
+        }
+      },
+      "description": "LLMGetStatusResponse carries the dashboard core. Fields whose sources await\nproduction adapters (clock drift, oldest data age, running/decisions\ncounters) are deliberately absent until they can be sourced truthfully."
+    },
+    "gctrpcLLMGetStrategyApprovalResponse": {
+      "type": "object",
+      "properties": {
+        "found": {
+          "type": "boolean"
+        },
+        "approval": {
+          "$ref": "#/definitions/gctrpcLLMStrategyApproval"
+        }
+      }
+    },
+    "gctrpcLLMGetStrategyVersionResponse": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "$ref": "#/definitions/gctrpcLLMStrategyVersion"
+        },
+        "tree": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMStrategyVersion"
+          }
+        },
+        "policyJson": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMGetUsageResponse": {
+      "type": "object",
+      "properties": {
+        "windowHours": {
+          "type": "string",
+          "format": "int64"
+        },
+        "lines": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMUsageLine"
+          }
+        },
+        "totalInputTokens": {
+          "type": "string",
+          "format": "int64"
+        },
+        "totalOutputTokens": {
+          "type": "string",
+          "format": "int64"
+        },
+        "totalReservations": {
+          "type": "string",
+          "format": "int64"
+        },
+        "checkedAt": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMGrantMarketRequest": {
+      "type": "object",
+      "properties": {
+        "accountId": {
+          "type": "string"
+        },
+        "network": {
+          "type": "string"
+        },
+        "marketId": {
+          "type": "string"
+        },
+        "validDays": {
+          "type": "string",
+          "format": "int64"
+        },
+        "grantedBy": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMGrantMarketResponse": {
+      "type": "object",
+      "properties": {
+        "grant": {
+          "$ref": "#/definitions/gctrpcLLMMarketGrant"
+        }
+      }
+    },
+    "gctrpcLLMHaltRow": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "level": {
+          "type": "string"
+        },
+        "marketId": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "setBy": {
+          "type": "string"
+        },
+        "setAt": {
+          "type": "string"
+        },
+        "affectedStrategies": {
+          "type": "string",
+          "format": "int64"
+        },
+        "canceledOrders": {
+          "type": "string",
+          "format": "int64"
+        }
+      },
+      "description": "W7-01 halt write side: the three-level stop (SOFT/MARKET/FULL) and its\nre-authenticated clear that never auto-resumes anything."
+    },
+    "gctrpcLLMListAuditEventsResponse": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMAuditEvent"
+          }
+        }
+      }
+    },
+    "gctrpcLLMListConversationsResponse": {
+      "type": "object",
+      "properties": {
+        "conversations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMConversation"
+          }
+        }
+      }
+    },
+    "gctrpcLLMListDecisionRunsResponse": {
+      "type": "object",
+      "properties": {
+        "runs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMDecisionRun"
+          }
+        }
+      }
+    },
+    "gctrpcLLMListHaltsResponse": {
+      "type": "object",
+      "properties": {
+        "halts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMHaltRow"
+          }
+        }
+      }
+    },
+    "gctrpcLLMListMarketGrantsResponse": {
+      "type": "object",
+      "properties": {
+        "grants": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMMarketGrant"
+          }
+        }
+      }
+    },
+    "gctrpcLLMListMessagesResponse": {
+      "type": "object",
+      "properties": {
+        "messages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMChatMessage"
+          }
+        }
+      }
+    },
+    "gctrpcLLMListProviderProfilesResponse": {
+      "type": "object",
+      "properties": {
+        "profiles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMProviderProfile"
+          }
+        }
+      }
+    },
+    "gctrpcLLMListStrategiesResponse": {
+      "type": "object",
+      "properties": {
+        "strategies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMStrategy"
+          }
+        }
+      }
+    },
+    "gctrpcLLMListStrategyVersionsResponse": {
+      "type": "object",
+      "properties": {
+        "versions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMStrategyVersion"
+          }
+        }
+      }
+    },
+    "gctrpcLLMMarketGrant": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "accountId": {
+          "type": "string"
+        },
+        "network": {
+          "type": "string"
+        },
+        "marketId": {
+          "type": "string"
+        },
+        "grantedBy": {
+          "type": "string"
+        },
+        "grantedAt": {
+          "type": "string"
+        },
+        "validUntil": {
+          "type": "string"
+        },
+        "revokedAt": {
+          "type": "string"
+        },
+        "revokedBy": {
+          "type": "string"
+        },
+        "revokeReason": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMNotifyChannel": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "credentialSet": {
+          "type": "boolean"
+        },
+        "targets": {
+          "type": "string",
+          "format": "int64"
+        },
+        "endpointHost": {
+          "type": "string"
+        }
+      },
+      "description": "W7-06 notification channels: Telegram and the generic webhook (Q19). The\nsurface reports configuration readiness only -- credentials are never\nechoed (booleans, not values); editing channels is a configuration act."
+    },
+    "gctrpcLLMPolicyChange": {
+      "type": "object",
+      "properties": {
+        "field": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMPositionDelta": {
+      "type": "object",
+      "properties": {
+        "marketId": {
+          "type": "string"
+        },
+        "side": {
+          "type": "string"
+        },
+        "local": {
+          "type": "string"
+        },
+        "exchange": {
+          "type": "string"
+        }
+      },
+      "description": "W7-02 manual reconciliation: one operator-triggered pass of \"local view vs\nexchange truth\"; a mismatch trips SOFT halt and records the deltas."
+    },
+    "gctrpcLLMPreviewDecisionRequest": {
+      "type": "object",
+      "properties": {
+        "strategyVersionId": {
+          "type": "string"
+        },
+        "marketId": {
+          "type": "string"
+        },
+        "actor": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMProbeLayerResult": {
+      "type": "object",
+      "properties": {
+        "layer": {
+          "type": "string"
+        },
+        "passed": {
+          "type": "boolean"
+        },
+        "errorCode": {
+          "type": "string"
+        },
+        "errorMessage": {
+          "type": "string"
+        },
+        "latencyMs": {
+          "type": "string",
+          "format": "int64"
+        },
+        "inputTokens": {
+          "type": "string",
+          "format": "int64"
+        },
+        "outputTokens": {
+          "type": "string",
+          "format": "int64"
+        },
+        "responseModel": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMProviderProfile": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "createdBy": {
+          "type": "string"
+        },
+        "archivedAt": {
+          "type": "string"
+        },
+        "revisionCount": {
+          "type": "string",
+          "format": "int64"
+        },
+        "revision": {
+          "$ref": "#/definitions/gctrpcLLMProviderRevision",
+          "description": "revision is the newest revision; unset when none exists yet."
+        }
+      }
+    },
+    "gctrpcLLMProviderRevision": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "profileId": {
+          "type": "string"
+        },
+        "revisionNo": {
+          "type": "string",
+          "format": "int64"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "baseUrl": {
+          "type": "string"
+        },
+        "modelId": {
+          "type": "string"
+        },
+        "apiKeyRef": {
+          "type": "string",
+          "description": "api_key_ref is the vault reference, never the key itself."
+        },
+        "apiKeyFingerprint": {
+          "type": "string",
+          "description": "api_key_fingerprint is the truncated SHA-256 the vault reports (16 hex)."
+        },
+        "timeoutSeconds": {
+          "type": "string",
+          "format": "int64"
+        },
+        "maxOutputTokens": {
+          "type": "string",
+          "format": "int64",
+          "description": "Optional numeric fields use 0 for unset (proto3 scalars)."
+        },
+        "maxToolRounds": {
+          "type": "string",
+          "format": "int64"
+        },
+        "maxToolCalls": {
+          "type": "string",
+          "format": "int64"
+        },
+        "maxCumulativeTokens": {
+          "type": "string",
+          "format": "int64"
+        },
+        "promptVersion": {
+          "type": "string"
+        },
+        "questionTemplateVersion": {
+          "type": "string"
+        },
+        "dailyBudgetUsd": {
+          "type": "string",
+          "description": "daily_budget_usd distinguishes unset (empty) from explicit \"0\"."
+        },
+        "reservationCap24h": {
+          "type": "string",
+          "format": "int64"
+        },
+        "allowInsecureLocalhost": {
+          "type": "boolean"
+        },
+        "proxyAddress": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "createdBy": {
+          "type": "string"
+        },
+        "supersededAt": {
+          "type": "string",
+          "description": "superseded_at is empty while this revision is the live one."
+        }
+      }
+    },
+    "gctrpcLLMReadinessGate": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "description": "status is PASS or FAIL."
+        },
+        "detail": {
+          "type": "string",
+          "description": "detail carries the actual value vs the expectation."
+        }
+      }
+    },
+    "gctrpcLLMReadinessResponse": {
+      "type": "object",
+      "properties": {
+        "ready": {
+          "type": "boolean",
+          "description": "ready is true only when every gate passed."
+        },
+        "network": {
+          "type": "string"
+        },
+        "mode": {
+          "type": "string"
+        },
+        "gates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMReadinessGate"
+          }
+        },
+        "checkedAt": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMReconcileRequest": {
+      "type": "object",
+      "properties": {
+        "actor": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMReconcileResponse": {
+      "type": "object",
+      "properties": {
+        "reconciliationId": {
+          "type": "string"
+        },
+        "reconciled": {
+          "type": "boolean"
+        },
+        "deltas": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMPositionDelta"
+          }
+        },
+        "haltId": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMRevokeMarketGrantResponse": {
+      "type": "object",
+      "properties": {
+        "grantId": {
+          "type": "string"
+        },
+        "revokedApprovalIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "gctrpcLLMRiskEvidence": {
+      "type": "object",
+      "properties": {
+        "riskEvaluationId": {
+          "type": "string"
+        },
+        "checkVersion": {
+          "type": "string"
+        },
+        "verdict": {
+          "type": "string"
+        },
+        "checksJson": {
+          "type": "string"
+        },
+        "rejectionsJson": {
+          "type": "string"
+        },
+        "envelopeHash": {
+          "type": "string"
+        },
+        "computedQty": {
+          "type": "string"
+        },
+        "computedNotionalUsd": {
+          "type": "string"
+        },
+        "referencePrice": {
+          "type": "string"
+        },
+        "evaluatedAt": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMRiskSwitch": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "defaultOn": {
+          "type": "boolean"
+        },
+        "locked": {
+          "type": "boolean",
+          "description": "locked marks the red-line switches that cannot be turned off over RPC."
+        },
+        "reasonCode": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMSaveStrategyDraftResponse": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "$ref": "#/definitions/gctrpcLLMStrategyVersion"
+        }
+      }
+    },
+    "gctrpcLLMSendMessageResponse": {
+      "type": "object",
+      "properties": {
+        "messageId": {
+          "type": "string"
+        },
+        "assistantMessage": {
+          "type": "string"
+        },
+        "toolTranscript": {
+          "type": "string"
+        },
+        "inputTokens": {
+          "type": "string",
+          "format": "int64"
+        },
+        "outputTokens": {
+          "type": "string",
+          "format": "int64"
+        },
+        "latencyMs": {
+          "type": "string",
+          "format": "int64"
+        },
+        "errorCode": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMEvidenceCard"
+          }
+        }
+      }
+    },
+    "gctrpcLLMSetHaltRequest": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "type": "string"
+        },
+        "marketId": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "actor": {
+          "type": "string"
+        },
+        "flatten": {
+          "type": "boolean"
+        },
+        "confirmFlatten": {
+          "type": "boolean"
+        }
+      }
+    },
+    "gctrpcLLMSetHaltResponse": {
+      "type": "object",
+      "properties": {
+        "halt": {
+          "$ref": "#/definitions/gctrpcLLMHaltRow"
+        },
+        "suspendedStrategies": {
+          "type": "string",
+          "format": "int64"
+        },
+        "canceledOrders": {
+          "type": "string",
+          "format": "int64"
+        },
+        "flattenedPositions": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "gctrpcLLMSetRiskSwitchRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "actor": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMSetRunModeRequest": {
+      "type": "object",
+      "properties": {
+        "runMode": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "actor": {
+          "type": "string"
+        },
+        "acknowledged": {
+          "type": "string"
+        }
+      },
+      "description": "08 §3.6 run control: the operator-facing caller of ModeSwitcher. The\npassword is re-authentication; switching to LIVE additionally needs the\ntyped acknowledgement phrase (the approval binding and envelope are read\nserver-side)."
+    },
+    "gctrpcLLMStrategy": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "createdBy": {
+          "type": "string"
+        },
+        "archived": {
+          "type": "boolean"
+        }
+      }
+    },
+    "gctrpcLLMStrategyApproval": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "strategyVersionId": {
+          "type": "string"
+        },
+        "accountId": {
+          "type": "string"
+        },
+        "network": {
+          "type": "string"
+        },
+        "executionMode": {
+          "type": "string"
+        },
+        "approvedMarketIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "riskEnvelopeHash": {
+          "type": "string"
+        },
+        "pairEpoch": {
+          "type": "string",
+          "format": "int64"
+        },
+        "validFrom": {
+          "type": "string"
+        },
+        "validUntil": {
+          "type": "string"
+        },
+        "approvedBy": {
+          "type": "string"
+        },
+        "approvedAt": {
+          "type": "string"
+        },
+        "revokedAt": {
+          "type": "string"
+        },
+        "revokedBy": {
+          "type": "string"
+        },
+        "revokeReason": {
+          "type": "string"
+        },
+        "expiredAt": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMStrategyVersion": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "strategyId": {
+          "type": "string"
+        },
+        "parentVersionId": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "proposalState": {
+          "type": "string"
+        },
+        "strategyHash": {
+          "type": "string"
+        },
+        "riskEnvelopeHash": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "frozenAt": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMSwitchActiveModelPairRequest": {
+      "type": "object",
+      "properties": {
+        "llmProfileRevisionId": {
+          "type": "string"
+        },
+        "jevProfileRevisionId": {
+          "type": "string"
+        },
+        "expectedPairEpoch": {
+          "type": "string",
+          "format": "int64"
+        },
+        "operatorPassword": {
+          "type": "string"
+        },
+        "idempotencyKey": {
+          "type": "string"
+        },
+        "actor": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMSwitchActiveModelPairResponse": {
+      "type": "object",
+      "properties": {
+        "pairEpoch": {
+          "type": "string",
+          "format": "int64"
+        },
+        "readiness": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMTestNotifyRequest": {
+      "type": "object",
+      "properties": {
+        "actor": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMTestNotifyResponse": {
+      "type": "object",
+      "properties": {
+        "relayRunning": {
+          "type": "boolean"
+        },
+        "eventType": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMTestProviderProfileResponse": {
+      "type": "object",
+      "properties": {
+        "revisionId": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMProbeLayerResult"
+          }
+        }
+      }
+    },
+    "gctrpcLLMTriggerAnalysisRequest": {
+      "type": "object",
+      "properties": {
+        "strategyVersionId": {
+          "type": "string"
+        },
+        "marketId": {
+          "type": "string"
+        },
+        "actor": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMUpdateProviderProfileResponse": {
+      "type": "object",
+      "properties": {
+        "revision": {
+          "$ref": "#/definitions/gctrpcLLMProviderRevision"
+        }
+      }
+    },
+    "gctrpcLLMUsageLine": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "purpose": {
+          "type": "string"
+        },
+        "reservations": {
+          "type": "string",
+          "format": "int64"
+        },
+        "inputTokens": {
+          "type": "string",
+          "format": "int64"
+        },
+        "outputTokens": {
+          "type": "string",
+          "format": "int64"
+        },
+        "avgLatencyMs": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "gctrpcLLMVaultAddSecretRequest": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "description": "kind groups the secret, e.g. llm or jev."
+        },
+        "secret": {
+          "type": "string",
+          "description": "secret is write-only: it is never echoed back, only the ref + fingerprint."
+        }
+      }
+    },
+    "gctrpcLLMVaultAddSecretResponse": {
+      "type": "object",
+      "properties": {
+        "ref": {
+          "type": "string"
+        },
+        "fingerprint": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMVaultEntry": {
+      "type": "object",
+      "properties": {
+        "ref": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "fingerprint": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMVaultStatusResponse": {
+      "type": "object",
+      "properties": {
+        "initialized": {
+          "type": "boolean"
+        },
+        "directory": {
+          "type": "string"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMVaultEntry"
           }
         }
       }

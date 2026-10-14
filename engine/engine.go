@@ -32,20 +32,50 @@ import (
 // Engine contains configuration, portfolio manager, exchange & ticker data and is the
 // overarching type across this code base.
 type Engine struct {
-	Config                   *config.Config
-	CommunicationsManager    *CommunicationManager
-	connectionManager        *connectionManager
-	currencyPairSyncer       *SyncManager
-	DatabaseManager          *DatabaseConnectionManager
-	DepositAddressManager    *DepositAddressManager
-	eventManager             *eventManager
-	ExchangeManager          *ExchangeManager
-	ntpManager               *ntpManager
-	OrderManager             *OrderManager
-	portfolioManager         *portfolioManager
-	WebsocketRoutineManager  *WebsocketRoutineManager
-	WithdrawManager          *WithdrawManager
-	dataHistoryManager       *DataHistoryManager
+	Config                  *config.Config
+	CommunicationsManager   *CommunicationManager
+	connectionManager       *connectionManager
+	currencyPairSyncer      *SyncManager
+	DatabaseManager         *DatabaseConnectionManager
+	DepositAddressManager   *DepositAddressManager
+	eventManager            *eventManager
+	ExchangeManager         *ExchangeManager
+	ntpManager              *ntpManager
+	OrderManager            *OrderManager
+	portfolioManager        *portfolioManager
+	WebsocketRoutineManager *WebsocketRoutineManager
+	WithdrawManager         *WithdrawManager
+	dataHistoryManager      *DataHistoryManager
+	llmManager              *LLMManager
+	// llmChatService is the conversation corridor built by LLMManager.SetupChat
+	// once the provider transport exists; the conversation RPCs fail closed
+	// while it is nil (the client factory wires it from the active revisions).
+	llmChatService *LLMChatService
+	// llmDecisionRunner is the shadow decision chain (analysis -> Jev ->
+	// synthesis -> risk -> record) assembled from the same clients and scope
+	// as the chat corridor; trigger/preview answer fail closed while it is nil.
+	llmDecisionRunner *ShadowRunner
+	// llmMetrics is the metrics registry (10 §6); wired with the model-free
+	// runtime seams when the subsystem starts and read by the LLMGetMetrics RPC.
+	llmMetrics *LLMMetrics
+	// llmNotifier is the LLM event push sink (W7-06); built on first use with
+	// its Push wired to the communications manager. Tests may pre-set it.
+	llmNotifier *LLMNotifier
+
+	// llmRiskSwitches is the §5.6 switch catalogue state (M5-17); wired with
+	// the model-free runtime seams and read/toggled by the RPC.
+	llmRiskSwitches *RiskSwitchService
+	// llmDayStart is the UTC day-start baseline and daily-loss service (M5-09);
+	// the risk closure reads its netted flows and the daily loss from it.
+	llmDayStart *DayStartService
+	// llmIntents records prepared intents (M5-01) and llmDispatcher routes them
+	// by run mode (M5-02); both are wired with the rest of the execution seams
+	// and consumed by the PAPER/LIVE bridge.
+	llmIntents    *IntentRecorder
+	llmDispatcher *OrderDispatcher
+	// llmReadiness is the M6-01 admission evaluator; wired with the model-free
+	// runtime seams (LLMRuntimeFacts) when the subsystem starts.
+	llmReadiness             *LLMReadinessService
 	currencyStateManager     *CurrencyStateManager
 	Settings                 Settings
 	uptime                   time.Time
@@ -172,6 +202,7 @@ func validateSettings(b *Engine, s *Settings, flagSet FlagSet) {
 	flagSet.WithBool("openexchangerates", &b.Settings.EnableOpenExchangeRates, b.Config.Currency.ForexProviders.IsEnabled("openexchangerates"))
 
 	flagSet.WithBool("datahistorymanager", &b.Settings.EnableDataHistoryManager, b.Config.DataHistoryManager.Enabled)
+	flagSet.WithBool("llmmanager", &b.Settings.EnableLLMManager, b.Config.LLM.Enabled)
 	flagSet.WithBool("currencystatemanager", &b.Settings.EnableCurrencyStateManager, b.Config.CurrencyStateManager.Enabled != nil && *b.Config.CurrencyStateManager.Enabled)
 
 	flagSet.WithBool("tickersync", &b.Settings.EnableTickerSyncing, b.Config.SyncManagerConfig.SynchronizeTicker)
@@ -472,6 +503,76 @@ func (bot *Engine) Start() error {
 		}
 	}
 
+	if bot.Settings.EnableLLMManager {
+		if bot.llmManager == nil {
+			if lm, err := SetupLLMManager(bot.ExchangeManager, &bot.Config.LLM); err != nil {
+				gctlog.Errorf(gctlog.Global, "LLM manager unable to setup: %s", err)
+			} else {
+				bot.llmManager = lm
+				// The delist watch must be attached before Start: the rotation
+				// loop begins re-reading the market list as soon as it runs, and
+				// every disappearance must meet the row-18 response chain.
+				bot.llmManager.SetMarketWatch(bot.newMarketDelistWatch())
+				if err := bot.llmManager.Start(runtimeCtx); err != nil {
+					gctlog.Errorf(gctlog.Global, "LLM manager unable to start: %s", err)
+				}
+			}
+		}
+	}
+
+	// The model-free runtime seams: metrics, the §5.6 switch service and the
+	// M6-01 readiness evaluator need no model clients, so they are wired as
+	// soon as the subsystem runs. The chat corridor and the decision runner
+	// stay fail-closed until the client factory assembles them from the active
+	// provider revisions.
+	if bot.llmManager != nil {
+		bot.llmMetrics = NewLLMMetrics()
+		bot.llmRiskSwitches = &RiskSwitchService{Audit: LLMDecisionStore{}, Now: time.Now}
+		bot.llmDayStart = &DayStartService{
+			Store: LLMDayStartStore{}, Halts: LLMHalts{}, Audit: LLMDecisionStore{},
+			Now: time.Now, NewID: newLLMIdentifier,
+		}
+		// The execution seams the PAPER/LIVE bridge drives: recording needs the
+		// audit store, dispatching needs the order manager (nil leaves the
+		// bridge record-only, which is the documented fail-closed posture).
+		bot.llmIntents = &IntentRecorder{Intents: LLMIntentStore{}, Audit: LLMDecisionStore{}, Now: time.Now, NewID: newLLMIdentifier}
+		if bot.OrderManager != nil {
+			orders := LLMOrderManager{Manager: bot.OrderManager}
+			bot.llmDispatcher = &OrderDispatcher{
+				Orders: orders, Fake: orders, Claim: LLMIntentClaimer{}, Lifecycle: LLMIntentLifecycle{},
+				Audit: LLMDecisionStore{}, Now: time.Now, NewID: newLLMIdentifier,
+			}
+		}
+		bot.llmReadiness = &LLMReadinessService{
+			Facts: &LLMRuntimeFacts{
+				Config:   func() *config.LLMConfig { return &bot.Config.LLM },
+				Rotation: func() []string { return bot.llmManager.Rotation().Markets() },
+				Switches: func() map[string]bool { return bot.llmRiskSwitches.CurrentState() },
+				Now:      time.Now,
+			},
+			Now: time.Now,
+		}
+
+		// The chat corridor: active-pair clients + the read-only tool runner.
+		// Any missing piece (no pair, uninitialised vault, unknown exchange)
+		// logs and leaves the chat RPCs fail-closed rather than aborting Start.
+		if chat, err := bot.setupLLMChat(runtimeCtx); err != nil {
+			gctlog.Warnf(gctlog.Global, "LLM chat corridor not assembled (chat RPCs stay unavailable): %s", err)
+		} else {
+			bot.llmChatService = chat
+		}
+
+		// The shadow decision runner shares the same clients and scope.
+		if runner, err := bot.setupLLMDecisionRunner(runtimeCtx); err != nil {
+			gctlog.Warnf(gctlog.Global, "LLM decision runner not assembled (trigger/preview stay unavailable): %s", err)
+		} else {
+			bot.llmDecisionRunner = runner
+			// The trigger queue's production consumer: without it the
+			// scanner's events end in a bounded queue nobody drains.
+			go bot.triggerConsumeLoop(runtimeCtx)
+		}
+	}
+
 	if bot.Settings.EnableExchangeSyncManager {
 		cfg := bot.Config.SyncManagerConfig
 		cfg.SynchronizeTicker = bot.Settings.EnableTickerSyncing
@@ -666,6 +767,13 @@ func (bot *Engine) Stop() {
 		bot.Config.Portfolio = bot.portfolioManager.GetPortfolio()
 	}
 
+	// Stopped before the order manager so no in-flight decision can submit an
+	// order while the order manager is shutting down.
+	if bot.llmManager.IsRunning() {
+		if err := bot.llmManager.Stop(); err != nil {
+			gctlog.Errorf(gctlog.Global, "LLM manager unable to stop. Error: %v", err)
+		}
+	}
 	if bot.OrderManager.IsRunning() {
 		if err := bot.OrderManager.Stop(); err != nil {
 			gctlog.Errorf(gctlog.Global, "Order manager unable to stop. Error: %v", err)

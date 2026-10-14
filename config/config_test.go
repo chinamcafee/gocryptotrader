@@ -1575,7 +1575,7 @@ func TestReadVersion14ConfigFromFile(t *testing.T) {
 	require.NoError(t, err, "ReadFile must load the config fixture")
 	var expected Config
 	require.NoError(t, json.Unmarshal(data, &expected), "Unmarshal must decode the current config fixture")
-	require.Equal(t, 17, expected.Version, "Config.Version must use version 17")
+	require.Equal(t, 19, expected.Version, "Config.Version must use version 19")
 
 	var saved map[string]json.RawMessage
 	require.NoError(t, json.Unmarshal(data, &saved), "Unmarshal must preserve saved config fields")
@@ -1592,7 +1592,7 @@ func TestReadVersion14ConfigFromFile(t *testing.T) {
 
 	var migrated Config
 	require.NoError(t, migrated.ReadConfigFromFile(path, true), "ReadConfigFromFile must upgrade the version 14 config")
-	assert.Equal(t, expected.Version, migrated.Version, "ReadConfigFromFile should advance the config to version 17")
+	assert.Equal(t, expected.Version, migrated.Version, "ReadConfigFromFile should advance the config to version 19")
 	assert.Equal(t, expected.Exchanges, migrated.Exchanges, "ReadConfigFromFile should remove BitMEX credentials while preserving all other exchanges")
 	assert.Equal(t, expected.Currency, migrated.Currency, "ReadConfigFromFile should preserve currency settings")
 }
@@ -1604,7 +1604,7 @@ func TestReadVersion16OrderbookBufferConfigFromFile(t *testing.T) {
 	require.NoError(t, err, "ReadFile must load the current config fixture")
 	var expected Config
 	require.NoError(t, json.Unmarshal(data, &expected), "Unmarshal must decode the current config fixture")
-	require.Equal(t, 17, expected.Version, "Config.Version must use version 17")
+	require.Equal(t, 19, expected.Version, "Config.Version must use version 19")
 
 	var saved map[string]json.RawMessage
 	require.NoError(t, json.Unmarshal(data, &saved), "Unmarshal must preserve saved config fields")
@@ -1634,7 +1634,7 @@ func TestReadVersion16OrderbookBufferConfigFromFile(t *testing.T) {
 
 	var migrated Config
 	require.NoError(t, migrated.ReadConfigFromFile(path, true), "ReadConfigFromFile must upgrade the version 16 config")
-	assert.Equal(t, expected.Version, migrated.Version, "ReadConfigFromFile should advance the config to version 17")
+	assert.Equal(t, expected.Version, migrated.Version, "ReadConfigFromFile should advance the config to version 19")
 	assert.Equal(t, expected.Exchanges, migrated.Exchanges, "ReadConfigFromFile should preserve exchanges apart from obsolete buffer settings")
 
 	var output bytes.Buffer
@@ -1652,10 +1652,47 @@ func TestReadVersion15ConfigRetainsSafeGCTScriptSubLogger(t *testing.T) {
 
 	var migrated Config
 	require.NoError(t, migrated.ReadConfigFromFile(path, true), "ReadConfigFromFile must upgrade the version 15 config")
-	assert.Equal(t, 17, migrated.Version, "ReadConfigFromFile should advance the config to version 17")
+	assert.Equal(t, 19, migrated.Version, "ReadConfigFromFile should advance the config to version 19")
 	require.Len(t, migrated.Logging.SubLoggers, 1, "ReadConfigFromFile must preserve the obsolete GCTScript sublogger")
 	assert.Equal(t, "GCTSCRIPT", migrated.Logging.SubLoggers[0].Name, "ReadConfigFromFile should preserve the obsolete sublogger name")
 	require.NoError(t, log.SetupSubLoggers(migrated.Logging.SubLoggers), "SetupSubLoggers must safely ignore the obsolete GCTScript sublogger")
+}
+
+func TestReadVersion17ConfigAddsLLMSection(t *testing.T) {
+	t.Parallel()
+
+	// v17 -> v18 (docs 09 §4.3): the migration only ADDS the llm section when
+	// absent - an explicit section in any shape survives - and the version
+	// advances either way. Exercised through the real loader, because changing
+	// defaults does not migrate existing installs.
+	data, err := os.ReadFile(TestFile)
+	require.NoError(t, err, "ReadFile must load the config fixture")
+	var saved map[string]json.RawMessage
+	require.NoError(t, json.Unmarshal(data, &saved), "Unmarshal must preserve saved config fields")
+	delete(saved, "llm")
+	saved["version"] = json.RawMessage(`17`)
+	payload, err := json.Marshal(saved)
+	require.NoError(t, err, "Marshal must encode the version 17 config")
+	path := filepath.Join(t.TempDir(), "config.json")
+	require.NoError(t, os.WriteFile(path, payload, 0o600), "WriteFile must save the version 17 config")
+
+	var migrated Config
+	require.NoError(t, migrated.ReadConfigFromFile(path, true), "ReadConfigFromFile must upgrade the version 17 config")
+	assert.Equal(t, 19, migrated.Version, "the migration should advance the version")
+	assert.False(t, migrated.LLM.Enabled, "an absent llm section lands disabled")
+	migrated.CheckLLMConfig()
+	assert.Equal(t, "READ_ONLY", migrated.LLM.RunMode, "the documented defaults are filled by the check")
+
+	saved["llm"] = json.RawMessage(`{"enabled":true,"runMode":"SHADOW"}`)
+	payload, err = json.Marshal(saved)
+	require.NoError(t, err, "Marshal must encode the explicit llm config")
+	require.NoError(t, os.WriteFile(path, payload, 0o600), "WriteFile must save the explicit llm config")
+
+	var explicit Config
+	require.NoError(t, explicit.ReadConfigFromFile(path, true), "ReadConfigFromFile must upgrade the explicit llm config")
+	assert.Equal(t, 19, explicit.Version)
+	assert.True(t, explicit.LLM.Enabled, "an explicit llm section should survive the migration untouched")
+	assert.Equal(t, "SHADOW", explicit.LLM.RunMode)
 }
 
 func TestReadConfigFromReader(t *testing.T) {

@@ -60,6 +60,20 @@ type CommunicationsConfig struct {
 	SMSGlobalConfig SMSGlobalConfig `json:"smsGlobal"`
 	SMTPConfig      SMTPConfig      `json:"smtp"`
 	TelegramConfig  TelegramConfig  `json:"telegram"`
+	// WebhookConfig is the generic webhook relay (docs/llm-dev 08 §5, Q19):
+	// a POST of the event JSON to an operator-configured URL.
+	WebhookConfig WebhookConfig `json:"webhook"`
+}
+
+// WebhookConfig holds the generic webhook relay settings. Retries and backoff
+// are fixed policy (three retries, exponential); only the endpoint and the
+// optional shared secret are configuration.
+type WebhookConfig struct {
+	Enabled bool   `json:"enabled"`
+	URL     string `json:"url"`
+	// Secret, when set, is sent as X-Webhook-Secret so the receiver can
+	// authenticate the sender.
+	Secret string `json:"secret,omitempty"`
 }
 
 // IsAnyEnabled returns whether any comms relayers
@@ -68,6 +82,7 @@ func (c *CommunicationsConfig) IsAnyEnabled() bool {
 	if c.SMSGlobalConfig.Enabled ||
 		c.SMTPConfig.Enabled ||
 		c.SlackConfig.Enabled ||
+		c.WebhookConfig.Enabled ||
 		c.TelegramConfig.Enabled {
 		return true
 	}

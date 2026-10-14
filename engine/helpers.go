@@ -85,6 +85,7 @@ func (bot *Engine) GetSubsystemsStatus() map[string]bool {
 		grpcProxyName:                 bot.Settings.EnableGRPCProxy,
 		dispatch.Name:                 dispatch.IsRunning(),
 		dataHistoryManagerName:        bot.dataHistoryManager.IsRunning(),
+		llmManagerName:                bot.llmManager.IsRunning(),
 		CurrencyStateManagementName:   bot.currencyStateManager.IsRunning(),
 	}
 }

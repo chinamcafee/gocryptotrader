@@ -249,6 +249,7 @@ func init() {
 	WebsocketMgr = registerNewSubLogger("WEBSOCKET")
 	EventMgr = registerNewSubLogger("EVENT")
 	DispatchMgr = registerNewSubLogger("DISPATCH")
+	LLMMgr = registerNewSubLogger("LLM")
 
 	RequestSys = registerNewSubLogger("REQUESTER")
 	ExchangeSys = registerNewSubLogger("EXCHANGE")

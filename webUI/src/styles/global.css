@@ -1,0 +1,71 @@
+:root {
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; margin: 0; }
+
+body {
+  background: #0b111b;
+  color: #d7e0ea;
+  font-size: 13px;
+}
+
+/* 数字一律等宽对齐，方便扫读 */
+.gct-num { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum'; }
+
+.gct-up   { color: #25b49a; }
+.gct-down { color: #ec6a70; }
+.gct-dim  { color: #7c8b9d; }
+.gct-warn { color: #e8b44c; }
+
+.gct-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 面板标题：小号、字距放开、灰色，与整体暗色紧凑风格一致 */
+.gct-panel-title {
+  font-size: 11px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #7c8b9d;
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gct-kv {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 3px 0;
+  border-bottom: 1px dotted #18242f;
+}
+.gct-kv:last-child { border-bottom: 0; }
+.gct-kv > span:first-child { color: #7c8b9d; }
+.gct-kv > span:last-child { text-align: right; }
+
+/* 滚动条 */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #0e1723; }
+::-webkit-scrollbar-thumb { background: #1e2c3d; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #2a3d52; }
+
+/* 深度条 */
+.gct-depth-bar { position: absolute; top: 0; bottom: 0; right: 0; opacity: 0.14; z-index: 0; }
+.gct-depth-cell { position: relative; }
+.gct-depth-cell > span { position: relative; z-index: 1; }
+
+/* 列表中当前选中的合约 */
+.gct-row-active > td { background: rgba(91, 156, 255, 0.14) !important; }
+.gct-row-active:hover > td { background: rgba(91, 156, 255, 0.2) !important; }
+
+/* 窄屏收敛：品牌后缀与版本号在 <992px 隐藏，避免顶栏把页面撑宽（390px 实测项） */
+@media (max-width: 991px) {
+  .gct-brand-long { display: none; }
+  .gct-version { display: none; }
+}

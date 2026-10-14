@@ -211,6 +211,8 @@ func main() {
 	app.Commands = []*cli.Command{
 		getInfoCommand,
 		getSubsystemsCommand,
+		llmChatCommand,
+		llmCommand,
 		enableSubsystemCommand,
 		disableSubsystemCommand,
 		getRPCEndpointsCommand,

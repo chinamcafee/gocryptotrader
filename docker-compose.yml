@@ -6,3 +6,38 @@ services:
     ports:
       - "9052:9052"
       - "9053:9053"
+
+  # PostgreSQL provisioning for the LLM/Jev decision subsystem (TASKS.md M0-14).
+  #
+  # The bot does not require Postgres: SQLite is the default and stays valid.
+  # This service exists because the LLM tables ship migrations for both dialects,
+  # and the Postgres half has to be exercised somewhere before it is trusted —
+  # a migration that only ever ran on SQLite is an untested migration.
+  #
+  #   docker compose up -d postgres
+  #   # then point the database section at it:
+  #   #   "driver": "postgres",
+  #   #   "connectionDetails": {"host":"127.0.0.1","port":5432,
+  #   #     "username":"gocryptotrader","password":"gocryptotrader",
+  #   #     "database":"gocryptotrader","sslmode":"disable"}
+  #
+  # The credentials are development defaults on purpose: this service publishes
+  # 5432 on the host, so it must never be reachable from outside the machine.
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: gocryptotrader
+      POSTGRES_PASSWORD: gocryptotrader
+      POSTGRES_DB: gocryptotrader
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - gct-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gocryptotrader -d gocryptotrader"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+volumes:
+  gct-pgdata:

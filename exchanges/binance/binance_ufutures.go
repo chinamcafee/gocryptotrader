@@ -67,6 +67,7 @@ const (
 	ufuturesUsersForceOrders      = "/fapi/v1/forceOrders"
 	ufuturesADLQuantile           = "/fapi/v1/adlQuantile"
 	uFuturesMultiAssetsMargin     = "/fapi/v1/multiAssetsMargin"
+	uFuturesDualSidePosition      = "/fapi/v1/positionSide/dual"
 )
 
 // UServerTime gets the server time
@@ -1038,4 +1039,15 @@ func (e *Exchange) GetAssetsMode(ctx context.Context) (bool, error) {
 		MultiAssetsMargin bool `json:"multiAssetsMargin"`
 	}
 	return result.MultiAssetsMargin, e.SendAuthHTTPRequest(ctx, exchange.RestUSDTMargined, http.MethodGet, uFuturesMultiAssetsMargin, nil, uFuturesDefaultRate, &result)
+}
+
+// UGetDualSidePosition returns the account's position mode for USDT-margined
+// futures, true for hedge (dual-side), false for one-way. It is the read the
+// risk layer's HedgeMode fact is sourced from (the write side is deliberately
+// not exposed): a real reading beats a silent one-way assumption.
+func (e *Exchange) UGetDualSidePosition(ctx context.Context) (bool, error) {
+	var result struct {
+		DualSidePosition bool `json:"dualSidePosition"`
+	}
+	return result.DualSidePosition, e.SendAuthHTTPRequest(ctx, exchange.RestUSDTMargined, http.MethodGet, uFuturesDualSidePosition, nil, uFuturesDefaultRate, &result)
 }

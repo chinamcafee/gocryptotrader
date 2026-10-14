@@ -7,6 +7,50 @@ import "testing"
 
 func TestUpsert(t *testing.T) {
 	t.Run("AuditEvents", testAuditEventsUpsert)
+
+	t.Run("Candles", testCandlesUpsert)
+
+	t.Run("Datahistoryjobs", testDatahistoryjobsUpsert)
+
+	t.Run("Datahistoryjobresults", testDatahistoryjobresultsUpsert)
+
 	t.Run("Exchanges", testExchangesUpsert)
+
+	t.Run("LLMConversations", testLLMConversationsUpsert)
+
+	t.Run("LLMExternalFlows", testLLMExternalFlowsUpsert)
+
+	t.Run("LLMHalts", testLLMHaltsUpsert)
+
+	t.Run("LLMMarketTradeGrants", testLLMMarketTradeGrantsUpsert)
+
+	t.Run("LLMNewRiskCounters", testLLMNewRiskCountersUpsert)
+
+	t.Run("LLMPairSwitchCommands", testLLMPairSwitchCommandsUpsert)
+
+	t.Run("LLMProtectiveExits", testLLMProtectiveExitsUpsert)
+
+	t.Run("LLMProviderProfileRevisions", testLLMProviderProfileRevisionsUpsert)
+
+	t.Run("LLMProviderProfiles", testLLMProviderProfilesUpsert)
+
+	t.Run("LLMReconciliations", testLLMReconciliationsUpsert)
+
+	t.Run("LLMStrategies", testLLMStrategiesUpsert)
+
+	t.Run("LLMStrategyStateTransitions", testLLMStrategyStateTransitionsUpsert)
+
+	t.Run("LLMStrategyVersions", testLLMStrategyVersionsUpsert)
+
 	t.Run("Scripts", testScriptsUpsert)
+
+	t.Run("ScriptExecutions", testScriptExecutionsUpsert)
+
+	t.Run("Trades", testTradesUpsert)
+
+	t.Run("WithdrawalCryptos", testWithdrawalCryptosUpsert)
+
+	t.Run("WithdrawalFiats", testWithdrawalFiatsUpsert)
+
+	t.Run("WithdrawalHistories", testWithdrawalHistoriesUpsert)
 }

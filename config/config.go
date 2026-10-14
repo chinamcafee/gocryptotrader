@@ -1623,6 +1623,7 @@ func (c *Config) CheckConfig() error {
 
 	c.CheckConnectionMonitorConfig()
 	c.CheckDataHistoryMonitorConfig()
+	c.CheckLLMConfig()
 	c.CheckCurrencyStateManager()
 	c.CheckCommunicationsConfig()
 	c.CheckClientBankAccounts()

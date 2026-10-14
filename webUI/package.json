@@ -1,0 +1,42 @@
+{
+  "name": "gct-webui",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "GoCryptoTrader LLM/Jev 决策平台前端（币安 USDT-M 永续，全量合约）",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint src proxy",
+    "preview": "vite preview",
+    "proxy": "node proxy/gct-proxy.mjs",
+    "dev:all": "node scripts/dev-all.mjs"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^6.3.4",
+    "@ant-design/x": "^2.9.0",
+    "@reduxjs/toolkit": "^2.13.0",
+    "antd": "^6.6.5",
+    "jotai": "^3.0.1",
+    "lightweight-charts": "^5.2.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-markdown": "^10.1.0",
+    "react-redux": "^9.3.0",
+    "react-router-dom": "^7.18.4",
+    "remark-gfm": "^4.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "oxlint": "^1.87.0",
+    "typescript": "~5.9.3",
+    "vite": "^8.3.4"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

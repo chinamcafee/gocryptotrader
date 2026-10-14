@@ -98,7 +98,9 @@ func CreateTestBot(tb testing.TB) *Engine {
 }
 
 func TestGetSubsystemsStatus(t *testing.T) {
-	assert.Len(t, (&Engine{}).GetSubsystemsStatus(), 12, "GetSubsystemStatus should return the correct number of subsystems")
+	statuses := (&Engine{}).GetSubsystemsStatus()
+	assert.Len(t, statuses, 13, "GetSubsystemStatus should return the correct number of subsystems")
+	assert.Contains(t, statuses, llmManagerName, "the LLM manager should be tracked so its state is observable")
 }
 
 func TestGetRPCEndpoints(t *testing.T) {

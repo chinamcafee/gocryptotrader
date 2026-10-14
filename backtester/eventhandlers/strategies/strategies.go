@@ -9,7 +9,9 @@ import (
 	"github.com/thrasher-corp/gocryptotrader/backtester/eventhandlers/strategies/base"
 	"github.com/thrasher-corp/gocryptotrader/backtester/eventhandlers/strategies/binancecashandcarry"
 	"github.com/thrasher-corp/gocryptotrader/backtester/eventhandlers/strategies/dollarcostaverage"
+	"github.com/thrasher-corp/gocryptotrader/backtester/eventhandlers/strategies/macdcross"
 	"github.com/thrasher-corp/gocryptotrader/backtester/eventhandlers/strategies/rsi"
+	"github.com/thrasher-corp/gocryptotrader/backtester/eventhandlers/strategies/sma200trend"
 	"github.com/thrasher-corp/gocryptotrader/backtester/eventhandlers/strategies/top2bottom2"
 	"github.com/thrasher-corp/gocryptotrader/common"
 )
@@ -87,7 +89,9 @@ var (
 
 	supportedStrategies = StrategyHolder{
 		new(dollarcostaverage.Strategy),
+		new(macdcross.Strategy),
 		new(rsi.Strategy),
+		new(sma200trend.Strategy),
 		new(top2bottom2.Strategy),
 		new(binancecashandcarry.Strategy),
 	}

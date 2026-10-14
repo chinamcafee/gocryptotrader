@@ -101,6 +101,7 @@ type Config struct {
 	ConnectionMonitor    ConnectionMonitorConfig   `json:"connectionMonitor"`
 	OrderManager         OrderManager              `json:"orderManager"`
 	DataHistoryManager   DataHistoryManager        `json:"dataHistoryManager"`
+	LLM                  LLMConfig                 `json:"llm"`
 	CurrencyStateManager CurrencyStateManager      `json:"currencyStateManager"`
 	Profiler             Profiler                  `json:"profiler"`
 	NTPClient            NTPClientConfig           `json:"ntpclient"`

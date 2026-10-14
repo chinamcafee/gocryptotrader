@@ -36,6 +36,7 @@ type CoreSettings struct {
 	EnableCoinmarketcapAnalysis bool
 	EnablePortfolioManager      bool
 	EnableDataHistoryManager    bool
+	EnableLLMManager            bool
 	PortfolioManagerDelay       time.Duration
 	EnableGRPC                  bool
 	EnableGRPCProxy             bool

@@ -1502,6 +1502,823 @@ message GetCurrencyTradeURLResponse {
   string url = 1;
 }
 
+message LLMConversation {
+  string id = 1;
+  string title = 2;
+  string kind = 3;
+  string created_at = 4;
+  string updated_at = 5;
+  bool archived = 6;
+  int64 message_count = 7;
+}
+
+message LLMListConversationsRequest {
+  bool include_archived = 1;
+}
+
+message LLMListConversationsResponse {
+  repeated LLMConversation conversations = 1;
+}
+
+message LLMCreateConversationRequest {
+  string title = 1;
+  string kind = 2;
+}
+
+message LLMGetConversationRequest {
+  string conversation_id = 1;
+}
+
+message LLMChatMessage {
+  string id = 1;
+  int64 seq = 2;
+  string role = 3;
+  // content is decrypted for display; storage keeps it sealed.
+  string content = 4;
+  string created_at = 5;
+  string error_code = 6;
+  int64 input_tokens = 7;
+  int64 output_tokens = 8;
+  int64 latency_ms = 9;
+}
+
+message LLMConversationDetail {
+  LLMConversation conversation = 1;
+  repeated LLMChatMessage messages = 2;
+}
+
+message LLMArchiveConversationRequest {
+  string conversation_id = 1;
+}
+
+message LLMListMessagesRequest {
+  string conversation_id = 1;
+}
+
+message LLMListMessagesResponse {
+  repeated LLMChatMessage messages = 1;
+}
+
+message LLMEvidenceCard {
+  string ref = 1;
+  string tool = 2;
+  string exchange = 3;
+  string market_id = 4;
+  string account_id = 5;
+  string strategy_version_id = 6;
+  // source_time is the data source's own timestamp (asOf), RFC3339.
+  string source_time = 7;
+  string quality = 8;
+  string snapshot_id = 9;
+  // sha256 is the hash of the exact result bytes the model saw.
+  string sha256 = 10;
+}
+
+message LLMSendMessageRequest {
+  string conversation_id = 1;
+  string content = 2;
+}
+
+message LLMSendMessageResponse {
+  string message_id = 1;
+  string assistant_message = 2;
+  string tool_transcript = 3;
+  int64 input_tokens = 4;
+  int64 output_tokens = 5;
+  int64 latency_ms = 6;
+  string error_code = 7;
+  repeated LLMEvidenceCard evidence = 8;
+}
+
+message LLMChatStreamRequest {
+  string conversation_id = 1;
+  string content = 2;
+}
+
+message LLMChatStreamEvent {
+  // delta is one content fragment as it arrived from the provider.
+  string delta = 1;
+  // final carries the completed turn; the last event of a successful stream.
+  LLMSendMessageResponse final = 2;
+  // error carries a stream failure the client must show.
+  string error = 3;
+}
+
+// ---- docs/llm-dev 08 §3.2: strategies and approvals ----
+
+message LLMStrategy {
+  string id = 1;
+  string name = 2;
+  string created_at = 3;
+  string created_by = 4;
+  bool archived = 5;
+}
+
+message LLMListStrategiesRequest {
+  bool include_archived = 1;
+}
+
+message LLMListStrategiesResponse {
+  repeated LLMStrategy strategies = 1;
+}
+
+message LLMStrategyVersion {
+  string id = 1;
+  string strategy_id = 2;
+  string parent_version_id = 3;
+  string state = 4;
+  string proposal_state = 5;
+  string strategy_hash = 6;
+  string risk_envelope_hash = 7;
+  string created_at = 8;
+  string frozen_at = 9;
+}
+
+message LLMGetStrategyVersionRequest {
+  string id = 1;
+}
+
+message LLMGetStrategyVersionResponse {
+  LLMStrategyVersion version = 1;
+  repeated LLMStrategyVersion tree = 2;
+  string policy_json = 3;
+}
+
+message LLMExtractPolicyRequest {
+  string conversation_id = 1;
+  string profile_revision_id = 2;
+  repeated string markets = 3;
+}
+
+message LLMExtractPolicyResponse {
+  string proposal_json = 1;
+  string state = 2;
+  repeated string clarifying_questions = 3;
+  int64 input_tokens = 4;
+  int64 output_tokens = 5;
+  int64 latency_ms = 6;
+}
+
+message LLMFreezeStrategyVersionRequest {
+  string id = 1;
+  string actor = 2;
+  // policy_json is the reviewed reviewable-v1 document the operator confirms;
+  // the freeze stores exactly what was reviewed.
+  string policy_json = 3;
+}
+
+message LLMFreezeStrategyVersionResponse {
+  string strategy_hash = 1;
+  string risk_envelope_hash = 2;
+  string frozen_json = 3;
+  string frozen_at = 4;
+}
+
+message LLMApproveStrategyVersionRequest {
+  string strategy_version_id = 1;
+  string account_id = 2;
+  string network = 3;
+  string execution_mode = 4;
+  repeated string approved_market_ids = 5;
+  int64 valid_minutes = 6;
+  string operator_password = 7;
+  string idempotency_key = 8;
+  int64 expected_pair_epoch = 9;
+  string actor = 10;
+}
+
+message LLMApproveStrategyVersionResponse {
+  string approval_id = 1;
+  string approved_at = 2;
+  string valid_until = 3;
+  bool idempotent_replay = 4;
+}
+
+message LLMRevokeApprovalRequest {
+  string id = 1;
+  string actor = 2;
+  string reason = 3;
+}
+
+message LLMPauseStrategyRequest {
+  string strategy_version_id = 1;
+  string actor = 2;
+  string reason = 3;
+}
+
+message LLMResumeStrategyRequest {
+  string strategy_version_id = 1;
+  string actor = 2;
+  string reason = 3;
+}
+
+message LLMDiffStrategyVersionsRequest {
+  string from_id = 1;
+  string to_id = 2;
+}
+
+message LLMPolicyChange {
+  string field = 1;
+  string from = 2;
+  string to = 3;
+}
+
+message LLMDiffStrategyVersionsResponse {
+  string from_version_id = 1;
+  string to_version_id = 2;
+  repeated LLMPolicyChange changes = 3;
+}
+
+// W5 workspace bootstrap: strategy creation, draft persistence, version
+// browsing and approval reads.
+message LLMCreateStrategyRequest {
+  string name = 1;
+  string actor = 2;
+}
+message LLMCreateStrategyResponse {
+  LLMStrategy strategy = 1;
+}
+message LLMListStrategyVersionsRequest {
+  string strategy_id = 1;
+}
+message LLMListStrategyVersionsResponse {
+  repeated LLMStrategyVersion versions = 1;
+}
+message LLMSaveStrategyDraftRequest {
+  string strategy_id = 1;
+  string parent_version_id = 2;
+  // proposal_json is a candidate.PolicyProposal document (the extraction
+  // output); the server derives proposal_state from it.
+  string proposal_json = 3;
+  string actor = 4;
+}
+message LLMSaveStrategyDraftResponse {
+  LLMStrategyVersion version = 1;
+}
+message LLMGetStrategyApprovalRequest {
+  string strategy_version_id = 1;
+}
+message LLMStrategyApproval {
+  string id = 1;
+  string strategy_version_id = 2;
+  string account_id = 3;
+  string network = 4;
+  string execution_mode = 5;
+  repeated string approved_market_ids = 6;
+  string risk_envelope_hash = 7;
+  int64 pair_epoch = 8;
+  string valid_from = 9;
+  string valid_until = 10;
+  string approved_by = 11;
+  string approved_at = 12;
+  string revoked_at = 13;
+  string revoked_by = 14;
+  string revoke_reason = 15;
+  string expired_at = 16;
+}
+message LLMGetStrategyApprovalResponse {
+  bool found = 1;
+  LLMStrategyApproval approval = 2;
+}
+
+// W5-07 market grants: the second gate ("seeing a market" never equals
+// "trading a market"); one active grant per account+network+market, <=30 days.
+message LLMListMarketGrantsRequest {
+  string account_id = 1;
+}
+message LLMMarketGrant {
+  string id = 1;
+  string account_id = 2;
+  string network = 3;
+  string market_id = 4;
+  string granted_by = 5;
+  string granted_at = 6;
+  string valid_until = 7;
+  string revoked_at = 8;
+  string revoked_by = 9;
+  string revoke_reason = 10;
+}
+message LLMListMarketGrantsResponse {
+  repeated LLMMarketGrant grants = 1;
+}
+message LLMGrantMarketRequest {
+  string account_id = 1;
+  string network = 2;
+  string market_id = 3;
+  int64 valid_days = 4;
+  string granted_by = 5;
+}
+message LLMGrantMarketResponse {
+  LLMMarketGrant grant = 1;
+}
+message LLMRevokeMarketGrantRequest {
+  string id = 1;
+  string actor = 2;
+  string reason = 3;
+}
+message LLMRevokeMarketGrantResponse {
+  string grant_id = 1;
+  repeated string revoked_approval_ids = 2;
+}
+
+// ---- docs/llm-dev 08 §3.5: decisions and audit ----
+
+message LLMDecisionRun {
+  string id = 1;
+  string strategy_version_id = 2;
+  string snapshot_id = 3;
+  string trigger = 4;
+  string run_mode = 5;
+  string decision = 6;
+  string reason = 7;
+  string input_hash = 8;
+  string llm_model = 9;
+  string jev_model = 10;
+  string created_at = 11;
+  int64 latency_ms = 12;
+  int64 llm_round_count = 13;
+  int64 tool_call_count = 14;
+}
+
+message LLMListDecisionRunsRequest {
+  string strategy_version_id = 1;
+  int32 limit = 2;
+}
+
+message LLMListDecisionRunsResponse {
+  repeated LLMDecisionRun runs = 1;
+}
+
+message LLMGetDecisionRunRequest {
+  string id = 1;
+}
+
+message LLMGetDecisionRunResponse {
+  LLMDecisionRun run = 1;
+  string candidate_json = 2;
+  string jev_json = 3;
+  string tool_transcript_json = 4;
+}
+
+message LLMTriggerAnalysisRequest {
+  string strategy_version_id = 1;
+  string market_id = 2;
+  string actor = 3;
+}
+
+message LLMPreviewDecisionRequest {
+  string strategy_version_id = 1;
+  string market_id = 2;
+  string actor = 3;
+}
+
+message LLMGetDecisionLineageRequest {
+  string id = 1;
+}
+
+message LLMRiskEvidence {
+  string risk_evaluation_id = 1;
+  string check_version = 2;
+  string verdict = 3;
+  string checks_json = 4;
+  string rejections_json = 5;
+  string envelope_hash = 6;
+  string computed_qty = 7;
+  string computed_notional_usd = 8;
+  string reference_price = 9;
+  string evaluated_at = 10;
+}
+
+message LLMGetDecisionLineageResponse {
+  LLMDecisionRun run = 1;
+  repeated LLMRiskEvidence risk_evaluations = 2;
+  repeated LLMAuditEvent audit_events = 3;
+}
+
+message LLMAuditEvent {
+  string id = 1;
+  string kind = 2;
+  string actor = 3;
+  string subject = 4;
+  string detail_json = 5;
+  string created_at = 6;
+}
+
+message LLMListAuditEventsRequest {
+  string kind = 1;
+  int32 limit = 2;
+}
+
+message LLMListAuditEventsResponse {
+  repeated LLMAuditEvent events = 1;
+}
+
+message LLMGetRiskEvidenceRequest {
+  string decision_run_id = 1;
+}
+
+message LLMGetRiskEvidenceResponse {
+  repeated LLMRiskEvidence risk_evaluations = 1;
+}
+
+message LLMGetMetricsRequest {}
+
+message LLMGetMetricsResponse {
+  // metrics_json is the full metric snapshot (counters, gauges, histograms).
+  string metrics_json = 1;
+  string collected_at = 2;
+}
+
+message LLMSetRiskSwitchRequest {
+  string name = 1;
+  bool enabled = 2;
+  string actor = 3;
+}
+
+message LLMRiskSwitch {
+  string name = 1;
+  bool enabled = 2;
+  bool default_on = 3;
+  // locked marks the red-line switches that cannot be turned off over RPC.
+  bool locked = 4;
+  string reason_code = 5;
+}
+
+message LLMGetRiskSwitchesRequest {}
+
+message LLMGetRiskSwitchesResponse {
+  repeated LLMRiskSwitch switches = 1;
+}
+
+// ---- docs/llm-dev 08 §3.6: run control (status subset) ----
+
+message LLMGetStatusRequest {}
+
+// ---- docs/llm-dev 09 §5: vault (secret custody of W4-06) ----
+
+message LLMVaultEntry {
+  string ref = 1;
+  string kind = 2;
+  string fingerprint = 3;
+  string created_at = 4;
+}
+
+message LLMVaultStatusRequest {}
+
+message LLMVaultStatusResponse {
+  bool initialized = 1;
+  string directory = 2;
+  repeated LLMVaultEntry entries = 3;
+}
+
+message LLMVaultInitRequest {}
+
+message LLMVaultAddSecretRequest {
+  // kind groups the secret, e.g. llm or jev.
+  string kind = 1;
+  // secret is write-only: it is never echoed back, only the ref + fingerprint.
+  string secret = 2;
+}
+
+message LLMVaultAddSecretResponse {
+  string ref = 1;
+  string fingerprint = 2;
+}
+
+// W7-07 coverage runtime face: the plan's arithmetic plus the rotator's
+// measured state (cycle progress, coldest market age, weight already spent,
+// when the last sweep ended).
+message LLMGetCoverageStatusRequest {}
+message LLMGetCoverageStatusResponse {
+  bool enabled = 1;
+  string scope = 2;
+  int64 contract_count = 3;
+  int64 rotation_cycle_minutes = 4;
+  string last_cycle_completed_at = 5;
+  int64 worst_contract_age_seconds = 6;
+  int64 weight_used_per_minute = 7;
+  int64 weight_budget_per_minute = 8;
+  double cycle_progress_percent = 9;
+  int64 visited_this_cycle = 10;
+  int64 cycles_completed = 11;
+  int64 failures = 12;
+  int64 reloads_this_hour = 13;
+  int64 reload_markets = 14;
+  string last_ticker_refresh = 15;
+  string last_reload = 16;
+  int64 increment_spacing_ms = 17;
+  string checked_at = 18;
+}
+
+// W7-01 halt write side: the three-level stop (SOFT/MARKET/FULL) and its
+// re-authenticated clear that never auto-resumes anything.
+message LLMHaltRow {
+  string id = 1;
+  string level = 2;
+  string market_id = 3;
+  string reason = 4;
+  string set_by = 5;
+  string set_at = 6;
+  int64 affected_strategies = 7;
+  int64 canceled_orders = 8;
+}
+message LLMListHaltsRequest {}
+message LLMListHaltsResponse {
+  repeated LLMHaltRow halts = 1;
+}
+message LLMSetHaltRequest {
+  string level = 1;
+  string market_id = 2;
+  string reason = 3;
+  string actor = 4;
+  bool flatten = 5;
+  bool confirm_flatten = 6;
+}
+message LLMSetHaltResponse {
+  LLMHaltRow halt = 1;
+  int64 suspended_strategies = 2;
+  int64 canceled_orders = 3;
+  int64 flattened_positions = 4;
+}
+message LLMClearHaltRequest {
+  string id = 1;
+  string actor = 2;
+  string reason = 3;
+  string operator_password = 4;
+}
+
+// 08 §3.6 run control: the operator-facing caller of ModeSwitcher. The
+// password is re-authentication; switching to LIVE additionally needs the
+// typed acknowledgement phrase (the approval binding and envelope are read
+// server-side).
+message LLMSetRunModeRequest {
+  string run_mode = 1;
+  string password = 2;
+  string actor = 3;
+  string acknowledged = 4;
+}
+
+// W7-02 manual reconciliation: one operator-triggered pass of "local view vs
+// exchange truth"; a mismatch trips SOFT halt and records the deltas.
+message LLMPositionDelta {
+  string market_id = 1;
+  string side = 2;
+  string local = 3;
+  string exchange = 4;
+}
+message LLMReconcileRequest {
+  string actor = 1;
+}
+message LLMReconcileResponse {
+  string reconciliation_id = 1;
+  bool reconciled = 2;
+  repeated LLMPositionDelta deltas = 3;
+  string halt_id = 4;
+}
+
+// W7-03 usage accounting: token counts and reservation consumption per
+// provider kind and purpose over a window. Cost estimation is deliberately
+// absent -- the schema carries no price source, and a guessed number is worse
+// than a missing one.
+message LLMGetUsageRequest {
+  int64 window_hours = 1;
+}
+message LLMUsageLine {
+  string kind = 1;
+  string purpose = 2;
+  int64 reservations = 3;
+  int64 input_tokens = 4;
+  int64 output_tokens = 5;
+  int64 avg_latency_ms = 6;
+}
+message LLMGetUsageResponse {
+  int64 window_hours = 1;
+  repeated LLMUsageLine lines = 2;
+  int64 total_input_tokens = 3;
+  int64 total_output_tokens = 4;
+  int64 total_reservations = 5;
+  string checked_at = 6;
+}
+
+// W7-06 notification channels: Telegram and the generic webhook (Q19). The
+// surface reports configuration readiness only -- credentials are never
+// echoed (booleans, not values); editing channels is a configuration act.
+message LLMNotifyChannel {
+  string name = 1;
+  bool enabled = 2;
+  bool credential_set = 3;
+  int64 targets = 4;
+  string endpoint_host = 5;
+}
+message LLMGetNotifyStatusRequest {}
+message LLMGetNotifyStatusResponse {
+  repeated LLMNotifyChannel channels = 1;
+  bool relay_running = 2;
+  string checked_at = 3;
+}
+message LLMTestNotifyRequest {
+  string actor = 1;
+}
+message LLMTestNotifyResponse {
+  bool relay_running = 1;
+  string event_type = 2;
+}
+
+// LLMGetStatusResponse carries the dashboard core. Fields whose sources await
+// production adapters (clock drift, oldest data age, running/decisions
+// counters) are deliberately absent until they can be sourced truthfully.
+message LLMGetStatusResponse {
+  string run_mode = 1;
+  // live_unlocked is true once the mode is LIVE: the triple gate is what let
+  // the mode land, so the mode itself is the settled proof.
+  bool live_unlocked = 2;
+  string pair_readiness = 3;
+  int64 pair_epoch = 4;
+  string llm_profile_name = 5;
+  string llm_model = 6;
+  string jev_profile_name = 7;
+  string jev_model = 8;
+  int64 llm_probe_age_seconds = 9;
+  int64 jev_probe_age_seconds = 10;
+  bool halted = 11;
+  string halt_level = 12;
+  bool account_reconciled = 13;
+  int64 reconciliation_age_seconds = 14;
+  int64 reservations_remaining_24h = 15;
+  int64 approved_strategies = 16;
+  string checked_at = 17;
+  // review_expire_hours is the configured expiry window for unhandled REVIEW
+  // decisions (default 12h); the UI derives the expired state from it, so a
+  // tightened window does not leave stale clients lying.
+  int64 review_expire_hours = 18;
+}
+
+message LLMReadinessRequest {
+  // network is the admission target, e.g. binance-testnet.
+  string network = 1;
+  // mode is the run mode to admit, e.g. TESTNET.
+  string mode = 2;
+}
+
+message LLMReadinessGate {
+  string code = 1;
+  // status is PASS or FAIL.
+  string status = 2;
+  // detail carries the actual value vs the expectation.
+  string detail = 3;
+}
+
+message LLMReadinessResponse {
+  // ready is true only when every gate passed.
+  bool ready = 1;
+  string network = 2;
+  string mode = 3;
+  repeated LLMReadinessGate gates = 4;
+  string checked_at = 5;
+}
+
+message LLMProviderRevision {
+  string id = 1;
+  string profile_id = 2;
+  int64 revision_no = 3;
+  string kind = 4;
+  string base_url = 5;
+  string model_id = 6;
+  // api_key_ref is the vault reference, never the key itself.
+  string api_key_ref = 7;
+  // api_key_fingerprint is the truncated SHA-256 the vault reports (16 hex).
+  string api_key_fingerprint = 8;
+  int64 timeout_seconds = 9;
+  // Optional numeric fields use 0 for unset (proto3 scalars).
+  int64 max_output_tokens = 10;
+  int64 max_tool_rounds = 11;
+  int64 max_tool_calls = 12;
+  int64 max_cumulative_tokens = 13;
+  string prompt_version = 14;
+  string question_template_version = 15;
+  // daily_budget_usd distinguishes unset (empty) from explicit "0".
+  string daily_budget_usd = 16;
+  int64 reservation_cap_24h = 17;
+  bool allow_insecure_localhost = 18;
+  string proxy_address = 19;
+  string created_at = 20;
+  string created_by = 21;
+  // superseded_at is empty while this revision is the live one.
+  string superseded_at = 22;
+}
+
+message LLMProviderProfile {
+  string id = 1;
+  string kind = 2;
+  string display_name = 3;
+  bool enabled = 4;
+  string created_at = 5;
+  string created_by = 6;
+  string archived_at = 7;
+  int64 revision_count = 8;
+  // revision is the newest revision; unset when none exists yet.
+  LLMProviderRevision revision = 9;
+}
+
+message LLMListProviderProfilesRequest {
+  bool include_archived = 1;
+}
+
+message LLMListProviderProfilesResponse {
+  repeated LLMProviderProfile profiles = 1;
+}
+
+message LLMCreateProviderProfileRequest {
+  // kind is LLM_OPENAI_COMPAT or JEV.
+  string kind = 1;
+  string display_name = 2;
+  string actor = 3;
+}
+
+message LLMCreateProviderProfileResponse {
+  LLMProviderProfile profile = 1;
+}
+
+message LLMUpdateProviderProfileRequest {
+  // id is the profile id; the update appends a new revision to it.
+  string id = 1;
+  string actor = 2;
+  string base_url = 3;
+  string model_id = 4;
+  string api_key_ref = 5;
+  string api_key_fingerprint = 6;
+  int64 timeout_seconds = 7;
+  int64 max_output_tokens = 8;
+  int64 max_tool_rounds = 9;
+  int64 max_tool_calls = 10;
+  int64 max_cumulative_tokens = 11;
+  string prompt_version = 12;
+  string question_template_version = 13;
+  string daily_budget_usd = 14;
+  int64 reservation_cap_24h = 15;
+  bool allow_insecure_localhost = 16;
+  string proxy_address = 17;
+}
+
+message LLMUpdateProviderProfileResponse {
+  LLMProviderRevision revision = 1;
+}
+
+message LLMDeleteProviderProfileRequest {
+  string id = 1;
+  string actor = 2;
+}
+
+message LLMProbeLayerResult {
+  string layer = 1;
+  bool passed = 2;
+  string error_code = 3;
+  string error_message = 4;
+  int64 latency_ms = 5;
+  int64 input_tokens = 6;
+  int64 output_tokens = 7;
+  string response_model = 8;
+}
+
+message LLMTestProviderProfileRequest {
+  string id = 1;
+  // revision_id is optional; unset tests the profile's live revision.
+  string revision_id = 2;
+}
+
+message LLMTestProviderProfileResponse {
+  string revision_id = 1;
+  string kind = 2;
+  repeated LLMProbeLayerResult results = 3;
+}
+
+message LLMGetActiveModelPairRequest {}
+
+message LLMGetActiveModelPairResponse {
+  // found is false when no pairing has ever been activated.
+  bool found = 1;
+  string llm_profile_revision_id = 2;
+  string jev_profile_revision_id = 3;
+  int64 pair_epoch = 4;
+  string readiness = 5;
+  string updated_at = 6;
+  string updated_by = 7;
+}
+
+message LLMSwitchActiveModelPairRequest {
+  string llm_profile_revision_id = 1;
+  string jev_profile_revision_id = 2;
+  int64 expected_pair_epoch = 3;
+  string operator_password = 4;
+  string idempotency_key = 5;
+  string actor = 6;
+}
+
+message LLMSwitchActiveModelPairResponse {
+  int64 pair_epoch = 1;
+  string readiness = 2;
+}
+
 service GoCryptoTraderService {
   rpc GetInfo(GetInfoRequest) returns (GetInfoResponse) {
     option (google.api.http) = {get: "/v1/getinfo"};
@@ -1997,5 +2814,180 @@ service GoCryptoTraderService {
   }
   rpc GetCurrencyTradeURL(GetCurrencyTradeURLRequest) returns (GetCurrencyTradeURLResponse) {
     option (google.api.http) = {get: "/v1/getcurrencytradeurl"};
+  }
+  rpc LLMListConversations(LLMListConversationsRequest) returns (LLMListConversationsResponse) {
+    option (google.api.http) = {get: "/v1/llm/conversations"};
+  }
+  rpc LLMCreateConversation(LLMCreateConversationRequest) returns (LLMConversation) {
+    option (google.api.http) = {
+      post: "/v1/llm/conversations"
+      body: "*"
+    };
+  }
+  rpc LLMGetConversation(LLMGetConversationRequest) returns (LLMConversationDetail) {
+    option (google.api.http) = {get: "/v1/llm/conversations/{conversation_id}"};
+  }
+  rpc LLMArchiveConversation(LLMArchiveConversationRequest) returns (GenericResponse) {
+    option (google.api.http) = {
+      post: "/v1/llm/conversations/{conversation_id}/archive"
+      body: "*"
+    };
+  }
+  rpc LLMListMessages(LLMListMessagesRequest) returns (LLMListMessagesResponse) {
+    option (google.api.http) = {get: "/v1/llm/conversations/{conversation_id}/messages"};
+  }
+  rpc LLMSendMessage(LLMSendMessageRequest) returns (LLMSendMessageResponse) {
+    option (google.api.http) = {
+      post: "/v1/llm/conversations/{conversation_id}/messages"
+      body: "*"
+    };
+  }
+  rpc LLMChatStream(LLMChatStreamRequest) returns (stream LLMChatStreamEvent) {
+    option (google.api.http) = {get: "/v1/llm/chatstream"};
+  }
+
+  // docs/llm-dev 08 §3.2: strategies and approvals.
+  rpc LLMListStrategies(LLMListStrategiesRequest) returns (LLMListStrategiesResponse) {
+    option (google.api.http) = {get: "/v1/llm/strategies"};
+  }
+  rpc LLMGetStrategyVersion(LLMGetStrategyVersionRequest) returns (LLMGetStrategyVersionResponse) {
+    option (google.api.http) = {get: "/v1/llm/strategyversions/{id}"};
+  }
+  rpc LLMExtractPolicy(LLMExtractPolicyRequest) returns (LLMExtractPolicyResponse) {
+    option (google.api.http) = {post: "/v1/llm/extractpolicy" body: "*"};
+  }
+  rpc LLMFreezeStrategyVersion(LLMFreezeStrategyVersionRequest) returns (LLMFreezeStrategyVersionResponse) {
+    option (google.api.http) = {post: "/v1/llm/strategyversions/{id}/freeze" body: "*"};
+  }
+  rpc LLMApproveStrategyVersion(LLMApproveStrategyVersionRequest) returns (LLMApproveStrategyVersionResponse) {
+    option (google.api.http) = {post: "/v1/llm/strategyversions/{strategy_version_id}/approve" body: "*"};
+  }
+  rpc LLMRevokeApproval(LLMRevokeApprovalRequest) returns (GenericResponse) {
+    option (google.api.http) = {post: "/v1/llm/approvals/{id}/revoke" body: "*"};
+  }
+  rpc LLMPauseStrategy(LLMPauseStrategyRequest) returns (GenericResponse) {
+    option (google.api.http) = {post: "/v1/llm/strategyversions/{strategy_version_id}/pause" body: "*"};
+  }
+  rpc LLMResumeStrategy(LLMResumeStrategyRequest) returns (GenericResponse) {
+    option (google.api.http) = {post: "/v1/llm/strategyversions/{strategy_version_id}/resume" body: "*"};
+  }
+  rpc LLMDiffStrategyVersions(LLMDiffStrategyVersionsRequest) returns (LLMDiffStrategyVersionsResponse) {
+    option (google.api.http) = {get: "/v1/llm/strategyversions/diff"};
+  }
+  rpc LLMCreateStrategy(LLMCreateStrategyRequest) returns (LLMCreateStrategyResponse) {
+    option (google.api.http) = {post: "/v1/llm/strategies" body: "*"};
+  }
+  rpc LLMListStrategyVersions(LLMListStrategyVersionsRequest) returns (LLMListStrategyVersionsResponse) {
+    option (google.api.http) = {get: "/v1/llm/strategies/{strategy_id}/versions"};
+  }
+  rpc LLMSaveStrategyDraft(LLMSaveStrategyDraftRequest) returns (LLMSaveStrategyDraftResponse) {
+    option (google.api.http) = {post: "/v1/llm/strategies/{strategy_id}/drafts" body: "*"};
+  }
+  rpc LLMGetStrategyApproval(LLMGetStrategyApprovalRequest) returns (LLMGetStrategyApprovalResponse) {
+    option (google.api.http) = {get: "/v1/llm/strategyversions/{strategy_version_id}/approval"};
+  }
+  rpc LLMListMarketGrants(LLMListMarketGrantsRequest) returns (LLMListMarketGrantsResponse) {
+    option (google.api.http) = {get: "/v1/llm/marketgrants"};
+  }
+  rpc LLMGrantMarket(LLMGrantMarketRequest) returns (LLMGrantMarketResponse) {
+    option (google.api.http) = {post: "/v1/llm/marketgrants" body: "*"};
+  }
+  rpc LLMRevokeMarketGrant(LLMRevokeMarketGrantRequest) returns (LLMRevokeMarketGrantResponse) {
+    option (google.api.http) = {post: "/v1/llm/marketgrants/{id}/revoke" body: "*"};
+  }
+
+  // docs/llm-dev 08 §3.5: decisions and audit.
+  rpc LLMListDecisionRuns(LLMListDecisionRunsRequest) returns (LLMListDecisionRunsResponse) {
+    option (google.api.http) = {get: "/v1/llm/decisions"};
+  }
+  rpc LLMGetDecisionRun(LLMGetDecisionRunRequest) returns (LLMGetDecisionRunResponse) {
+    option (google.api.http) = {get: "/v1/llm/decisions/{id}"};
+  }
+  rpc LLMTriggerAnalysis(LLMTriggerAnalysisRequest) returns (LLMDecisionRun) {
+    option (google.api.http) = {post: "/v1/llm/decisions/trigger" body: "*"};
+  }
+  rpc LLMPreviewDecision(LLMPreviewDecisionRequest) returns (LLMDecisionRun) {
+    option (google.api.http) = {post: "/v1/llm/decisions/preview" body: "*"};
+  }
+  rpc LLMGetDecisionLineage(LLMGetDecisionLineageRequest) returns (LLMGetDecisionLineageResponse) {
+    option (google.api.http) = {get: "/v1/llm/decisions/{id}/lineage"};
+  }
+  rpc LLMGetRiskEvidence(LLMGetRiskEvidenceRequest) returns (LLMGetRiskEvidenceResponse) {
+    option (google.api.http) = {get: "/v1/llm/decisions/{decision_run_id}/riskevidence"};
+  }
+  rpc LLMListAuditEvents(LLMListAuditEventsRequest) returns (LLMListAuditEventsResponse) {
+    option (google.api.http) = {get: "/v1/llm/audit"};
+  }
+  rpc LLMGetMetrics(LLMGetMetricsRequest) returns (LLMGetMetricsResponse) {
+    option (google.api.http) = {get: "/v1/llm/metrics"};
+  }
+  rpc LLMSetRiskSwitch(LLMSetRiskSwitchRequest) returns (GenericResponse) {
+    option (google.api.http) = {post: "/v1/llm/riskswitch" body: "*"};
+  }
+  rpc LLMGetRiskSwitches(LLMGetRiskSwitchesRequest) returns (LLMGetRiskSwitchesResponse) {
+    option (google.api.http) = {get: "/v1/llm/riskswitches"};
+  }
+  rpc LLMGetCoverageStatus(LLMGetCoverageStatusRequest) returns (LLMGetCoverageStatusResponse) {
+    option (google.api.http) = {get: "/v1/llm/coverage"};
+  }
+  rpc LLMListHalts(LLMListHaltsRequest) returns (LLMListHaltsResponse) {
+    option (google.api.http) = {get: "/v1/llm/halts"};
+  }
+  rpc LLMSetHalt(LLMSetHaltRequest) returns (LLMSetHaltResponse) {
+    option (google.api.http) = {post: "/v1/llm/halt" body: "*"};
+  }
+  rpc LLMClearHalt(LLMClearHaltRequest) returns (GenericResponse) {
+    option (google.api.http) = {post: "/v1/llm/halt/{id}/clear" body: "*"};
+  }
+  rpc LLMSetRunMode(LLMSetRunModeRequest) returns (GenericResponse) {
+    option (google.api.http) = {post: "/v1/llm/runmode" body: "*"};
+  }
+  rpc LLMReconcile(LLMReconcileRequest) returns (LLMReconcileResponse) {
+    option (google.api.http) = {post: "/v1/llm/reconcile" body: "*"};
+  }
+  rpc LLMGetUsage(LLMGetUsageRequest) returns (LLMGetUsageResponse) {
+    option (google.api.http) = {get: "/v1/llm/usage"};
+  }
+  rpc LLMGetNotifyStatus(LLMGetNotifyStatusRequest) returns (LLMGetNotifyStatusResponse) {
+    option (google.api.http) = {get: "/v1/llm/notify"};
+  }
+  rpc LLMTestNotify(LLMTestNotifyRequest) returns (LLMTestNotifyResponse) {
+    option (google.api.http) = {post: "/v1/llm/notify/test" body: "*"};
+  }
+  rpc LLMGetStatus(LLMGetStatusRequest) returns (LLMGetStatusResponse) {
+    option (google.api.http) = {get: "/v1/llm/status"};
+  }
+  rpc LLMVaultStatus(LLMVaultStatusRequest) returns (LLMVaultStatusResponse) {
+    option (google.api.http) = {get: "/v1/llm/vault"};
+  }
+  rpc LLMVaultInit(LLMVaultInitRequest) returns (GenericResponse) {
+    option (google.api.http) = {post: "/v1/llm/vault/init"};
+  }
+  rpc LLMVaultAddSecret(LLMVaultAddSecretRequest) returns (LLMVaultAddSecretResponse) {
+    option (google.api.http) = {post: "/v1/llm/vault/secrets" body: "*"};
+  }
+  rpc LLMGetReadiness(LLMReadinessRequest) returns (LLMReadinessResponse) {
+    option (google.api.http) = {get: "/v1/llm/readiness"};
+  }
+  rpc LLMListProviderProfiles(LLMListProviderProfilesRequest) returns (LLMListProviderProfilesResponse) {
+    option (google.api.http) = {get: "/v1/llm/providers"};
+  }
+  rpc LLMCreateProviderProfile(LLMCreateProviderProfileRequest) returns (LLMCreateProviderProfileResponse) {
+    option (google.api.http) = {post: "/v1/llm/providers" body: "*"};
+  }
+  rpc LLMUpdateProviderProfile(LLMUpdateProviderProfileRequest) returns (LLMUpdateProviderProfileResponse) {
+    option (google.api.http) = {post: "/v1/llm/providers/{id}" body: "*"};
+  }
+  rpc LLMDeleteProviderProfile(LLMDeleteProviderProfileRequest) returns (GenericResponse) {
+    option (google.api.http) = {delete: "/v1/llm/providers/{id}"};
+  }
+  rpc LLMTestProviderProfile(LLMTestProviderProfileRequest) returns (LLMTestProviderProfileResponse) {
+    option (google.api.http) = {post: "/v1/llm/providers/{id}/test"};
+  }
+  rpc LLMGetActiveModelPair(LLMGetActiveModelPairRequest) returns (LLMGetActiveModelPairResponse) {
+    option (google.api.http) = {get: "/v1/llm/activepair"};
+  }
+  rpc LLMSwitchActiveModelPair(LLMSwitchActiveModelPairRequest) returns (LLMSwitchActiveModelPairResponse) {
+    option (google.api.http) = {post: "/v1/llm/activepair" body: "*"};
   }
 }
