@@ -1,10 +1,12 @@
 package engine
 
 import (
+	"strings"
 	"time"
 
 	"github.com/thrasher-corp/gocryptotrader/encoding/json"
 	"github.com/thrasher-corp/gocryptotrader/llm/candidate"
+	"github.com/thrasher-corp/gocryptotrader/llm/tools"
 )
 
 // EvidenceCard is the display view of one tool response (docs/llm-dev 11 §M3-04:
@@ -75,6 +77,39 @@ func EvidenceCards(records []ToolCallRecord) []EvidenceCard {
 			card.StrategyVersionID = *evidence.StrategyVersionID
 		}
 		cards = append(cards, card)
+	}
+	return cards
+}
+
+// maxTurnProposals bounds how many confirmation cards one turn may carry. The
+// model cannot flood the operator with drafts.
+const maxTurnProposals = 5
+
+// ProposalCards extracts the inert configuration drafts a turn produced
+// (docs/llm-dev/16). They travel inside the same evidence envelope as every
+// other tool result, so the transcript remains the single record; the card is
+// a display view and never executes anything.
+func ProposalCards(records []ToolCallRecord) []candidate.ActionProposal {
+	cards := make([]candidate.ActionProposal, 0, len(records))
+	for i := range records {
+		if records[i].Name != tools.ToolProposeAction {
+			continue
+		}
+		var evidence candidate.ToolEvidence
+		if err := json.Unmarshal([]byte(records[i].Result), &evidence); err != nil {
+			continue
+		}
+		var proposal candidate.ActionProposal
+		if err := json.Unmarshal(evidence.Data, &proposal); err != nil {
+			continue
+		}
+		if strings.TrimSpace(proposal.Action) == "" {
+			continue
+		}
+		cards = append(cards, proposal)
+		if len(cards) == maxTurnProposals {
+			break
+		}
 	}
 	return cards
 }

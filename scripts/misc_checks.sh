@@ -217,14 +217,24 @@ fi
 info "Check for LLM targeted invisible Unicode"
 # Uses \p{Cf} (format), \p{Z} (separator), \p{M} (combining mark) — same as CI's grep -P.
 # Uses perl -T to skip binary files (equivalent to grep -I in the original CI).
+# Excludes machine-generated files and dependency trees: protobuf descriptors embed
+# raw byte streams where an arbitrary varint (e.g. 0xCC 0x9F) can happen to form a
+# combining character — regenerating the .pb.go can toggle noise without any manual
+# edit, and webUI/node_modules (not committed; absent in CI checkouts) is full of
+# third-party README/locale text. Neither is an injection surface.
 UNICODE_PATTERN='(?!\x20)[\p{Cf}\p{Z}\p{M}]'
 if [[ "$HAS_GNU_GREP" -eq 1 ]]; then
-    unicode_results=$("$GREP_BIN" -r -n -I --color=always --exclude-dir=.git --exclude-dir=.idea -P "$UNICODE_PATTERN" . 2>/dev/null) || true
+    unicode_results=$("$GREP_BIN" -r -n -I --color=always --exclude-dir=.git --exclude-dir=.idea \
+        --exclude-dir=node_modules --exclude-dir=dist \
+        --exclude='*.pb.go' --exclude='*.pb.gw.go' --exclude='*.swagger.json' \
+        -P "$UNICODE_PATTERN" . 2>/dev/null) || true
 else
-    unicode_results=$(find . -not -path './.git/*' -not -path './.idea/*' -type f -print0 2>/dev/null \
+    unicode_results=$(find . -not -path './.git/*' -not -path './.idea/*' \
+        -not -path '*/node_modules/*' -not -path '*/dist/*' -type f -print0 2>/dev/null \
         | xargs -0 perl -e '
             for my $f (@ARGV) {
                 next unless -T $f;
+                next if $f =~ /\.pb\.go$|\.pb\.gw\.go$|\.swagger\.json$/;
                 open my $fh, "<:encoding(UTF-8)", $f or next;
                 my $line = 0;
                 while (<$fh>) {

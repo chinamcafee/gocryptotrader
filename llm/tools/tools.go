@@ -64,14 +64,14 @@ var (
 	// ErrArgumentsInvalid is the umbrella for every argument rejection; the
 	// message names the exact rule that failed.
 	ErrArgumentsInvalid = errors.New("llm tools: invalid arguments")
-	// ErrUnknownTool is returned for names outside the eight.
+	// ErrUnknownTool is returned for names outside the catalogue.
 	ErrUnknownTool = errors.New("llm tools: unknown tool")
 	// ErrScopeDenied is returned when evidence points outside the run's
 	// authorized scope.
 	ErrScopeDenied = errors.New("llm tools: evidence outside the run scope")
 )
 
-// Specs returns the eight tool specifications in a stable order.
+// Specs returns the read-only tool specifications in a stable order.
 func Specs() []openai.ToolSpec {
 	return []openai.ToolSpec{
 		spec(ToolListMarkets, "List tradable perpetual markets on the configured exchange. Optionally filter by a substring of the market id.", `{
@@ -161,6 +161,9 @@ func Specs() []openai.ToolSpec {
 	"required": ["strategyVersionId"],
 	"additionalProperties": false
 }`),
+		screenMarketsSpec(),
+		proposeActionSpec(),
+		assessOpeningSpec(),
 	}
 }
 
@@ -175,7 +178,7 @@ func spec(name, description, parameters string) openai.ToolSpec {
 	}
 }
 
-// Names returns the eight tool names in the same order as Specs.
+// Names returns the tool names in the same order as Specs.
 func Names() []string {
 	specs := Specs()
 	names := make([]string, 0, len(specs))

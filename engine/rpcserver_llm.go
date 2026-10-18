@@ -7,6 +7,8 @@ import (
 
 	llmstore "github.com/thrasher-corp/gocryptotrader/database/repository/llm"
 	"github.com/thrasher-corp/gocryptotrader/gctrpc"
+	"github.com/thrasher-corp/gocryptotrader/llm/candidate"
+	"github.com/thrasher-corp/gocryptotrader/log"
 )
 
 // LLM conversation RPCs (docs/llm-dev 08 §3.1).
@@ -23,10 +25,14 @@ var errLLMChatUnavailable = errors.New("llm chat service is not configured on th
 
 // chatService returns the conversation service or a fail-closed error.
 func (s *RPCServer) chatService() (*LLMChatService, error) {
-	if s.Engine == nil || s.Engine.llmChatService == nil {
+	if s.Engine == nil {
 		return nil, errLLMChatUnavailable
 	}
-	return s.Engine.llmChatService, nil
+	service := s.Engine.currentChatService()
+	if service == nil {
+		return nil, errLLMChatUnavailable
+	}
+	return service, nil
 }
 
 // conversationToProto renders a stored conversation.
@@ -165,6 +171,24 @@ func (s *RPCServer) LLMListMessages(ctx context.Context, r *gctrpc.LLMListMessag
 	return response, nil
 }
 
+// proposalToProto renders one inert configuration draft.
+func proposalToProto(p *candidate.ActionProposal) *gctrpc.LLMActionProposal {
+	out := &gctrpc.LLMActionProposal{
+		Action:            p.Action,
+		Summary:           p.Summary,
+		MarketIds:         append([]string(nil), p.MarketIDs...),
+		StrategyVersionId: p.StrategyVersionID,
+		Actor:             p.Actor,
+		MarketId:          p.MarketID,
+		AllPositions:      p.AllPositions,
+		JobId:             p.JobID,
+	}
+	if p.Tracked != nil {
+		out.Tracked = *p.Tracked
+	}
+	return out
+}
+
 // chatResultToProto renders a completed turn for the wire.
 func chatResultToProto(result *ChatRunResult) *gctrpc.LLMSendMessageResponse {
 	response := &gctrpc.LLMSendMessageResponse{
@@ -176,9 +200,13 @@ func chatResultToProto(result *ChatRunResult) *gctrpc.LLMSendMessageResponse {
 		LatencyMs:        result.LatencyMS,
 		ErrorCode:        result.ReasonCode,
 		Evidence:         make([]*gctrpc.LLMEvidenceCard, 0, len(result.Evidence)),
+		Proposals:        make([]*gctrpc.LLMActionProposal, 0, len(result.Proposals)),
 	}
 	for i := range result.Evidence {
 		response.Evidence = append(response.Evidence, cardToProto(&result.Evidence[i]))
+	}
+	for i := range result.Proposals {
+		response.Proposals = append(response.Proposals, proposalToProto(&result.Proposals[i]))
 	}
 	return response
 }
@@ -216,6 +244,15 @@ func (s *RPCServer) LLMChatStream(r *gctrpc.LLMChatStreamRequest, stream gctrpc.
 	}
 	result, err := service.SendMessageStream(stream.Context(), r.ConversationId, r.Content, func(delta string) error {
 		return stream.Send(&gctrpc.LLMChatStreamEvent{Delta: delta})
+	}, func(progress ToolProgress) {
+		if sendErr := stream.Send(&gctrpc.LLMChatStreamEvent{Progress: &gctrpc.LLMToolProgress{
+			Tool: progress.Tool, Phase: progress.Phase,
+			Done: int32(progress.Done), Total: int32(progress.Total), Message: progress.Message, //nolint:gosec // bounded by the market count
+		}}); sendErr != nil {
+			// A failed progress frame must not abort a turn whose work is
+			// already in flight; the final event still carries the result.
+			log.Warnf(log.LLMMgr, "chat stream progress frame failed: %v", sendErr)
+		}
 	})
 	if err != nil {
 		return err

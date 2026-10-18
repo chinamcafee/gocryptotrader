@@ -165,6 +165,9 @@ func (m *LLMManager) SetupRotation() (*Rotator, error) {
 	if err != nil {
 		return nil, err
 	}
+	// The production assembly warms the candle cache on the first sweep: a
+	// restart must not leave the screener blind until the next clock hour.
+	rotator.warmOnFirstSweep = true
 	// The scanner is part of the production rotation: a sweep that reloads
 	// history without feeding the triggers would keep the markets warm and
 	// notice nothing.

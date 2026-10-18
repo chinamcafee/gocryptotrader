@@ -145,6 +145,7 @@ const (
 	GoCryptoTraderService_LLMListStrategyVersions_FullMethodName           = "/gctrpc.GoCryptoTraderService/LLMListStrategyVersions"
 	GoCryptoTraderService_LLMSaveStrategyDraft_FullMethodName              = "/gctrpc.GoCryptoTraderService/LLMSaveStrategyDraft"
 	GoCryptoTraderService_LLMGetStrategyApproval_FullMethodName            = "/gctrpc.GoCryptoTraderService/LLMGetStrategyApproval"
+	GoCryptoTraderService_LLMListActiveApprovals_FullMethodName            = "/gctrpc.GoCryptoTraderService/LLMListActiveApprovals"
 	GoCryptoTraderService_LLMListMarketGrants_FullMethodName               = "/gctrpc.GoCryptoTraderService/LLMListMarketGrants"
 	GoCryptoTraderService_LLMGrantMarket_FullMethodName                    = "/gctrpc.GoCryptoTraderService/LLMGrantMarket"
 	GoCryptoTraderService_LLMRevokeMarketGrant_FullMethodName              = "/gctrpc.GoCryptoTraderService/LLMRevokeMarketGrant"
@@ -152,6 +153,11 @@ const (
 	GoCryptoTraderService_LLMGetDecisionRun_FullMethodName                 = "/gctrpc.GoCryptoTraderService/LLMGetDecisionRun"
 	GoCryptoTraderService_LLMTriggerAnalysis_FullMethodName                = "/gctrpc.GoCryptoTraderService/LLMTriggerAnalysis"
 	GoCryptoTraderService_LLMPreviewDecision_FullMethodName                = "/gctrpc.GoCryptoTraderService/LLMPreviewDecision"
+	GoCryptoTraderService_LLMStartBatchDecision_FullMethodName             = "/gctrpc.GoCryptoTraderService/LLMStartBatchDecision"
+	GoCryptoTraderService_LLMGetBatchDecision_FullMethodName               = "/gctrpc.GoCryptoTraderService/LLMGetBatchDecision"
+	GoCryptoTraderService_LLMCancelBatchDecision_FullMethodName            = "/gctrpc.GoCryptoTraderService/LLMCancelBatchDecision"
+	GoCryptoTraderService_LLMGetScreenerMetrics_FullMethodName             = "/gctrpc.GoCryptoTraderService/LLMGetScreenerMetrics"
+	GoCryptoTraderService_LLMRunScreen_FullMethodName                      = "/gctrpc.GoCryptoTraderService/LLMRunScreen"
 	GoCryptoTraderService_LLMGetDecisionLineage_FullMethodName             = "/gctrpc.GoCryptoTraderService/LLMGetDecisionLineage"
 	GoCryptoTraderService_LLMGetRiskEvidence_FullMethodName                = "/gctrpc.GoCryptoTraderService/LLMGetRiskEvidence"
 	GoCryptoTraderService_LLMListAuditEvents_FullMethodName                = "/gctrpc.GoCryptoTraderService/LLMListAuditEvents"
@@ -159,6 +165,7 @@ const (
 	GoCryptoTraderService_LLMSetRiskSwitch_FullMethodName                  = "/gctrpc.GoCryptoTraderService/LLMSetRiskSwitch"
 	GoCryptoTraderService_LLMGetRiskSwitches_FullMethodName                = "/gctrpc.GoCryptoTraderService/LLMGetRiskSwitches"
 	GoCryptoTraderService_LLMGetCoverageStatus_FullMethodName              = "/gctrpc.GoCryptoTraderService/LLMGetCoverageStatus"
+	GoCryptoTraderService_LLMSetMarketTracked_FullMethodName               = "/gctrpc.GoCryptoTraderService/LLMSetMarketTracked"
 	GoCryptoTraderService_LLMListHalts_FullMethodName                      = "/gctrpc.GoCryptoTraderService/LLMListHalts"
 	GoCryptoTraderService_LLMSetHalt_FullMethodName                        = "/gctrpc.GoCryptoTraderService/LLMSetHalt"
 	GoCryptoTraderService_LLMClearHalt_FullMethodName                      = "/gctrpc.GoCryptoTraderService/LLMClearHalt"
@@ -168,9 +175,6 @@ const (
 	GoCryptoTraderService_LLMGetNotifyStatus_FullMethodName                = "/gctrpc.GoCryptoTraderService/LLMGetNotifyStatus"
 	GoCryptoTraderService_LLMTestNotify_FullMethodName                     = "/gctrpc.GoCryptoTraderService/LLMTestNotify"
 	GoCryptoTraderService_LLMGetStatus_FullMethodName                      = "/gctrpc.GoCryptoTraderService/LLMGetStatus"
-	GoCryptoTraderService_LLMVaultStatus_FullMethodName                    = "/gctrpc.GoCryptoTraderService/LLMVaultStatus"
-	GoCryptoTraderService_LLMVaultInit_FullMethodName                      = "/gctrpc.GoCryptoTraderService/LLMVaultInit"
-	GoCryptoTraderService_LLMVaultAddSecret_FullMethodName                 = "/gctrpc.GoCryptoTraderService/LLMVaultAddSecret"
 	GoCryptoTraderService_LLMGetReadiness_FullMethodName                   = "/gctrpc.GoCryptoTraderService/LLMGetReadiness"
 	GoCryptoTraderService_LLMListProviderProfiles_FullMethodName           = "/gctrpc.GoCryptoTraderService/LLMListProviderProfiles"
 	GoCryptoTraderService_LLMCreateProviderProfile_FullMethodName          = "/gctrpc.GoCryptoTraderService/LLMCreateProviderProfile"
@@ -312,6 +316,7 @@ type GoCryptoTraderServiceClient interface {
 	LLMListStrategyVersions(ctx context.Context, in *LLMListStrategyVersionsRequest, opts ...grpc.CallOption) (*LLMListStrategyVersionsResponse, error)
 	LLMSaveStrategyDraft(ctx context.Context, in *LLMSaveStrategyDraftRequest, opts ...grpc.CallOption) (*LLMSaveStrategyDraftResponse, error)
 	LLMGetStrategyApproval(ctx context.Context, in *LLMGetStrategyApprovalRequest, opts ...grpc.CallOption) (*LLMGetStrategyApprovalResponse, error)
+	LLMListActiveApprovals(ctx context.Context, in *LLMListActiveApprovalsRequest, opts ...grpc.CallOption) (*LLMListActiveApprovalsResponse, error)
 	LLMListMarketGrants(ctx context.Context, in *LLMListMarketGrantsRequest, opts ...grpc.CallOption) (*LLMListMarketGrantsResponse, error)
 	LLMGrantMarket(ctx context.Context, in *LLMGrantMarketRequest, opts ...grpc.CallOption) (*LLMGrantMarketResponse, error)
 	LLMRevokeMarketGrant(ctx context.Context, in *LLMRevokeMarketGrantRequest, opts ...grpc.CallOption) (*LLMRevokeMarketGrantResponse, error)
@@ -320,6 +325,11 @@ type GoCryptoTraderServiceClient interface {
 	LLMGetDecisionRun(ctx context.Context, in *LLMGetDecisionRunRequest, opts ...grpc.CallOption) (*LLMGetDecisionRunResponse, error)
 	LLMTriggerAnalysis(ctx context.Context, in *LLMTriggerAnalysisRequest, opts ...grpc.CallOption) (*LLMDecisionRun, error)
 	LLMPreviewDecision(ctx context.Context, in *LLMPreviewDecisionRequest, opts ...grpc.CallOption) (*LLMDecisionRun, error)
+	LLMStartBatchDecision(ctx context.Context, in *LLMStartBatchDecisionRequest, opts ...grpc.CallOption) (*LLMStartBatchDecisionResponse, error)
+	LLMGetBatchDecision(ctx context.Context, in *LLMGetBatchDecisionRequest, opts ...grpc.CallOption) (*LLMGetBatchDecisionResponse, error)
+	LLMCancelBatchDecision(ctx context.Context, in *LLMCancelBatchDecisionRequest, opts ...grpc.CallOption) (*LLMCancelBatchDecisionResponse, error)
+	LLMGetScreenerMetrics(ctx context.Context, in *LLMGetScreenerMetricsRequest, opts ...grpc.CallOption) (*LLMGetScreenerMetricsResponse, error)
+	LLMRunScreen(ctx context.Context, in *LLMRunScreenRequest, opts ...grpc.CallOption) (*LLMRunScreenResponse, error)
 	LLMGetDecisionLineage(ctx context.Context, in *LLMGetDecisionLineageRequest, opts ...grpc.CallOption) (*LLMGetDecisionLineageResponse, error)
 	LLMGetRiskEvidence(ctx context.Context, in *LLMGetRiskEvidenceRequest, opts ...grpc.CallOption) (*LLMGetRiskEvidenceResponse, error)
 	LLMListAuditEvents(ctx context.Context, in *LLMListAuditEventsRequest, opts ...grpc.CallOption) (*LLMListAuditEventsResponse, error)
@@ -327,6 +337,7 @@ type GoCryptoTraderServiceClient interface {
 	LLMSetRiskSwitch(ctx context.Context, in *LLMSetRiskSwitchRequest, opts ...grpc.CallOption) (*GenericResponse, error)
 	LLMGetRiskSwitches(ctx context.Context, in *LLMGetRiskSwitchesRequest, opts ...grpc.CallOption) (*LLMGetRiskSwitchesResponse, error)
 	LLMGetCoverageStatus(ctx context.Context, in *LLMGetCoverageStatusRequest, opts ...grpc.CallOption) (*LLMGetCoverageStatusResponse, error)
+	LLMSetMarketTracked(ctx context.Context, in *LLMSetMarketTrackedRequest, opts ...grpc.CallOption) (*LLMSetMarketTrackedResponse, error)
 	LLMListHalts(ctx context.Context, in *LLMListHaltsRequest, opts ...grpc.CallOption) (*LLMListHaltsResponse, error)
 	LLMSetHalt(ctx context.Context, in *LLMSetHaltRequest, opts ...grpc.CallOption) (*LLMSetHaltResponse, error)
 	LLMClearHalt(ctx context.Context, in *LLMClearHaltRequest, opts ...grpc.CallOption) (*GenericResponse, error)
@@ -336,9 +347,6 @@ type GoCryptoTraderServiceClient interface {
 	LLMGetNotifyStatus(ctx context.Context, in *LLMGetNotifyStatusRequest, opts ...grpc.CallOption) (*LLMGetNotifyStatusResponse, error)
 	LLMTestNotify(ctx context.Context, in *LLMTestNotifyRequest, opts ...grpc.CallOption) (*LLMTestNotifyResponse, error)
 	LLMGetStatus(ctx context.Context, in *LLMGetStatusRequest, opts ...grpc.CallOption) (*LLMGetStatusResponse, error)
-	LLMVaultStatus(ctx context.Context, in *LLMVaultStatusRequest, opts ...grpc.CallOption) (*LLMVaultStatusResponse, error)
-	LLMVaultInit(ctx context.Context, in *LLMVaultInitRequest, opts ...grpc.CallOption) (*GenericResponse, error)
-	LLMVaultAddSecret(ctx context.Context, in *LLMVaultAddSecretRequest, opts ...grpc.CallOption) (*LLMVaultAddSecretResponse, error)
 	LLMGetReadiness(ctx context.Context, in *LLMReadinessRequest, opts ...grpc.CallOption) (*LLMReadinessResponse, error)
 	LLMListProviderProfiles(ctx context.Context, in *LLMListProviderProfilesRequest, opts ...grpc.CallOption) (*LLMListProviderProfilesResponse, error)
 	LLMCreateProviderProfile(ctx context.Context, in *LLMCreateProviderProfileRequest, opts ...grpc.CallOption) (*LLMCreateProviderProfileResponse, error)
@@ -1680,6 +1688,16 @@ func (c *goCryptoTraderServiceClient) LLMGetStrategyApproval(ctx context.Context
 	return out, nil
 }
 
+func (c *goCryptoTraderServiceClient) LLMListActiveApprovals(ctx context.Context, in *LLMListActiveApprovalsRequest, opts ...grpc.CallOption) (*LLMListActiveApprovalsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(LLMListActiveApprovalsResponse)
+	err := c.cc.Invoke(ctx, GoCryptoTraderService_LLMListActiveApprovals_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *goCryptoTraderServiceClient) LLMListMarketGrants(ctx context.Context, in *LLMListMarketGrantsRequest, opts ...grpc.CallOption) (*LLMListMarketGrantsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(LLMListMarketGrantsResponse)
@@ -1750,6 +1768,56 @@ func (c *goCryptoTraderServiceClient) LLMPreviewDecision(ctx context.Context, in
 	return out, nil
 }
 
+func (c *goCryptoTraderServiceClient) LLMStartBatchDecision(ctx context.Context, in *LLMStartBatchDecisionRequest, opts ...grpc.CallOption) (*LLMStartBatchDecisionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(LLMStartBatchDecisionResponse)
+	err := c.cc.Invoke(ctx, GoCryptoTraderService_LLMStartBatchDecision_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *goCryptoTraderServiceClient) LLMGetBatchDecision(ctx context.Context, in *LLMGetBatchDecisionRequest, opts ...grpc.CallOption) (*LLMGetBatchDecisionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(LLMGetBatchDecisionResponse)
+	err := c.cc.Invoke(ctx, GoCryptoTraderService_LLMGetBatchDecision_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *goCryptoTraderServiceClient) LLMCancelBatchDecision(ctx context.Context, in *LLMCancelBatchDecisionRequest, opts ...grpc.CallOption) (*LLMCancelBatchDecisionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(LLMCancelBatchDecisionResponse)
+	err := c.cc.Invoke(ctx, GoCryptoTraderService_LLMCancelBatchDecision_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *goCryptoTraderServiceClient) LLMGetScreenerMetrics(ctx context.Context, in *LLMGetScreenerMetricsRequest, opts ...grpc.CallOption) (*LLMGetScreenerMetricsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(LLMGetScreenerMetricsResponse)
+	err := c.cc.Invoke(ctx, GoCryptoTraderService_LLMGetScreenerMetrics_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *goCryptoTraderServiceClient) LLMRunScreen(ctx context.Context, in *LLMRunScreenRequest, opts ...grpc.CallOption) (*LLMRunScreenResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(LLMRunScreenResponse)
+	err := c.cc.Invoke(ctx, GoCryptoTraderService_LLMRunScreen_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *goCryptoTraderServiceClient) LLMGetDecisionLineage(ctx context.Context, in *LLMGetDecisionLineageRequest, opts ...grpc.CallOption) (*LLMGetDecisionLineageResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(LLMGetDecisionLineageResponse)
@@ -1814,6 +1882,16 @@ func (c *goCryptoTraderServiceClient) LLMGetCoverageStatus(ctx context.Context, 
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(LLMGetCoverageStatusResponse)
 	err := c.cc.Invoke(ctx, GoCryptoTraderService_LLMGetCoverageStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *goCryptoTraderServiceClient) LLMSetMarketTracked(ctx context.Context, in *LLMSetMarketTrackedRequest, opts ...grpc.CallOption) (*LLMSetMarketTrackedResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(LLMSetMarketTrackedResponse)
+	err := c.cc.Invoke(ctx, GoCryptoTraderService_LLMSetMarketTracked_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1904,36 +1982,6 @@ func (c *goCryptoTraderServiceClient) LLMGetStatus(ctx context.Context, in *LLMG
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(LLMGetStatusResponse)
 	err := c.cc.Invoke(ctx, GoCryptoTraderService_LLMGetStatus_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *goCryptoTraderServiceClient) LLMVaultStatus(ctx context.Context, in *LLMVaultStatusRequest, opts ...grpc.CallOption) (*LLMVaultStatusResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(LLMVaultStatusResponse)
-	err := c.cc.Invoke(ctx, GoCryptoTraderService_LLMVaultStatus_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *goCryptoTraderServiceClient) LLMVaultInit(ctx context.Context, in *LLMVaultInitRequest, opts ...grpc.CallOption) (*GenericResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GenericResponse)
-	err := c.cc.Invoke(ctx, GoCryptoTraderService_LLMVaultInit_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *goCryptoTraderServiceClient) LLMVaultAddSecret(ctx context.Context, in *LLMVaultAddSecretRequest, opts ...grpc.CallOption) (*LLMVaultAddSecretResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(LLMVaultAddSecretResponse)
-	err := c.cc.Invoke(ctx, GoCryptoTraderService_LLMVaultAddSecret_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -2151,6 +2199,7 @@ type GoCryptoTraderServiceServer interface {
 	LLMListStrategyVersions(context.Context, *LLMListStrategyVersionsRequest) (*LLMListStrategyVersionsResponse, error)
 	LLMSaveStrategyDraft(context.Context, *LLMSaveStrategyDraftRequest) (*LLMSaveStrategyDraftResponse, error)
 	LLMGetStrategyApproval(context.Context, *LLMGetStrategyApprovalRequest) (*LLMGetStrategyApprovalResponse, error)
+	LLMListActiveApprovals(context.Context, *LLMListActiveApprovalsRequest) (*LLMListActiveApprovalsResponse, error)
 	LLMListMarketGrants(context.Context, *LLMListMarketGrantsRequest) (*LLMListMarketGrantsResponse, error)
 	LLMGrantMarket(context.Context, *LLMGrantMarketRequest) (*LLMGrantMarketResponse, error)
 	LLMRevokeMarketGrant(context.Context, *LLMRevokeMarketGrantRequest) (*LLMRevokeMarketGrantResponse, error)
@@ -2159,6 +2208,11 @@ type GoCryptoTraderServiceServer interface {
 	LLMGetDecisionRun(context.Context, *LLMGetDecisionRunRequest) (*LLMGetDecisionRunResponse, error)
 	LLMTriggerAnalysis(context.Context, *LLMTriggerAnalysisRequest) (*LLMDecisionRun, error)
 	LLMPreviewDecision(context.Context, *LLMPreviewDecisionRequest) (*LLMDecisionRun, error)
+	LLMStartBatchDecision(context.Context, *LLMStartBatchDecisionRequest) (*LLMStartBatchDecisionResponse, error)
+	LLMGetBatchDecision(context.Context, *LLMGetBatchDecisionRequest) (*LLMGetBatchDecisionResponse, error)
+	LLMCancelBatchDecision(context.Context, *LLMCancelBatchDecisionRequest) (*LLMCancelBatchDecisionResponse, error)
+	LLMGetScreenerMetrics(context.Context, *LLMGetScreenerMetricsRequest) (*LLMGetScreenerMetricsResponse, error)
+	LLMRunScreen(context.Context, *LLMRunScreenRequest) (*LLMRunScreenResponse, error)
 	LLMGetDecisionLineage(context.Context, *LLMGetDecisionLineageRequest) (*LLMGetDecisionLineageResponse, error)
 	LLMGetRiskEvidence(context.Context, *LLMGetRiskEvidenceRequest) (*LLMGetRiskEvidenceResponse, error)
 	LLMListAuditEvents(context.Context, *LLMListAuditEventsRequest) (*LLMListAuditEventsResponse, error)
@@ -2166,6 +2220,7 @@ type GoCryptoTraderServiceServer interface {
 	LLMSetRiskSwitch(context.Context, *LLMSetRiskSwitchRequest) (*GenericResponse, error)
 	LLMGetRiskSwitches(context.Context, *LLMGetRiskSwitchesRequest) (*LLMGetRiskSwitchesResponse, error)
 	LLMGetCoverageStatus(context.Context, *LLMGetCoverageStatusRequest) (*LLMGetCoverageStatusResponse, error)
+	LLMSetMarketTracked(context.Context, *LLMSetMarketTrackedRequest) (*LLMSetMarketTrackedResponse, error)
 	LLMListHalts(context.Context, *LLMListHaltsRequest) (*LLMListHaltsResponse, error)
 	LLMSetHalt(context.Context, *LLMSetHaltRequest) (*LLMSetHaltResponse, error)
 	LLMClearHalt(context.Context, *LLMClearHaltRequest) (*GenericResponse, error)
@@ -2175,9 +2230,6 @@ type GoCryptoTraderServiceServer interface {
 	LLMGetNotifyStatus(context.Context, *LLMGetNotifyStatusRequest) (*LLMGetNotifyStatusResponse, error)
 	LLMTestNotify(context.Context, *LLMTestNotifyRequest) (*LLMTestNotifyResponse, error)
 	LLMGetStatus(context.Context, *LLMGetStatusRequest) (*LLMGetStatusResponse, error)
-	LLMVaultStatus(context.Context, *LLMVaultStatusRequest) (*LLMVaultStatusResponse, error)
-	LLMVaultInit(context.Context, *LLMVaultInitRequest) (*GenericResponse, error)
-	LLMVaultAddSecret(context.Context, *LLMVaultAddSecretRequest) (*LLMVaultAddSecretResponse, error)
 	LLMGetReadiness(context.Context, *LLMReadinessRequest) (*LLMReadinessResponse, error)
 	LLMListProviderProfiles(context.Context, *LLMListProviderProfilesRequest) (*LLMListProviderProfilesResponse, error)
 	LLMCreateProviderProfile(context.Context, *LLMCreateProviderProfileRequest) (*LLMCreateProviderProfileResponse, error)
@@ -2574,6 +2626,9 @@ func (UnimplementedGoCryptoTraderServiceServer) LLMSaveStrategyDraft(context.Con
 func (UnimplementedGoCryptoTraderServiceServer) LLMGetStrategyApproval(context.Context, *LLMGetStrategyApprovalRequest) (*LLMGetStrategyApprovalResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method LLMGetStrategyApproval not implemented")
 }
+func (UnimplementedGoCryptoTraderServiceServer) LLMListActiveApprovals(context.Context, *LLMListActiveApprovalsRequest) (*LLMListActiveApprovalsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method LLMListActiveApprovals not implemented")
+}
 func (UnimplementedGoCryptoTraderServiceServer) LLMListMarketGrants(context.Context, *LLMListMarketGrantsRequest) (*LLMListMarketGrantsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method LLMListMarketGrants not implemented")
 }
@@ -2595,6 +2650,21 @@ func (UnimplementedGoCryptoTraderServiceServer) LLMTriggerAnalysis(context.Conte
 func (UnimplementedGoCryptoTraderServiceServer) LLMPreviewDecision(context.Context, *LLMPreviewDecisionRequest) (*LLMDecisionRun, error) {
 	return nil, status.Error(codes.Unimplemented, "method LLMPreviewDecision not implemented")
 }
+func (UnimplementedGoCryptoTraderServiceServer) LLMStartBatchDecision(context.Context, *LLMStartBatchDecisionRequest) (*LLMStartBatchDecisionResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method LLMStartBatchDecision not implemented")
+}
+func (UnimplementedGoCryptoTraderServiceServer) LLMGetBatchDecision(context.Context, *LLMGetBatchDecisionRequest) (*LLMGetBatchDecisionResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method LLMGetBatchDecision not implemented")
+}
+func (UnimplementedGoCryptoTraderServiceServer) LLMCancelBatchDecision(context.Context, *LLMCancelBatchDecisionRequest) (*LLMCancelBatchDecisionResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method LLMCancelBatchDecision not implemented")
+}
+func (UnimplementedGoCryptoTraderServiceServer) LLMGetScreenerMetrics(context.Context, *LLMGetScreenerMetricsRequest) (*LLMGetScreenerMetricsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method LLMGetScreenerMetrics not implemented")
+}
+func (UnimplementedGoCryptoTraderServiceServer) LLMRunScreen(context.Context, *LLMRunScreenRequest) (*LLMRunScreenResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method LLMRunScreen not implemented")
+}
 func (UnimplementedGoCryptoTraderServiceServer) LLMGetDecisionLineage(context.Context, *LLMGetDecisionLineageRequest) (*LLMGetDecisionLineageResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method LLMGetDecisionLineage not implemented")
 }
@@ -2615,6 +2685,9 @@ func (UnimplementedGoCryptoTraderServiceServer) LLMGetRiskSwitches(context.Conte
 }
 func (UnimplementedGoCryptoTraderServiceServer) LLMGetCoverageStatus(context.Context, *LLMGetCoverageStatusRequest) (*LLMGetCoverageStatusResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method LLMGetCoverageStatus not implemented")
+}
+func (UnimplementedGoCryptoTraderServiceServer) LLMSetMarketTracked(context.Context, *LLMSetMarketTrackedRequest) (*LLMSetMarketTrackedResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method LLMSetMarketTracked not implemented")
 }
 func (UnimplementedGoCryptoTraderServiceServer) LLMListHalts(context.Context, *LLMListHaltsRequest) (*LLMListHaltsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method LLMListHalts not implemented")
@@ -2642,15 +2715,6 @@ func (UnimplementedGoCryptoTraderServiceServer) LLMTestNotify(context.Context, *
 }
 func (UnimplementedGoCryptoTraderServiceServer) LLMGetStatus(context.Context, *LLMGetStatusRequest) (*LLMGetStatusResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method LLMGetStatus not implemented")
-}
-func (UnimplementedGoCryptoTraderServiceServer) LLMVaultStatus(context.Context, *LLMVaultStatusRequest) (*LLMVaultStatusResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method LLMVaultStatus not implemented")
-}
-func (UnimplementedGoCryptoTraderServiceServer) LLMVaultInit(context.Context, *LLMVaultInitRequest) (*GenericResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method LLMVaultInit not implemented")
-}
-func (UnimplementedGoCryptoTraderServiceServer) LLMVaultAddSecret(context.Context, *LLMVaultAddSecretRequest) (*LLMVaultAddSecretResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method LLMVaultAddSecret not implemented")
 }
 func (UnimplementedGoCryptoTraderServiceServer) LLMGetReadiness(context.Context, *LLMReadinessRequest) (*LLMReadinessResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method LLMGetReadiness not implemented")
@@ -4916,6 +4980,24 @@ func _GoCryptoTraderService_LLMGetStrategyApproval_Handler(srv interface{}, ctx 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GoCryptoTraderService_LLMListActiveApprovals_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LLMListActiveApprovalsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GoCryptoTraderServiceServer).LLMListActiveApprovals(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GoCryptoTraderService_LLMListActiveApprovals_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GoCryptoTraderServiceServer).LLMListActiveApprovals(ctx, req.(*LLMListActiveApprovalsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _GoCryptoTraderService_LLMListMarketGrants_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(LLMListMarketGrantsRequest)
 	if err := dec(in); err != nil {
@@ -5042,6 +5124,96 @@ func _GoCryptoTraderService_LLMPreviewDecision_Handler(srv interface{}, ctx cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GoCryptoTraderService_LLMStartBatchDecision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LLMStartBatchDecisionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GoCryptoTraderServiceServer).LLMStartBatchDecision(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GoCryptoTraderService_LLMStartBatchDecision_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GoCryptoTraderServiceServer).LLMStartBatchDecision(ctx, req.(*LLMStartBatchDecisionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GoCryptoTraderService_LLMGetBatchDecision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LLMGetBatchDecisionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GoCryptoTraderServiceServer).LLMGetBatchDecision(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GoCryptoTraderService_LLMGetBatchDecision_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GoCryptoTraderServiceServer).LLMGetBatchDecision(ctx, req.(*LLMGetBatchDecisionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GoCryptoTraderService_LLMCancelBatchDecision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LLMCancelBatchDecisionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GoCryptoTraderServiceServer).LLMCancelBatchDecision(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GoCryptoTraderService_LLMCancelBatchDecision_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GoCryptoTraderServiceServer).LLMCancelBatchDecision(ctx, req.(*LLMCancelBatchDecisionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GoCryptoTraderService_LLMGetScreenerMetrics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LLMGetScreenerMetricsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GoCryptoTraderServiceServer).LLMGetScreenerMetrics(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GoCryptoTraderService_LLMGetScreenerMetrics_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GoCryptoTraderServiceServer).LLMGetScreenerMetrics(ctx, req.(*LLMGetScreenerMetricsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GoCryptoTraderService_LLMRunScreen_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LLMRunScreenRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GoCryptoTraderServiceServer).LLMRunScreen(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GoCryptoTraderService_LLMRunScreen_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GoCryptoTraderServiceServer).LLMRunScreen(ctx, req.(*LLMRunScreenRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _GoCryptoTraderService_LLMGetDecisionLineage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(LLMGetDecisionLineageRequest)
 	if err := dec(in); err != nil {
@@ -5164,6 +5336,24 @@ func _GoCryptoTraderService_LLMGetCoverageStatus_Handler(srv interface{}, ctx co
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GoCryptoTraderServiceServer).LLMGetCoverageStatus(ctx, req.(*LLMGetCoverageStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GoCryptoTraderService_LLMSetMarketTracked_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LLMSetMarketTrackedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GoCryptoTraderServiceServer).LLMSetMarketTracked(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GoCryptoTraderService_LLMSetMarketTracked_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GoCryptoTraderServiceServer).LLMSetMarketTracked(ctx, req.(*LLMSetMarketTrackedRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -5326,60 +5516,6 @@ func _GoCryptoTraderService_LLMGetStatus_Handler(srv interface{}, ctx context.Co
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GoCryptoTraderServiceServer).LLMGetStatus(ctx, req.(*LLMGetStatusRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _GoCryptoTraderService_LLMVaultStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LLMVaultStatusRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(GoCryptoTraderServiceServer).LLMVaultStatus(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: GoCryptoTraderService_LLMVaultStatus_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GoCryptoTraderServiceServer).LLMVaultStatus(ctx, req.(*LLMVaultStatusRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _GoCryptoTraderService_LLMVaultInit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LLMVaultInitRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(GoCryptoTraderServiceServer).LLMVaultInit(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: GoCryptoTraderService_LLMVaultInit_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GoCryptoTraderServiceServer).LLMVaultInit(ctx, req.(*LLMVaultInitRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _GoCryptoTraderService_LLMVaultAddSecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LLMVaultAddSecretRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(GoCryptoTraderServiceServer).LLMVaultAddSecret(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: GoCryptoTraderService_LLMVaultAddSecret_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GoCryptoTraderServiceServer).LLMVaultAddSecret(ctx, req.(*LLMVaultAddSecretRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -6012,6 +6148,10 @@ var GoCryptoTraderService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _GoCryptoTraderService_LLMGetStrategyApproval_Handler,
 		},
 		{
+			MethodName: "LLMListActiveApprovals",
+			Handler:    _GoCryptoTraderService_LLMListActiveApprovals_Handler,
+		},
+		{
 			MethodName: "LLMListMarketGrants",
 			Handler:    _GoCryptoTraderService_LLMListMarketGrants_Handler,
 		},
@@ -6040,6 +6180,26 @@ var GoCryptoTraderService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _GoCryptoTraderService_LLMPreviewDecision_Handler,
 		},
 		{
+			MethodName: "LLMStartBatchDecision",
+			Handler:    _GoCryptoTraderService_LLMStartBatchDecision_Handler,
+		},
+		{
+			MethodName: "LLMGetBatchDecision",
+			Handler:    _GoCryptoTraderService_LLMGetBatchDecision_Handler,
+		},
+		{
+			MethodName: "LLMCancelBatchDecision",
+			Handler:    _GoCryptoTraderService_LLMCancelBatchDecision_Handler,
+		},
+		{
+			MethodName: "LLMGetScreenerMetrics",
+			Handler:    _GoCryptoTraderService_LLMGetScreenerMetrics_Handler,
+		},
+		{
+			MethodName: "LLMRunScreen",
+			Handler:    _GoCryptoTraderService_LLMRunScreen_Handler,
+		},
+		{
 			MethodName: "LLMGetDecisionLineage",
 			Handler:    _GoCryptoTraderService_LLMGetDecisionLineage_Handler,
 		},
@@ -6066,6 +6226,10 @@ var GoCryptoTraderService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LLMGetCoverageStatus",
 			Handler:    _GoCryptoTraderService_LLMGetCoverageStatus_Handler,
+		},
+		{
+			MethodName: "LLMSetMarketTracked",
+			Handler:    _GoCryptoTraderService_LLMSetMarketTracked_Handler,
 		},
 		{
 			MethodName: "LLMListHalts",
@@ -6102,18 +6266,6 @@ var GoCryptoTraderService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LLMGetStatus",
 			Handler:    _GoCryptoTraderService_LLMGetStatus_Handler,
-		},
-		{
-			MethodName: "LLMVaultStatus",
-			Handler:    _GoCryptoTraderService_LLMVaultStatus_Handler,
-		},
-		{
-			MethodName: "LLMVaultInit",
-			Handler:    _GoCryptoTraderService_LLMVaultInit_Handler,
-		},
-		{
-			MethodName: "LLMVaultAddSecret",
-			Handler:    _GoCryptoTraderService_LLMVaultAddSecret_Handler,
 		},
 		{
 			MethodName: "LLMGetReadiness",

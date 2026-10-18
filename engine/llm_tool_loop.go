@@ -105,6 +105,9 @@ type ToolLoopRequest struct {
 	// openai.StreamingCompleter. The decision path leaves it nil -- a streamed
 	// reply cannot be schema-validated, so decisions are never streamed.
 	OnDelta func(string) error
+	// OnProgress, when set, receives live progress from long-running tools
+	// (the full-universe screen). Nil is a no-op.
+	OnProgress func(ToolProgress)
 	// ProfileTimeout is the provider revision's timeout; the per-request
 	// timeout is min(profile, 30s) and then clamped by Deadline.
 	ProfileTimeout time.Duration
@@ -244,6 +247,12 @@ func RunToolLoop(ctx context.Context, transport ChatCompleter, runner ToolRunner
 		if err != nil {
 			return nil, err
 		}
+		// Some OpenAI-compatible endpoints (observed on deepseek-flash) emit
+		// tool calls as DSML text instead of structured tool_calls. Convert
+		// them before the content can be mistaken for the final answer.
+		if len(message.ToolCalls) == 0 {
+			message.ToolCalls, message.Content, _ = parseDSMLToolCalls(message.Content)
+		}
 		messages = append(messages, *message)
 
 		if response.FirstFinishReason() == "length" {
@@ -286,7 +295,9 @@ func RunToolLoop(ctx context.Context, transport ChatCompleter, runner ToolRunner
 		}
 
 		for _, call := range message.ToolCalls {
-			toolResult, runErr := runner.Run(ctx, call.ID, call.Function.Name, call.Function.Arguments)
+			runCtx := withToolProgress(ctx, req.OnProgress)
+			reportToolProgress(runCtx, ToolProgress{Tool: call.Function.Name, Phase: "START", Message: "调用工具 " + call.Function.Name})
+			toolResult, runErr := runner.Run(runCtx, call.ID, call.Function.Name, call.Function.Arguments)
 			if runErr != nil {
 				if !errors.Is(runErr, ErrToolArgumentsInvalid) {
 					toolResult = fmt.Sprintf(`{"error":%q}`, runErr.Error())

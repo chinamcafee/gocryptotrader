@@ -21,8 +21,7 @@ const (
 	flagProvProfile       = "profile"
 	flagProvBaseURL       = "base-url"
 	flagProvModel         = "model"
-	flagProvKeyRef        = "key-ref"
-	flagProvFingerprint   = "fingerprint"
+	flagProvAPIKey        = "api-key"
 	flagProvTimeout       = "timeout"
 	flagProvMaxOutTokens  = "max-output-tokens"
 	flagProvPromptVersion = "prompt-version"
@@ -92,8 +91,7 @@ var llmProvidersCommand = &cli.Command{
 				&cli.StringFlag{Name: flagNameActor, Usage: flagUsageActor},
 				&cli.StringFlag{Name: flagProvBaseURL, Usage: "provider base URL"},
 				&cli.StringFlag{Name: flagProvModel, Usage: "model id (Jev needs jev-<major>.<minor>.<patch>)"},
-				&cli.StringFlag{Name: flagProvKeyRef, Usage: "vault reference, e.g. secret://llm/deepseek"},
-				&cli.StringFlag{Name: flagProvFingerprint, Usage: "api key fingerprint (16 hex)"},
+				&cli.StringFlag{Name: flagProvAPIKey, Usage: "plaintext API key (vault removed 2026-10-15)"},
 				&cli.Int64Flag{Name: flagProvTimeout, Usage: "request timeout in seconds"},
 				&cli.Int64Flag{Name: flagProvMaxOutTokens, Usage: "max output tokens (LLM only)"},
 				&cli.StringFlag{Name: flagProvPromptVersion, Usage: "prompt version (LLM only)"},
@@ -111,7 +109,7 @@ var llmProvidersCommand = &cli.Command{
 				result, err := gctrpc.NewGoCryptoTraderServiceClient(conn).LLMUpdateProviderProfile(c.Context, &gctrpc.LLMUpdateProviderProfileRequest{
 					Id: c.String(flagProvProfile), Actor: c.String(flagNameActor),
 					BaseUrl: c.String(flagProvBaseURL), ModelId: c.String(flagProvModel),
-					ApiKeyRef: c.String(flagProvKeyRef), ApiKeyFingerprint: c.String(flagProvFingerprint),
+					ApiKey:         c.String(flagProvAPIKey),
 					TimeoutSeconds: c.Int64(flagProvTimeout), MaxOutputTokens: c.Int64(flagProvMaxOutTokens),
 					PromptVersion: c.String(flagProvPromptVersion), DailyBudgetUsd: c.String(flagProvBudget),
 					ReservationCap_24H:     c.Int64(flagProvReserveCap),

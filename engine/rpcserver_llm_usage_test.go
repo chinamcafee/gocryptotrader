@@ -17,9 +17,9 @@ import (
 func TestLLMGetUsage(t *testing.T) {
 	setupStrategyAdminDB(t)
 	ctx := context.Background()
-	_, llmRef, jevRef := vaultFixture(t, "sk-llm-1")
-	seedRevision(t, "rev-llm", ProviderKindLLM, "https://api.example.com/v1", "model-a", llmRef, false)
-	seedRevision(t, "rev-jev", ProviderKindJev, "https://jev.example.com/v1", "jev-1.0.0", jevRef, false)
+	llmKey, jevKey := keyFixture(t, "sk-llm-1")
+	seedRevision(t, "rev-llm", ProviderKindLLM, "https://api.example.com/v1", "model-a", llmKey, false)
+	seedRevision(t, "rev-jev", ProviderKindJev, "https://jev.example.com/v1", "jev-1.0.0", jevKey, false)
 	seedPair(t)
 
 	now := time.Now().UTC()

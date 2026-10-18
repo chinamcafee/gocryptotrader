@@ -85,9 +85,9 @@ func triggerTestEngine(t *testing.T) *Engine {
 func TestBuildShadowRunRequestFromLiveState(t *testing.T) {
 	setupProviderAdminDB(t)
 	ctx := t.Context()
-	_, llmRef, jevRef := vaultFixture(t, "sk-llm-1")
-	seedRevision(t, "rev-llm", ProviderKindLLM, "https://api.example.com/v1", "model-a", llmRef, false)
-	seedRevision(t, "rev-jev", ProviderKindJev, "https://jev.example.com/v1", "jev-1.0.0", jevRef, false)
+	llmKey, jevKey := keyFixture(t, "sk-llm-1")
+	seedRevision(t, "rev-llm", ProviderKindLLM, "https://api.example.com/v1", "model-a", llmKey, false)
+	seedRevision(t, "rev-jev", ProviderKindJev, "https://jev.example.com/v1", "jev-1.0.0", jevKey, false)
 	seedPair(t)
 	probeFixture(t, "rev-llm", true, providerAdminNow)
 	seedFrozenVersion(t, "version-live")
@@ -125,9 +125,9 @@ func TestBuildShadowRunRequestFromLiveState(t *testing.T) {
 func TestBuildShadowRunRequestRefusesUnfrozenAndUnknown(t *testing.T) {
 	setupProviderAdminDB(t)
 	ctx := t.Context()
-	_, llmRef, jevRef := vaultFixture(t, "sk-llm-1")
-	seedRevision(t, "rev-llm", ProviderKindLLM, "https://api.example.com/v1", "model-a", llmRef, false)
-	seedRevision(t, "rev-jev", ProviderKindJev, "https://jev.example.com/v1", "jev-1.0.0", jevRef, false)
+	llmKey, jevKey := keyFixture(t, "sk-llm-1")
+	seedRevision(t, "rev-llm", ProviderKindLLM, "https://api.example.com/v1", "model-a", llmKey, false)
+	seedRevision(t, "rev-jev", ProviderKindJev, "https://jev.example.com/v1", "jev-1.0.0", jevKey, false)
 	seedPair(t)
 
 	bot := triggerTestEngine(t)

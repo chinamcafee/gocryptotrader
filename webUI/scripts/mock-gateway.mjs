@@ -32,7 +32,7 @@ const providerProfiles = [
     revision: {
       id: 'rev-llm-2', profileId: 'prof-llm-1', revisionNo: 2, kind: 'LLM_OPENAI_COMPAT',
       baseUrl: 'https://api.deepseek.com/v1', modelId: 'deepseek-chat',
-      apiKeyRef: 'secret://llm/8a1b2c3d', apiKeyFingerprint: 'abc123def4567890',
+      apiKeyFingerprint: 'abc123def4567890',
       timeoutSeconds: 30, maxOutputTokens: 2048, promptVersion: 'analysis-readonly-v1',
       dailyBudgetUsd: '5.00', reservationCap24h: 3,
       createdAt: '2026-10-11T09:10:00Z', createdBy: 'op',
@@ -44,7 +44,7 @@ const providerProfiles = [
     revision: {
       id: 'rev-jev-1', profileId: 'prof-jev-1', revisionNo: 1, kind: 'JEV',
       baseUrl: 'https://api.typesafe.ai', modelId: 'jev-1.0.0',
-      apiKeyRef: 'secret://llm/9f8e7d6c', apiKeyFingerprint: 'fedcba0987654321',
+      apiKeyFingerprint: 'fedcba0987654321',
       timeoutSeconds: 20, questionTemplateVersion: 'jev-review-v2', reservationCap24h: 100,
       createdAt: '2026-10-11T09:01:00Z', createdBy: 'op',
     },
@@ -117,9 +117,6 @@ const auditEvents = [
   { id: 'aud-3', kind: 'RISK_SWITCH_SET', actor: 'op', subject: 'maxSlippageBps', detailJson: '{"enabled":true,"value":"20"}', createdAt: '2026-10-11T08:40:00Z' },
   { id: 'aud-4', kind: 'CRASH_RECOVERY', actor: 'engine', subject: 'intent-a', detailJson: '{"reconciliationRequired":true,"unknown":1}', createdAt: '2026-10-11T08:00:00Z' },
 ]
-
-// vault（W4-06 离线形状：init 幂等；secret 只回 ref+指纹）
-const vaultState = { initialized: false, entries: [] }
 
 // ── 策略工作区（W5 离线形状）────────────────────────────────────────────
 // 版本是追加式的：保存草案=新版本行；冻结把 reviewable-v1 文档+双哈希钉进行。
@@ -199,6 +196,27 @@ const marketGrants = [
   },
 ]
 let grantSeq = 1
+let batchJobSeq = 0
+const batchJobs = new Map()
+
+// 期货持仓（老端点 getallmanagedpositions 的离线形状：真实网关为 protojson
+// camelCase，方向是 order.Side 词汇表 BUY/SELL，数量为十进制字符串）
+const managedPositions = [
+  {
+    exchange: 'Binance', asset: 'usdtmarginedfutures',
+    pair: { delimiter: '_', base: 'BTC', quote: 'USDT' }, status: 'OPEN',
+    openingDate: '2026-10-14T02:10:00Z', openingDirection: 'BUY', openingPrice: '61250.5', openingSize: '0.01',
+    currentDirection: 'BUY', currentPrice: '61890.0', currentSize: '0.01',
+    unrealisedPnl: '6.395', realisedPnl: '0', orderCount: '1',
+  },
+  {
+    exchange: 'Binance', asset: 'usdtmarginedfutures',
+    pair: { delimiter: '_', base: 'SOL', quote: 'USDT' }, status: 'OPEN',
+    openingDate: '2026-10-14T05:40:00Z', openingDirection: 'SELL', openingPrice: '152.4', openingSize: '0.5',
+    currentDirection: 'SELL', currentPrice: '149.8', currentSize: '0.5',
+    unrealisedPnl: '1.3', realisedPnl: '0', orderCount: '1',
+  },
+]
 
 const json = (res, status, body) => {
   res.writeHead(status, { 'content-type': 'application/json' })
@@ -210,27 +228,6 @@ server.on('request', (req, res) => {
   const path = new URL(req.url ?? '/', `https://127.0.0.1:${PORT}`).pathname
   const url = new URL(req.url ?? '/', `https://127.0.0.1:${PORT}`)
 
-  if (path === '/v1/llm/vault' && method === 'GET') {
-    return json(res, 200, { initialized: vaultState.initialized, directory: '/tmp/mock-vault', entries: vaultState.entries })
-  }
-  if (path === '/v1/llm/vault/init' && method === 'POST') {
-    vaultState.initialized = true
-    return json(res, 200, { status: 'ok' })
-  }
-  if (path === '/v1/llm/vault/secrets' && method === 'POST') {
-    let raw = ''
-    req.on('data', (c) => { raw += c })
-    req.on('end', () => {
-      if (!vaultState.initialized) return json(res, 400, { code: 3, message: 'vault is not initialised' })
-      const body = JSON.parse(raw || '{}')
-      if (!body.kind || !body.secret) return json(res, 400, { code: 3, message: 'kind and secret are required' })
-      const fingerprint = Array.from({ length: 16 }, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('')
-      const ref = `secret://${body.kind}/${Math.random().toString(16).slice(2, 10)}`
-      vaultState.entries.push({ ref, kind: body.kind, fingerprint, createdAt: new Date().toISOString() })
-      json(res, 200, { ref, fingerprint })
-    })
-    return
-  }
   // ── 策略工作区（W5）────────────────────────────────────────────────
   if (path === '/v1/llm/strategies' && method === 'GET') {
     const includeArchived = url.searchParams.get('includeArchived') === 'true'
@@ -350,6 +347,18 @@ server.on('request', (req, res) => {
       return json(res, 200, { strategyHash: version.strategyHash, riskEnvelopeHash: version.riskEnvelopeHash, frozenJson: body.policyJson, frozenAt: now })
     })
     return
+  }
+  if (path === '/v1/llm/approvals/active' && method === 'GET') {
+    const listed = [...approvals.values()]
+    if (listed.length === 0) {
+      listed.push({
+        strategyVersionId: 'ver-mock-1', accountId: 'binance-usdtm-main', network: 'binance-testnet',
+        executionMode: 'SHADOW', pairEpoch: 3, riskEnvelopeHash: 'env-hash',
+        validFrom: '2026-10-01T00:00:00Z', validUntil: '2027-10-01T00:00:00Z',
+        approvedMarketIds: JSON.stringify(['Binance:usdtmarginedfutures:BTC_USDT']),
+      })
+    }
+    return json(res, 200, { approvals: listed })
   }
   const approvalGetMatch = path.match(/^\/v1\/llm\/strategyversions\/([^/]+)\/approval$/)
   if (approvalGetMatch && method === 'GET') {
@@ -507,6 +516,23 @@ server.on('request', (req, res) => {
     })
   }
 
+  if (path === '/v1/llm/providers' && method === 'POST') {
+    let raw = ''
+    req.on('data', (c) => { raw += c })
+    req.on('end', () => {
+      const body = JSON.parse(raw || '{}')
+      if (!body.kind || !body.displayName || !body.actor) {
+        return json(res, 400, { code: 3, message: 'kind, displayName and actor are required' })
+      }
+      const profile = {
+        id: `prof-mock-${providerProfiles.length + 1}`, kind: body.kind, displayName: body.displayName,
+        enabled: true, createdAt: new Date().toISOString(), createdBy: body.actor, revisionCount: 0,
+      }
+      providerProfiles.push(profile)
+      json(res, 200, { profile })
+    })
+    return
+  }
   if (path === '/v1/llm/providers' && method === 'GET') {
     return json(res, 200, { profiles: providerProfiles })
   }
@@ -736,6 +762,127 @@ server.on('request', (req, res) => {
       }]),
     })
   }
+  // ── 期货持仓（老端点；持仓复核页的需求③数据面）──────────────────────
+  if (path === '/v1/getallmanagedpositions' && method === 'GET') {
+    return json(res, 200, { positions: managedPositions })
+  }
+  // ── 筛选与批量决策工作台（docs/llm-dev/13）────────────────────────────
+  if (path === '/v1/llm/screener/metrics' && method === 'GET') {
+    return json(res, 200, {
+      maxLimit: 50, defaultLimit: 20,
+      metrics: [
+        { name: 'lastprice', kind: 'NUMERIC', tier: 'TICKER_CACHED', unit: 'USDT', description: '最新成交价' },
+        { name: 'change24h', kind: 'NUMERIC', tier: 'TICKER_CACHED', unit: '%', description: '24h 涨跌幅' },
+        { name: 'quotevolume24h', kind: 'NUMERIC', tier: 'TICKER_CACHED', unit: 'USDT', description: '24h 报价额' },
+        { name: 'change4h', kind: 'NUMERIC', tier: 'KLINES_CACHED', unit: '%', description: '4h 涨跌幅（收盘对收盘）' },
+        { name: 'change48h', kind: 'NUMERIC', tier: 'KLINES_CACHED', unit: '%', description: '48h 涨跌幅（收盘对收盘）' },
+        { name: 'atrpercent', kind: 'NUMERIC', tier: 'KLINES_CACHED', unit: '%', description: 'ATR(14)/close 百分比' },
+        { name: 'range24h', kind: 'NUMERIC', tier: 'KLINES_CACHED', unit: '%', description: '24 根区间振幅百分比' },
+        { name: 'macdstate', kind: 'CATEGORY', tier: 'KLINES_CACHED', description: 'MACD 柱符号', categories: ['BULL', 'BEAR'] },
+        { name: 'macdhist', kind: 'NUMERIC', tier: 'KLINES_CACHED', unit: 'price units', description: 'MACD 柱状图最新值（macdstate 的连续可排序版）' },
+        { name: 'macdcross', kind: 'CATEGORY', tier: 'KLINES_CACHED', description: '近期交叉', categories: ['BULL_CROSS', 'BEAR_CROSS', 'NONE'] },
+        { name: 'takernetflowratio24h', kind: 'NUMERIC', tier: 'VENUE_READ', description: '净流入占比 ∈[-1,1]' },
+        { name: 'takernetflow24h', kind: 'NUMERIC', tier: 'VENUE_READ', unit: 'venue volume units', description: '24h 主动买量−主动卖量（原样报数）' },
+      ],
+    })
+  }
+  if (path === '/v1/llm/screener/run' && method === 'POST') {
+    let raw = ''
+    req.on('data', (c) => { raw += c })
+    req.on('end', () => {
+      JSON.parse(raw || '{}')
+      json(res, 200, {
+        universeSize: 588, matched: 2, filteredOut: 4, excludedForMissing: 9,
+        notes: ['K 线缓存窗口：最多 300 根 1h（mock 数据）', '净流入读：按 24h 成交额前 100 扫描（mock 固定返回 2 行）'],
+        rows: [
+          { marketId: 'Binance:usdtmarginedfutures:BTC_USDT', numbersJson: JSON.stringify({ change24h: 3.2, quotevolume24h: 912340000, change4h: 0.8, change48h: -1.2, takernetflowratio24h: 0.18 }), statesJson: JSON.stringify({ macdstate: 'BULL', macdcross: 'BULL_CROSS' }) },
+          { marketId: 'Binance:usdtmarginedfutures:ETH_USDT', numbersJson: JSON.stringify({ change24h: -1.5, quotevolume24h: 512340000, change4h: -0.4, change48h: 2.1, takernetflowratio24h: -0.07 }), statesJson: JSON.stringify({ macdstate: 'BEAR', macdcross: 'NONE' }) },
+        ],
+      })
+    })
+    return
+  }
+  if (path === '/v1/llm/batchdecisions' && method === 'POST') {
+    let raw = ''
+    req.on('data', (c) => { raw += c })
+    req.on('end', () => {
+      const body = JSON.parse(raw || '{}')
+      if (!body.strategyVersionId || !Array.isArray(body.marketIds) || body.marketIds.length === 0) {
+        return json(res, 400, { code: 3, message: 'strategyVersionId and marketIds are required' })
+      }
+      const jobId = `job-${++batchJobSeq}`
+      const rows = body.marketIds.map((m) => {
+        const runId = `run-${batchJobSeq}-${m.slice(-8)}`
+        // 批量产出的决策记录联进 decisionRuns：决策列表/详情/血缘三页可查（与真实落库语义一致）
+        decisionRuns.push({
+          id: runId, strategyVersionId: body.strategyVersionId, snapshotId: `snap-${runId}`,
+          trigger: body.kind === 'POSITION_REVIEW' ? 'MANUAL_POSITION_REVIEW' : 'MANUAL_BATCH',
+          runMode: 'SHADOW', decision: 'HOLD', reason: 'AWAITING_HARD_RISK_AND_APPROVAL',
+          inputHash: '00'.repeat(32), llmModel: 'deepseek-chat', jevModel: 'jev-1.0.0',
+          createdAt: new Date().toISOString(), latencyMs: 0, llmRoundCount: 0, toolCallCount: 0,
+        })
+        return { marketId: m, status: 'DONE', decision: 'HOLD', reason: 'AWAITING_HARD_RISK_AND_APPROVAL', decisionRunId: runId }
+      })
+      batchJobs.set(jobId, { jobId, kind: body.kind ?? 'OPEN_DECISION', strategyVersionId: body.strategyVersionId, actor: body.actor ?? 'webui-operator', createdAt: new Date().toISOString(), done: true, total: rows.length, finished: rows.length, rows })
+      // 起批是治理动作：真后端落 BATCH_DECISION_STARTED 审计（fail-closed），mock 同步进审计流
+      auditEvents.unshift({
+        id: `aud-batch-${batchJobSeq}`, kind: 'BATCH_DECISION_STARTED', actor: body.actor ?? 'webui-operator',
+        subject: jobId, detailJson: JSON.stringify({ kind: body.kind ?? 'OPEN_DECISION', strategyVersionId: body.strategyVersionId, markets: rows.length }),
+        createdAt: new Date().toISOString(),
+      })
+      json(res, 200, { jobId })
+    })
+    return
+  }
+  const batchMatch = path.match(/^\/v1\/llm\/batchdecisions\/([^/]+)$/)
+  if (batchMatch && method === 'GET') {
+    const job = batchJobs.get(batchMatch[1])
+    if (!job) return json(res, 404, { code: 5, message: `batch job not found: ${batchMatch[1]}` })
+    return json(res, 200, job)
+  }
+  const cancelMatch = path.match(/^\/v1\/llm\/batchdecisions\/([^/]+)\/cancel$/)
+  if (cancelMatch && method === 'POST') {
+    let raw = ''
+    req.on('data', (c) => { raw += c })
+    req.on('end', () => {
+      const body = JSON.parse(raw || '{}')
+      if (!body.actor) return json(res, 400, { code: 3, message: 'actor is required' })
+      const job = batchJobs.get(cancelMatch[1])
+      if (!job) return json(res, 404, { code: 5, message: `batch job not found: ${cancelMatch[1]}` })
+      if (job.done) return json(res, 400, { code: 3, message: `job ${cancelMatch[1]} already finished` })
+      let cancelled = 0
+      for (const row of job.rows) {
+        if (row.status === 'PENDING' || row.status === 'RUNNING') {
+          row.status = 'CANCELLED'
+          row.reason = 'cancelled by operator'
+          cancelled++
+        }
+      }
+      job.done = true
+      auditEvents.unshift({
+        id: `aud-cancel-${Date.now()}`, kind: 'BATCH_DECISION_CANCELLED', actor: body.actor,
+        subject: job.jobId, detailJson: JSON.stringify({ markets: job.rows.length }),
+        createdAt: new Date().toISOString(),
+      })
+      json(res, 200, { jobId: job.jobId, done: job.done, cancelled })
+    })
+    return
+  }
+  // N11 覆盖联动（mock）：真后端写交换配置并刷新轮询器；mock 只回状态。
+  if (path === '/v1/llm/markettracked' && method === 'POST') {
+    let raw = ''
+    req.on('data', (c) => { raw += c })
+    req.on('end', () => {
+      const body = JSON.parse(raw || '{}')
+      if (!body.marketId || !body.actor) return json(res, 400, { code: 3, message: 'marketId and actor are required' })
+      json(res, 200, {
+        marketId: body.marketId,
+        tracked: !!body.tracked,
+        status: body.tracked ? 'TRACKED' : 'UNTRACKED',
+      })
+    })
+    return
+  }
   if (path === '/v1/llm/audit' && method === 'GET') {
     const kind = url.searchParams.get('kind')
     const limit = Number(url.searchParams.get('limit') ?? auditEvents.length)
@@ -772,7 +919,7 @@ server.on('request', (req, res) => {
       profile.revision = {
         id: `rev-mock-${profile.id}-${nextNo}`, profileId: profile.id, revisionNo: nextNo, kind: profile.kind,
         baseUrl: body.baseUrl ?? '', modelId: body.modelId ?? '',
-        apiKeyRef: body.apiKeyRef ?? '', apiKeyFingerprint: body.apiKeyFingerprint ?? '',
+        apiKeyFingerprint: body.apiKey ? `fp-${String(body.apiKey).slice(-8)}` : '',
         timeoutSeconds: body.timeoutSeconds ?? 0,
         ...(body.maxOutputTokens ? { maxOutputTokens: body.maxOutputTokens } : {}),
         ...(body.promptVersion ? { promptVersion: body.promptVersion } : {}),
@@ -847,7 +994,32 @@ server.on('request', (req, res) => {
       'content-type': 'application/json',
       'cache-control': 'no-cache',
     })
-    const deltas = [
+    // 需求①的对话筛选场景：消息含「筛/找/符合」时演示 screenMarkets 全流程
+    // （真实后端由模型自主调用工具；mock 无法跑模型，用关键词分叉演示两种回复形态）
+    const screening = /筛|找|符合|screen|scan/i.test(content)
+    // docs/llm-dev/16：配置提案场景（真实后端由模型调用 proposeAction 产出草案）
+    const proposalKind = /取消/.test(content) ? 'CANCEL_BATCH_JOB'
+      : /复核/.test(content) ? 'START_POSITION_REVIEW'
+        : /启用|停用/.test(content) ? 'SET_MARKET_TRACKED'
+          : /批量|开仓决策/.test(content) ? 'START_OPEN_DECISION_BATCH' : ''
+    const proposal = proposalKind === '' ? undefined : (
+      proposalKind === 'CANCEL_BATCH_JOB' ? { action: proposalKind, summary: '取消批量作业 job-1', jobId: 'job-1', actor: 'webui-operator' }
+        : proposalKind === 'START_POSITION_REVIEW' ? { action: proposalKind, summary: '复核全部当前持仓', allPositions: true, strategyVersionId: 'version-live', actor: 'webui-operator' }
+          : proposalKind === 'SET_MARKET_TRACKED' ? { action: proposalKind, summary: '启用 SOL_USDT', marketId: 'Binance:usdtmarginedfutures:SOL_USDT', tracked: true, actor: 'webui-operator' }
+            : { action: proposalKind, summary: '对 BTC/ETH 生成开仓决策', marketIds: ['Binance:usdtmarginedfutures:BTC_USDT', 'Binance:usdtmarginedfutures:ETH_USDT'], strategyVersionId: 'version-live', actor: 'webui-operator' }
+    )
+    const deltas = proposal ? [
+      '已按你的要求生成**配置提案**：请在下方确认卡片核对参数后点「确认执行」。\n\n',
+      '提案本身不会自动执行——确认后调用与手动页面相同的端点（写闸与审批绑定照旧生效）。\n',
+    ] : screening ? [
+      '## 全宇宙筛选完成（宇宙 588 · 命中 2 · 条件不符 4 · 缺席排除 9）\n\n',
+      '- 条件：`change24h ≥ 5`、`change4h ≥ 0`（AND）\n',
+      '- 排序：`quotevolume24h` 降序 · 返回前 20（缺席指标的市场被排除并计数，不以 0 冒充）\n\n',
+      '| 合约 | change24h | change4h | MACD |\n|---|---|---|---|\n',
+      '| Binance:usdtmarginedfutures:BTC_USDT | +6.2% | +0.8% | BULL |\n',
+      '| Binance:usdtmarginedfutures:ETH_USDT | +5.1% | +0.3% | BULL |\n\n',
+      '下一步：可在「筛选与开仓决策」页对选定市场发起批量开仓决策（只记录不下单）。证据如下。',
+    ] : [
       '## BTC_USDT 1h 结构\n\n',
       '- **价格区间**：62,000–64,500 USDT（震荡）\n',
       '- **资金费**：0.0042%／8h（中性）\n',
@@ -864,6 +1036,9 @@ server.on('request', (req, res) => {
       clearInterval(timer)
       const reply = deltas.join('')
       rows.push({ id: `m-${++messageSeq}`, seq: rows.length + 1, role: 'assistant', content: reply })
+      if (screening) {
+        res.write(JSON.stringify({ progress: { tool: 'screenMarkets', phase: 'CANDLES', done: 588, total: 588, message: '已扫描 588/588 个合约（mock）' } }) + '\n')
+      }
       const conv = conversations.get(conversationId)
       if (conv) conv.messageCount = rows.length
       res.write(JSON.stringify({
@@ -873,12 +1048,17 @@ server.on('request', (req, res) => {
           inputTokens: 120,
           outputTokens: 30,
           latencyMs: 900,
-          evidence: [{
+          evidence: screening ? [{
+            ref: 'tool:screenMarkets:call-1', tool: 'screenMarkets',
+            exchange: 'Binance', quality: 'DATABASE_CACHED', sourceTime: new Date().toISOString(),
+            sha256: '9f2c1a0b3d4e5f60718293a4b5c6d7e8f9012345678abcdef0123456789abcd',
+          }] : [{
             ref: 'tool:getCandleWindow:call-1', tool: 'getCandleWindow',
             exchange: 'Binance', marketId: 'Binance:usdtmarginedfutures:BTC_USDT',
             quality: 'EXCHANGE_REST', sourceTime: new Date().toISOString(),
             sha256: 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
           }],
+          ...(proposal ? { proposals: [proposal] } : {}),
         },
       }) + '\n')
       res.end()

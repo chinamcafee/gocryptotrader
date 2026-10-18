@@ -79,21 +79,33 @@ type SafetyStatus struct {
 	Reason string `json:"reason,omitempty"`
 }
 
+// Question type tags. The wire contract discriminates question shapes on the
+// "type" property (official OpenAPI discriminator: choice/score/noul), so every
+// question must carry its tag (found live 2026-10-16: HTTP 422 without it).
+const (
+	QuestionTypeChoice = "choice"
+	QuestionTypeScore  = "score"
+	QuestionTypeNoul   = "noul"
+)
+
 // ChoiceQuestion asks the judge to pick one named option and returns a full
 // probability distribution over them.
 type ChoiceQuestion struct {
+	Type         string            `json:"type"`
 	Instructions string            `json:"instructions"`
 	Criteria     map[string]string `json:"criteria"`
 }
 
 // ScoreQuestion asks the judge to rate on an ordinal scale.
 type ScoreQuestion struct {
+	Type         string   `json:"type"`
 	Instructions string   `json:"instructions"`
 	Criteria     []string `json:"criteria"`
 }
 
 // NoulQuestion asks a binary natural-language yes/no question.
 type NoulQuestion struct {
+	Type         string `json:"type"`
 	Instructions string `json:"instructions"`
 }
 
@@ -105,14 +117,15 @@ type ChoiceAnswer struct {
 	Confidence    float64            `json:"confidence"`
 }
 
-// ScoreAnswer is the reply to a ScoreQuestion. Score is expected to satisfy
-// score ≈ p1 + 2*p2 for a three-point scale.
+// ScoreAnswer is the reply to a ScoreQuestion (official OpenAPI shape): score
+// is the probability-weighted expected level (may fall between integers) and
+// legend maps the requested criteria to their levels as an object. There is no
+// bucket distribution on this answer (live correction 2026-10-16).
 type ScoreAnswer struct {
-	Type          AnswerType         `json:"type"`
-	Score         float64            `json:"score"`
-	Probabilities map[string]float64 `json:"probabilities"`
-	Legend        []string           `json:"legend"`
-	Confidence    float64            `json:"confidence"`
+	Type       AnswerType     `json:"type"`
+	Score      float64        `json:"score"`
+	Confidence float64        `json:"confidence"`
+	Legend     map[string]any `json:"legend"`
 }
 
 // NoulAnswer is the reply to a NoulQuestion. It has no confidence field, which

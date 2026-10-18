@@ -10,19 +10,18 @@ import (
 	"github.com/thrasher-corp/gocryptotrader/llm/httpclient"
 	"github.com/thrasher-corp/gocryptotrader/llm/jev"
 	"github.com/thrasher-corp/gocryptotrader/llm/openai"
-	"github.com/thrasher-corp/gocryptotrader/llm/secrets"
 )
 
 // 生产装配 · client factory（docs 05 §2 / 06 §8、M1-09 的另一半）：
-// 把激活配对两侧的最新修订版变成活的模型客户端——读修订版行、从 vault 解出
-// API key、按文档字段映射出 Profile、交给 llm/openai 与 llm/jev 的 NewClient。
+// 把激活配对两侧的最新修订版变成活的模型客户端——读修订版行、取 API key、
+// 按文档字段映射出 Profile、交给 llm/openai 与 llm/jev 的 NewClient。
 //
 // 几件事刻意如此：
-//   - **密钥不落在客户端上**：secretFn 每次调用才 Reveal，解出来的明文只活在
-//     一次请求里（llm/secrets 的既定语义）；
+//   - **明文 key 直用**（2026-10-15 用户拍板简化）：key 以明文存于修订版
+//     行（api_key_ref 列承载），不再经 vault；secretFn 每次请求才取值；
 //   - **Jev 必需**（Q3=A）：任一侧缺失即报错，没有「只有 LLM」的退化装配；
-//   - **失败即失败**：vault 未初始化、引用不可解析、模型不是 pinned 版本都会
-//     在装配期直接报错，而不是留到第一次决策才炸。
+//   - **失败即失败**：key 为空、模型不是 pinned 版本都会在装配期直接报错，
+//     而不是留到第一次决策才炸。
 
 // LLMActiveClients bundles the live clients built from the active pair.
 type LLMActiveClients struct {
@@ -36,13 +35,10 @@ type LLMActiveClients struct {
 // mandatory, there is no degraded LLM-only assembly).
 var ErrNoActiveJevRevision = errors.New("llm clients: no active Jev profile revision in the model pair")
 
-// BuildActiveClients builds the transports from the active pairing and the
-// vault. The vault must be initialised (llm/secrets Init); a missing vault is
-// an assembly error, not a per-call surprise.
-func BuildActiveClients(ctx context.Context, vaultDir string) (*LLMActiveClients, error) {
-	if strings.TrimSpace(vaultDir) == "" {
-		return nil, fmt.Errorf("%w: vault directory is required", ErrChatNotConfigured)
-	}
+// BuildActiveClients builds the transports from the active pairing. Both
+// revisions must carry a key; an empty key is an assembly error, not a
+// per-call surprise.
+func BuildActiveClients(ctx context.Context) (*LLMActiveClients, error) {
 	pair, err := llmstore.GetActiveModelPair(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("llm clients: active pair: %w", err)
@@ -69,15 +65,11 @@ func BuildActiveClients(ctx context.Context, vaultDir string) (*LLMActiveClients
 		return nil, fmt.Errorf("llm clients: revision %s is %q, not a Jev provider", jevRevision.ID, jevRevision.Kind)
 	}
 
-	vault, err := secrets.Open(vaultDir)
-	if err != nil {
-		return nil, fmt.Errorf("llm clients: opening vault: %w", err)
-	}
-	llmSecret, err := vaultSecretFn(vault, llmRevision.APIKeyRef)
+	llmSecret, err := revisionSecretFn(llmRevision.APIKeyRef)
 	if err != nil {
 		return nil, err
 	}
-	jevSecret, err := vaultSecretFn(vault, jevRevision.APIKeyRef)
+	jevSecret, err := revisionSecretFn(jevRevision.APIKeyRef)
 	if err != nil {
 		return nil, err
 	}
@@ -136,13 +128,14 @@ func jevProfileOf(r *llmstore.ProfileRevision) *jev.Profile {
 	return p
 }
 
-// vaultSecretFn resolves the stored ref once and reveals per call.
-func vaultSecretFn(vault *secrets.Vault, ref string) (httpclient.SecretFn, error) {
-	parsed, err := secrets.ParseRef(ref)
-	if err != nil {
-		return nil, fmt.Errorf("llm clients: parsing key ref %q: %w", ref, err)
+// revisionSecretFn adapts the revision's plaintext key to the clients'
+// per-request secret hook. The key is stored as entered (2026-10-15 vault
+// removal); an empty key refuses at assembly.
+func revisionSecretFn(apiKey string) (httpclient.SecretFn, error) {
+	if strings.TrimSpace(apiKey) == "" {
+		return nil, fmt.Errorf("%w: the provider revision carries no API key", ErrChatNotConfigured)
 	}
 	return func(context.Context) (string, error) {
-		return vault.Reveal(parsed)
+		return apiKey, nil
 	}, nil
 }

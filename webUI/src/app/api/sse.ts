@@ -11,6 +11,8 @@ export interface GatewayStreamEvent {
   delta?: string
   final?: Record<string, unknown>
   error?: unknown
+  /** 工具运行进度（全量扫描等），与正文增量并列、不进入正文。 */
+  progress?: Record<string, unknown>
 }
 
 export interface GatewayStreamParser {
@@ -37,6 +39,7 @@ export function createGatewayStreamParser(): GatewayStreamParser {
     const event: GatewayStreamEvent = {}
     if (typeof body.delta === 'string') event.delta = body.delta
     if (body.final) event.final = body.final as Record<string, unknown>
+    if (body.progress) event.progress = body.progress as Record<string, unknown>
     if (envelope.error) event.error = envelope.error
     return event
   }

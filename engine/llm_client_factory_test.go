@@ -11,25 +11,17 @@ import (
 	llmstore "github.com/thrasher-corp/gocryptotrader/database/repository/llm"
 	"github.com/thrasher-corp/gocryptotrader/llm/jev"
 	"github.com/thrasher-corp/gocryptotrader/llm/openai"
-	"github.com/thrasher-corp/gocryptotrader/llm/secrets"
 )
 
-// 生产装配 · client factory 测试。
+// 生产装配 · client factory 测试（明文 key，2026-10-15 vault 移除后）。
 
-// vaultFixture initialises a vault in a temp dir and stores one secret per side.
-func vaultFixture(t *testing.T, llmSecret string) (dir, llmRef, jevRef string) {
+// keyFixture returns the two plaintext keys a pair of revisions carries.
+func keyFixture(t *testing.T, llmKey string) (llm, jevToken string) {
 	t.Helper()
-	dir = t.TempDir()
-	vault, err := secrets.Init(dir)
-	require.NoError(t, err)
-	llm, _, err := vault.Add("llm", llmSecret)
-	require.NoError(t, err)
-	jevRefObj, _, err := vault.Add("jev", "jev-token-1")
-	require.NoError(t, err)
-	return dir, llm.String(), jevRefObj.String()
+	return llmKey, "jev-token-1"
 }
 
-func seedRevision(t *testing.T, id, kind, baseURL, model, keyRef string, allowLoopback bool) {
+func seedRevision(t *testing.T, id, kind, baseURL, model, apiKey string, allowLoopback bool) {
 	t.Helper()
 	ctx := t.Context()
 	require.NoError(t, llmstore.InsertProfile(ctx, &llmstore.Profile{
@@ -39,7 +31,7 @@ func seedRevision(t *testing.T, id, kind, baseURL, model, keyRef string, allowLo
 	timeout := int64(30)
 	require.NoError(t, llmstore.InsertProfileRevision(ctx, &llmstore.ProfileRevision{
 		ID: id, ProfileID: "prof-" + id, RevisionNo: 1, Kind: kind,
-		BaseURL: baseURL, ModelID: model, APIKeyRef: keyRef, APIKeyFingerprint: "fp",
+		BaseURL: baseURL, ModelID: model, APIKeyRef: apiKey, APIKeyFingerprint: "fp",
 		TimeoutSeconds: timeout, AllowInsecureLocalhost: allowLoopback,
 		CreatedAt: providerAdminNow, CreatedBy: "op",
 	}))
@@ -57,12 +49,12 @@ func seedPair(t *testing.T) {
 
 func TestBuildActiveClientsMapsThePair(t *testing.T) {
 	setupProviderAdminDB(t)
-	dir, llmRef, jevRef := vaultFixture(t, "sk-llm-1")
-	seedRevision(t, "rev-llm", ProviderKindLLM, "https://api.example.com/v1", "model-a", llmRef, false)
-	seedRevision(t, "rev-jev", ProviderKindJev, "https://jev.example.com/v1", "jev-1.0.0", jevRef, false)
+	llmKey, jevKey := keyFixture(t, "sk-llm-1")
+	seedRevision(t, "rev-llm", ProviderKindLLM, "https://api.example.com/v1", "model-a", llmKey, false)
+	seedRevision(t, "rev-jev", ProviderKindJev, "https://jev.example.com/v1", "jev-1.0.0", jevKey, false)
 	seedPair(t)
 
-	clients, err := BuildActiveClients(t.Context(), dir)
+	clients, err := BuildActiveClients(t.Context())
 	require.NoError(t, err)
 	assert.Equal(t, "model-a", clients.LLM.Model())
 	assert.Equal(t, "jev-1.0.0", clients.Jev.Model())
@@ -70,11 +62,12 @@ func TestBuildActiveClientsMapsThePair(t *testing.T) {
 	assert.Equal(t, "rev-jev", clients.JevRevision.ID)
 }
 
-// TestBuildActiveClientsRevealsPerRequest proves the whole chain: revision row
-// -> vault ref -> per-call reveal -> Authorization header on the wire.
-func TestBuildActiveClientsRevealsPerRequest(t *testing.T) {
+// TestBuildActiveClientsSendsTheStoredKey proves the whole chain: revision
+// row -> stored plaintext key -> per-request secret hook -> Authorization
+// header on the wire.
+func TestBuildActiveClientsSendsTheStoredKey(t *testing.T) {
 	setupProviderAdminDB(t)
-	dir, llmRef, jevRef := vaultFixture(t, "sk-live-1")
+	llmKey, jevKey := keyFixture(t, "sk-live-1")
 
 	var seenAuth string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -84,52 +77,44 @@ func TestBuildActiveClientsRevealsPerRequest(t *testing.T) {
 	}))
 	t.Cleanup(srv.Close)
 
-	seedRevision(t, "rev-llm", ProviderKindLLM, srv.URL+"/v1", "model-a", llmRef, true)
-	seedRevision(t, "rev-jev", ProviderKindJev, "https://jev.example.com/v1", "jev-1.0.0", jevRef, false)
+	seedRevision(t, "rev-llm", ProviderKindLLM, srv.URL+"/v1", "model-a", llmKey, true)
+	seedRevision(t, "rev-jev", ProviderKindJev, "https://jev.example.com/v1", "jev-1.0.0", jevKey, false)
 	seedPair(t)
 
-	clients, err := BuildActiveClients(t.Context(), dir)
+	clients, err := BuildActiveClients(t.Context())
 	require.NoError(t, err)
 	reply, err := clients.LLM.ChatCompletion(t.Context(), &openai.ChatRequest{
 		Messages: []openai.Message{{Role: "user", Content: "hi"}},
 	})
 	require.NoError(t, err)
 	require.Len(t, reply.Choices, 1)
-	assert.Equal(t, "Bearer sk-live-1", seenAuth, "the vault secret reaches the wire as a bearer token")
+	assert.Equal(t, "Bearer sk-live-1", seenAuth, "the stored key reaches the wire as a bearer token")
 }
 
 func TestBuildActiveClientsRequiresAPair(t *testing.T) {
 	setupProviderAdminDB(t)
-	dir := t.TempDir()
-	_, err := BuildActiveClients(t.Context(), dir)
+	_, err := BuildActiveClients(t.Context())
 	require.Error(t, err, "no pair must fail the assembly, not the first call")
 }
 
-func TestBuildActiveClientsRequiresAnInitialisedVault(t *testing.T) {
+func TestBuildActiveClientsRefusesAnEmptyKey(t *testing.T) {
 	setupProviderAdminDB(t)
-	_, llmRef, jevRef := vaultFixture(t, "sk-llm-1")
-	seedRevision(t, "rev-llm", ProviderKindLLM, "https://api.example.com/v1", "model-a", llmRef, false)
-	seedRevision(t, "rev-jev", ProviderKindJev, "https://jev.example.com/v1", "jev-1.0.0", jevRef, false)
+	_, jevKey := keyFixture(t, "sk-llm-1")
+	seedRevision(t, "rev-llm", ProviderKindLLM, "https://api.example.com/v1", "model-a", "", false)
+	seedRevision(t, "rev-jev", ProviderKindJev, "https://jev.example.com/v1", "jev-1.0.0", jevKey, false)
 	seedPair(t)
 
-	uninitialised := t.TempDir()
-	_, err := BuildActiveClients(t.Context(), uninitialised)
-	require.ErrorIs(t, err, secrets.ErrVaultNotInitialised)
+	_, err := BuildActiveClients(t.Context())
+	require.ErrorIs(t, err, ErrChatNotConfigured, "an empty key must fail the assembly, not the first call")
 }
 
 func TestBuildActiveClientsRefusesAJevAlias(t *testing.T) {
 	setupProviderAdminDB(t)
-	dir, llmRef, jevRef := vaultFixture(t, "sk-llm-1")
-	seedRevision(t, "rev-llm", ProviderKindLLM, "https://api.example.com/v1", "model-a", llmRef, false)
-	seedRevision(t, "rev-jev", ProviderKindJev, "https://jev.example.com/v1", "systemone-latest", jevRef, false)
+	llmKey, jevKey := keyFixture(t, "sk-llm-1")
+	seedRevision(t, "rev-llm", ProviderKindLLM, "https://api.example.com/v1", "model-a", llmKey, false)
+	seedRevision(t, "rev-jev", ProviderKindJev, "https://jev.example.com/v1", "systemone-latest", jevKey, false)
 	seedPair(t)
 
-	_, err := BuildActiveClients(t.Context(), dir)
+	_, err := BuildActiveClients(context.Background())
 	require.ErrorIs(t, err, jev.ErrModelInvalid, "a Jev alias must be refused at assembly, not at replay time")
-}
-
-func TestBuildActiveClientsRefusesMissingVaultDir(t *testing.T) {
-	_, err := BuildActiveClients(context.Background(), "   ")
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "vault directory is required")
 }

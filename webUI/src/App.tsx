@@ -13,6 +13,8 @@ import ProvidersPage from '@/pages/ProvidersPage'
 import DecisionsPage from '@/pages/DecisionsPage'
 import HealthPage from '@/pages/HealthPage'
 import SettingsPage from '@/pages/SettingsPage'
+import ScreenerPage from '@/pages/ScreenerPage'
+import PositionsReviewPage from '@/pages/PositionsReviewPage'
 
 export default function App() {
   return (
@@ -24,6 +26,8 @@ export default function App() {
             <Route path="/terminal" element={<TerminalPage />} />
             <Route path="/markets" element={<MarketsPage />} />
             <Route path="/chat" element={<ChatPage />} />
+            <Route path="/screener" element={<ScreenerPage />} />
+            <Route path="/positions-review" element={<PositionsReviewPage />} />
             <Route path="/strategies" element={<StrategiesPage />} />
             <Route path="/providers" element={<ProvidersPage />} />
             <Route path="/decisions" element={<DecisionsPage />} />

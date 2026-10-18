@@ -382,15 +382,16 @@ func (e *Exchange) UpdateTickers(ctx context.Context, a asset.Item) error {
 				return err
 			}
 			err = ticker.ProcessTicker(&ticker.Price{
-				Last:         tick[y].LastPrice.Float64(),
-				High:         tick[y].HighPrice.Float64(),
-				Low:          tick[y].LowPrice.Float64(),
-				BaseVolume:   tick[y].Volume.Float64(),
-				QuoteVolume:  tick[y].QuoteVolume.Float64(),
-				Open:         tick[y].OpenPrice.Float64(),
-				Pair:         cp,
-				ExchangeName: e.Name,
-				AssetType:    a,
+				Last:                tick[y].LastPrice.Float64(),
+				High:                tick[y].HighPrice.Float64(),
+				Low:                 tick[y].LowPrice.Float64(),
+				BaseVolume:          tick[y].Volume.Float64(),
+				QuoteVolume:         tick[y].QuoteVolume.Float64(),
+				Open:                tick[y].OpenPrice.Float64(),
+				PercentChange24Hour: tick[y].PriceChangePercent.Float64(),
+				Pair:                cp,
+				ExchangeName:        e.Name,
+				AssetType:           a,
 			})
 			if err != nil {
 				return err
@@ -408,14 +409,15 @@ func (e *Exchange) UpdateTickers(ctx context.Context, a asset.Item) error {
 				return err
 			}
 			err = ticker.ProcessTicker(&ticker.Price{
-				Last:         tick[y].LastPrice.Float64(),
-				High:         tick[y].HighPrice.Float64(),
-				Low:          tick[y].LowPrice.Float64(),
-				BaseVolume:   tick[y].BaseVolume.Float64(),
-				Open:         tick[y].OpenPrice.Float64(),
-				Pair:         cp,
-				ExchangeName: e.Name,
-				AssetType:    a,
+				Last:                tick[y].LastPrice.Float64(),
+				High:                tick[y].HighPrice.Float64(),
+				Low:                 tick[y].LowPrice.Float64(),
+				BaseVolume:          tick[y].BaseVolume.Float64(),
+				Open:                tick[y].OpenPrice.Float64(),
+				PercentChange24Hour: tick[y].PriceChangePercent.Float64(),
+				Pair:                cp,
+				ExchangeName:        e.Name,
+				AssetType:           a,
 			})
 			if err != nil {
 				return err
@@ -461,15 +463,16 @@ func (e *Exchange) UpdateTicker(ctx context.Context, p currency.Pair, a asset.It
 			return nil, err
 		}
 		err = ticker.ProcessTicker(&ticker.Price{
-			Last:         tick[0].LastPrice.Float64(),
-			High:         tick[0].HighPrice.Float64(),
-			Low:          tick[0].LowPrice.Float64(),
-			BaseVolume:   tick[0].Volume.Float64(),
-			QuoteVolume:  tick[0].QuoteVolume.Float64(),
-			Open:         tick[0].OpenPrice.Float64(),
-			Pair:         p,
-			ExchangeName: e.Name,
-			AssetType:    a,
+			Last:                tick[0].LastPrice.Float64(),
+			High:                tick[0].HighPrice.Float64(),
+			Low:                 tick[0].LowPrice.Float64(),
+			BaseVolume:          tick[0].Volume.Float64(),
+			QuoteVolume:         tick[0].QuoteVolume.Float64(),
+			Open:                tick[0].OpenPrice.Float64(),
+			PercentChange24Hour: tick[0].PriceChangePercent.Float64(),
+			Pair:                p,
+			ExchangeName:        e.Name,
+			AssetType:           a,
 		})
 		if err != nil {
 			return nil, err
@@ -480,14 +483,15 @@ func (e *Exchange) UpdateTicker(ctx context.Context, p currency.Pair, a asset.It
 			return nil, err
 		}
 		err = ticker.ProcessTicker(&ticker.Price{
-			Last:         tick[0].LastPrice.Float64(),
-			High:         tick[0].HighPrice.Float64(),
-			Low:          tick[0].LowPrice.Float64(),
-			BaseVolume:   tick[0].BaseVolume.Float64(),
-			Open:         tick[0].OpenPrice.Float64(),
-			Pair:         p,
-			ExchangeName: e.Name,
-			AssetType:    a,
+			Last:                tick[0].LastPrice.Float64(),
+			High:                tick[0].HighPrice.Float64(),
+			Low:                 tick[0].LowPrice.Float64(),
+			BaseVolume:          tick[0].BaseVolume.Float64(),
+			Open:                tick[0].OpenPrice.Float64(),
+			PercentChange24Hour: tick[0].PriceChangePercent.Float64(),
+			Pair:                p,
+			ExchangeName:        e.Name,
+			AssetType:           a,
 		})
 		if err != nil {
 			return nil, err
@@ -1640,6 +1644,52 @@ func (e *Exchange) GetHistoricCandles(ctx context.Context, pair currency.Pair, a
 		}
 	default:
 		return nil, fmt.Errorf("%w %q", asset.ErrNotSupported, a)
+	}
+	return req.ProcessResponse(timeSeries)
+}
+
+// GetHistoricCandlesUnrestricted fetches closed USDT-margined futures candles
+// for any available pair, skipping the enabled-pair gate GetHistoricCandles
+// enforces. The coverage screener needs to read markets the operator has not
+// enabled (N10 on-demand read-through); asset and interval support are still
+// validated. Read-only: nothing here can place an order.
+func (e *Exchange) GetHistoricCandlesUnrestricted(ctx context.Context, pair currency.Pair, a asset.Item, interval kline.Interval, start, end time.Time) (*kline.Item, error) {
+	if a != asset.USDTMarginedFutures {
+		return nil, fmt.Errorf("%w: unrestricted reads support USDT-margined futures only", asset.ErrNotSupported)
+	}
+	if pair.IsEmpty() {
+		return nil, currency.ErrCurrencyPairEmpty
+	}
+	exchangeInterval, err := e.Features.Enabled.Kline.Intervals.Construct(interval)
+	if err != nil {
+		return nil, err
+	}
+	formatted, err := e.FormatExchangeCurrency(pair, a)
+	if err != nil {
+		return nil, err
+	}
+	limit, err := e.Features.Enabled.Kline.GetIntervalResultLimit(exchangeInterval)
+	if err != nil {
+		return nil, err
+	}
+	req, err := kline.CreateKlineRequest(e.Name, pair, formatted, a, interval, exchangeInterval, start, end, limit)
+	if err != nil {
+		return nil, err
+	}
+	candles, err := e.UKlineData(ctx, req.RequestFormatted, e.FormatExchangeKlineInterval(interval), req.RequestLimit, req.Start, req.End)
+	if err != nil {
+		return nil, err
+	}
+	timeSeries := make([]kline.Candle, 0, len(candles))
+	for i := range candles {
+		timeSeries = append(timeSeries, kline.Candle{
+			Time:   candles[i].OpenTime.Time(),
+			Open:   candles[i].Open.Float64(),
+			High:   candles[i].High.Float64(),
+			Low:    candles[i].Low.Float64(),
+			Close:  candles[i].Close.Float64(),
+			Volume: candles[i].Volume.Float64(),
+		})
 	}
 	return req.ProcessResponse(timeSeries)
 }

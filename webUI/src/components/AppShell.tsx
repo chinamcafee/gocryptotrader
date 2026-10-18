@@ -1,7 +1,7 @@
 import { Layout, Menu, Typography } from 'antd'
 import {
   AreaChartOutlined, RobotOutlined, BranchesOutlined, AuditOutlined,
-  HeartOutlined, SettingOutlined, AppstoreOutlined, CommentOutlined,
+  HeartOutlined, SettingOutlined, AppstoreOutlined, CommentOutlined, FundProjectionScreenOutlined, HistoryOutlined,
 } from '@ant-design/icons'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { StatusBar } from './StatusBar'
@@ -15,6 +15,8 @@ const NAV = [
   { key: '/terminal', icon: <AreaChartOutlined />, label: '交易台' },
   { key: '/markets', icon: <AppstoreOutlined />, label: '合约覆盖' },
   { key: '/chat', icon: <CommentOutlined />, label: '对话' },
+  { key: '/screener', icon: <FundProjectionScreenOutlined />, label: '筛选与开仓决策' },
+  { key: '/positions-review', icon: <HistoryOutlined />, label: '持仓决策' },
   { key: '/strategies', icon: <BranchesOutlined />, label: '策略工作区' },
   { key: '/providers', icon: <RobotOutlined />, label: '模型与配对' },
   { key: '/decisions', icon: <AuditOutlined />, label: '决策与审计' },

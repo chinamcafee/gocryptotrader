@@ -232,6 +232,7 @@ func TestProbeSchemaPasses(t *testing.T) {
 	result := c.Probe(context.Background(), ProbeLayerSchema)
 	require.Truef(t, result.Passed, "a HOLD candidate with an explicit null notional must pass: %s", result.ErrorMessage)
 	assert.Contains(t, (*seen)[0], `"response_format":{"type":"json_object"}`, "the JSON mode should be requested")
+	assert.Contains(t, (*seen)[0], `"max_tokens":4096`, "the schema layer should budget for a complete candidate plus model reasoning (live misses 2026-10-16: 256 and 1024 both truncated deepseek-flash)")
 }
 
 func TestProbeSchemaRejectsUnsafeReplies(t *testing.T) {
@@ -294,6 +295,7 @@ func TestProbeStreamPasses(t *testing.T) {
 	result := c.Probe(context.Background(), ProbeLayerStream)
 	require.Truef(t, result.Passed, "an SSE reply must pass the stream layer: %s", result.ErrorMessage)
 	assert.Contains(t, (*seen)[0], `"stream":true`, "the request should ask to stream")
+	assert.Contains(t, (*seen)[0], `"model":"`+testModel+`"`, "the stream request should carry the configured model (live miss 2026-10-16: an empty model earned HTTP 400)")
 	assert.Equal(t, testModel, result.ResponseModel, "the model should be read from a frame")
 	assert.Equal(t, 9, result.InputTokens, "usage should be read from the final frame")
 	assert.Equal(t, 2, result.OutputTokens, "usage should be read from the final frame")

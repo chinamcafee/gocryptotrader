@@ -105,17 +105,17 @@ type LLMChatService struct {
 // 0600, never regenerated once present), and storage, budget and revision
 // lookup are the real adapters. transport and runner are the production chat
 // client and the read-only tool runner.
-func (m *LLMManager) SetupChat(vaultDir string, transport ChatCompleter, runner ToolRunner) (*LLMChatService, error) {
+func (m *LLMManager) SetupChat(chatKeyDir string, transport ChatCompleter, runner ToolRunner) (*LLMChatService, error) {
 	if m == nil {
 		return nil, ErrNilSubsystem
 	}
-	if strings.TrimSpace(vaultDir) == "" {
-		return nil, fmt.Errorf("%w: vault directory is required", ErrChatNotConfigured)
+	if strings.TrimSpace(chatKeyDir) == "" {
+		return nil, fmt.Errorf("%w: chat key directory is required", ErrChatNotConfigured)
 	}
 	if transport == nil || runner == nil {
 		return nil, ErrChatNotConfigured
 	}
-	key, err := chat.LoadOrCreateConversationKey(vaultDir)
+	key, err := chat.LoadOrCreateConversationKey(chatKeyDir)
 	if err != nil {
 		return nil, fmt.Errorf("llm chat: conversation key: %w", err)
 	}
@@ -259,21 +259,22 @@ func (s *LLMChatService) ArchiveConversation(ctx context.Context, id string) err
 
 // SendMessage runs one turn against the active model pair's LLM revision.
 func (s *LLMChatService) SendMessage(ctx context.Context, conversationID, text string) (*ChatRunResult, error) {
-	return s.send(ctx, conversationID, text, nil)
+	return s.send(ctx, conversationID, text, nil, nil)
 }
 
 // SendMessageStream runs one turn and streams the reply's text fragments to
-// onDelta as they arrive. An interrupted stream persists no assistant row:
-// half a reply is not a reply (docs 05 §1), and the budget slot is released.
-func (s *LLMChatService) SendMessageStream(ctx context.Context, conversationID, text string, onDelta func(string) error) (*ChatRunResult, error) {
+// onDelta as they arrive, with live tool progress to onProgress. An
+// interrupted stream persists no assistant row: half a reply is not a reply
+// (docs 05 §1), and the budget slot is released.
+func (s *LLMChatService) SendMessageStream(ctx context.Context, conversationID, text string, onDelta func(string) error, onProgress func(ToolProgress)) (*ChatRunResult, error) {
 	if onDelta == nil {
-		return s.send(ctx, conversationID, text, nil)
+		return s.send(ctx, conversationID, text, nil, nil)
 	}
-	return s.send(ctx, conversationID, text, onDelta)
+	return s.send(ctx, conversationID, text, onDelta, onProgress)
 }
 
 // send is the shared turn entry; a nil onDelta means non-streaming.
-func (s *LLMChatService) send(ctx context.Context, conversationID, text string, onDelta func(string) error) (*ChatRunResult, error) {
+func (s *LLMChatService) send(ctx context.Context, conversationID, text string, onDelta func(string) error, onProgress func(ToolProgress)) (*ChatRunResult, error) {
 	if s == nil || s.Pipeline == nil {
 		return nil, ErrChatNotConfigured
 	}
@@ -289,6 +290,7 @@ func (s *LLMChatService) send(ctx context.Context, conversationID, text string, 
 		ConversationID:    conversationID,
 		Input:             text,
 		ProfileRevisionID: revisionID,
+		OnProgress:        onProgress,
 	}, onDelta)
 }
 

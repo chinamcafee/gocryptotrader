@@ -459,12 +459,13 @@ func TestLastEntryIntentAt(t *testing.T) {
 	seed("i4", "Kraken", "BTC_USDT", "usdtmarginedfutures", "OPEN_LONG", atMinutes(0))  // another venue
 	seed("i5", "Binance", "ETH_USDT", "usdtmarginedfutures", "OPEN_LONG", atMinutes(0)) // another market
 
-	at, ok, err := LastEntryIntentAt(ctx, "Binance", "BTC_USDT", "usdtmarginedfutures")
+	id, at, ok, err := LastEntryIntentAt(ctx, "Binance", "BTC_USDT", "usdtmarginedfutures")
 	require.NoError(t, err)
 	require.True(t, ok)
+	require.Equal(t, "i3", id, "the latest open's id travels with the time")
 	require.True(t, baseTime.Add(-5*time.Minute).Equal(at), "the latest open for the market, not the reduce")
 
-	_, ok, err = LastEntryIntentAt(ctx, "Binance", "SOL_USDT", "usdtmarginedfutures")
+	_, _, ok, err = LastEntryIntentAt(ctx, "Binance", "SOL_USDT", "usdtmarginedfutures")
 	require.NoError(t, err)
 	assert.False(t, ok, "a market never entered is past any cooldown")
 }

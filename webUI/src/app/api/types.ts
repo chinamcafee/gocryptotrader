@@ -198,11 +198,15 @@ export interface CollateralModeInfo {
   collateralMode?: string
 }
 
+/** 期货持仓（GET getallmanagedpositions；网关 protojson camelCase 形状，
+ *  方向是 order.Side 词汇表 BUY/SELL，数量为十进制字符串） */
 export interface ManagedPosition {
   exchange?: string
   asset?: string
   pair?: CurrencyPair
-  total?: number | string
+  currentSize?: string
+  currentDirection?: string
+  openingDirection?: string
   [k: string]: unknown
 }
 
@@ -286,7 +290,7 @@ export interface LlmProviderRevision {
   kind: string
   baseUrl: string
   modelId: string
-  /** vault 引用（secret://…）；明文 key 从不经过前端 */
+  /** apiKey 只在请求里出现；响应仅回派生指纹，明文 key 从不经过前端 */
   apiKeyRef: string
   /** SHA-256 截断指纹：界面只显示指纹，可核对不泄密 */
   apiKeyFingerprint: string
@@ -323,6 +327,11 @@ export interface LlmProviderProfile {
 
 export interface LlmListProviderProfilesResponse {
   profiles?: LlmProviderProfile[]
+}
+
+/** 新建档案的响应（W4-02 补缺）：返回含 id 的档案行，随后追加首个修订版。 */
+export interface LlmCreateProviderProfileResponse {
+  profile?: LlmProviderProfile
 }
 
 /** 一层探针的判决（05 §3；探针失败是结果不是错误） */
@@ -416,20 +425,6 @@ export interface LlmRiskSwitch {
 
 export interface LlmGetRiskSwitchesResponse {
   switches?: LlmRiskSwitch[]
-}
-
-/** vault 条目（只描述不泄密：引用 + 指纹；W4-06） */
-export interface LlmVaultEntry {
-  ref: string
-  kind?: string
-  fingerprint?: string
-  createdAt?: string
-}
-
-export interface LlmVaultStatusResponse {
-  initialized: boolean
-  directory?: string
-  entries?: LlmVaultEntry[]
 }
 
 /** 审计事件（docs/llm-dev 08 §3.5；append-only，不删除不改写） */
@@ -663,4 +658,81 @@ export interface LlmGetNotifyStatusResponse {
 export interface LlmTestNotifyResponse {
   relayRunning: boolean
   eventType?: string
+}
+
+// ── 筛选与批量决策工作台（docs/llm-dev/13）────────────────────────────────────
+
+/** 筛选指标目录行（GUI 表单与后端注册表同源，不硬编码） */
+export interface LlmScreenerMetric {
+  name: string
+  kind: 'NUMERIC' | 'CATEGORY' | string
+  tier: string
+  unit?: string
+  description: string
+  categories?: string[]
+}
+
+export interface LlmGetScreenerMetricsResponse {
+  metrics?: LlmScreenerMetric[]
+  maxLimit: number
+  defaultLimit: number
+}
+
+export interface LlmScreenCriteria {
+  metric: string
+  op: string
+  value?: number
+  value2?: number
+  state?: string
+}
+
+export interface LlmScreenSort {
+  metric: string
+  desc?: boolean
+}
+
+export interface LlmScreenRow {
+  marketId: string
+  numbersJson?: string
+  statesJson?: string
+}
+
+export interface LlmRunScreenResponse {
+  rows?: LlmScreenRow[]
+  universeSize: number
+  matched: number
+  filteredOut: number
+  excludedForMissing: number
+  notes?: string[]
+}
+
+/** 批量决策作业（docs 13 §3.2；只产决策记录，绝不下单） */
+export interface LlmBatchDecisionRow {
+  marketId: string
+  status: 'PENDING' | 'RUNNING' | 'DONE' | 'SKIPPED' | 'FAILED' | string
+  decision?: string
+  reason?: string
+  decisionRunId?: string
+  error?: string
+}
+
+export interface LlmStartBatchDecisionResponse {
+  jobId: string
+}
+
+export interface LlmGetBatchDecisionResponse {
+  jobId: string
+  kind: string
+  strategyVersionId: string
+  actor: string
+  createdAt: string
+  done: boolean
+  total: number
+  finished: number
+  rows?: LlmBatchDecisionRow[]
+}
+
+/** 活跃审批列表（A5：批量工作台默认绑定版本） */
+export interface LlmListActiveApprovalsResponse {
+  approvals?: LlmStrategyApproval[]
 }

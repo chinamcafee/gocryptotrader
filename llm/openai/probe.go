@@ -40,6 +40,11 @@ const (
 	// probeMaxTokens is the reply budget for a probe. It is smaller than a real
 	// analysis budget because a probe answer is short by construction.
 	probeMaxTokens = 256
+	// probeSchemaMaxTokens is the SCHEMA layer's budget: that layer must carry
+	// a complete candidate, and reasoning-capable models spend budget before
+	// the answer starts. (Found live 2026-10-16: 256 truncated deepseek-flash;
+	// 1024 was also consumed whole by the model's reasoning, 4096 clears it.)
+	probeSchemaMaxTokens = 4096
 	// sseDone is the terminator every OpenAI-compatible stream ends with.
 	sseDone = "[DONE]"
 )
@@ -247,7 +252,7 @@ func (c *Client) probeSchema(ctx context.Context, result *ProbeResult) error {
 			{Role: RoleUser, Content: probeSchemaUserPrompt},
 		},
 		ResponseFormat: &ResponseFormat{Type: ResponseFormatJSONObject},
-		MaxTokens:      probeMaxTokens,
+		MaxTokens:      probeSchemaMaxTokens,
 		Temperature:    new(float64),
 	})
 	if err != nil {
@@ -273,6 +278,12 @@ func (c *Client) probeStream(ctx context.Context, result *ProbeResult) error {
 		},
 		MaxTokens: probeMaxTokens,
 		Stream:    true,
+	}
+	// The stream path posts directly, so it must normalise itself: skipping
+	// this sent an empty model to the provider (found live 2026-10-16:
+	// HTTP 400 "you passed ." on deepseek-flash).
+	if err := c.normaliseRequest(req); err != nil {
+		return err
 	}
 	body, err := req.Marshal()
 	if err != nil {
@@ -398,8 +409,13 @@ func ParseSSE(payload []byte) (frames []string, done bool) {
 // It is probe-only and must never be reused as a production prompt.
 const probeSchemaSystemPrompt = `You answer with one JSON candidate object and nothing else.
 No market data is available: no evidence, no prices, no account facts.
+Return exactly these keys: strategyVersionId, snapshotId, marketId, action, thesis,
+evidenceRefs, invalidation, suggestedEntry, suggestedExit, proposedMaxNotionalUsd,
+uncertainty, ttlSeconds.
 Rules that are checked automatically:
+- strategyVersionId and snapshotId must be copied exactly from the user message.
 - With no data you cannot justify any trade, so action must be "HOLD".
+- thesis and invalidation must be nonempty strings.
 - proposedMaxNotionalUsd must be present and exactly null.
 - evidenceRefs must contain the snapshotId as its first entry.
 - uncertainty must be one of LOW, MEDIUM, HIGH.

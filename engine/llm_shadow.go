@@ -24,6 +24,12 @@ import (
 
 // ShadowRunRequest is one scheduled analysis.
 type ShadowRunRequest struct {
+	// Trigger names the run in the audit trail (09 §2.3); empty means the
+	// automatic shadow trigger.
+	Trigger string
+	// Review carries the since-entry context of a manual position review
+	// (docs 13 §3.3); nil for ordinary runs.
+	Review              *PositionReviewContext
 	StrategyVersionID   string
 	AccountID           string
 	MarketID            string
@@ -124,6 +130,7 @@ func (r *ShadowRunner) RunOnce(ctx context.Context, req *ShadowRunRequest) (*Sha
 		AccountID:           req.AccountID,
 		MarketID:            req.MarketID,
 		StrategyInstruction: req.StrategyInstruction,
+		Review:              req.Review,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("llm shadow: analysis: %w", err)
@@ -182,7 +189,10 @@ func (r *ShadowRunner) RunOnce(ctx context.Context, req *ShadowRunRequest) (*Sha
 
 // record fills the audit input from the request and writes the chain.
 func (r *ShadowRunner) record(ctx context.Context, req *ShadowRunRequest, in *DecisionRecordInput) (*DecisionRecordResult, error) {
-	in.Trigger = DecisionTriggerAutoShadow
+	in.Trigger = req.Trigger
+	if in.Trigger == "" {
+		in.Trigger = DecisionTriggerAutoShadow
+	}
 	in.RunMode = req.RunMode
 	in.StrategyVersionID = req.StrategyVersionID
 	in.LLMProfileRevisionID = req.ProfileRevisionID

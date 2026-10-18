@@ -226,7 +226,11 @@ func (r *TriggerConsumeResult) fail(err error) {
 // rotation, its scanner or the decision runner is missing -- each of those is
 // a legitimate configuration that leaves the consumer off.
 func (bot *Engine) newTriggerConsumer() *TriggerConsumer {
-	if bot == nil || bot.llmManager == nil || bot.llmDecisionRunner == nil {
+	if bot == nil || bot.llmManager == nil {
+		return nil
+	}
+	runner := bot.currentDecisionRunner()
+	if runner == nil {
 		return nil
 	}
 	rotation := bot.llmManager.Rotation()
@@ -244,7 +248,7 @@ func (bot *Engine) newTriggerConsumer() *TriggerConsumer {
 		Approvals:    LLMMarketGrants{},
 		VersionState: llmstore.GetStrategyVersion,
 		Build:        bot.buildShadowRunRequest,
-		Runner:       bot.llmDecisionRunner,
+		Runner:       runner,
 		Mode:         bot.llmManager.EffectiveRunMode,
 		AccountID:    strings.TrimSpace(cfg.AccountID),
 		Network:      strings.TrimSpace(cfg.Network),
@@ -260,14 +264,14 @@ func (bot *Engine) newTriggerConsumer() *TriggerConsumer {
 
 // triggerConsumeLoop drains the trigger queue until the context ends.
 //
+// The consumer is rebuilt every tick so a runner swapped in later (a pair
+// activation after startup) is picked up without restarting the loop; before
+// the first assembly it is legitimately nil and the tick is a no-op.
+//
 // A failed pass is logged and retried next tick: the events it could not
 // consume were drained and are lost (the queue's documented drop semantics),
 // but the next triggers of the same markets arrive on the next sweep.
 func (bot *Engine) triggerConsumeLoop(ctx context.Context) {
-	consumer := bot.newTriggerConsumer()
-	if consumer == nil {
-		return
-	}
 	ticker := time.NewTicker(triggerConsumeInterval)
 	defer ticker.Stop()
 	for {
@@ -275,6 +279,10 @@ func (bot *Engine) triggerConsumeLoop(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
+		}
+		consumer := bot.newTriggerConsumer()
+		if consumer == nil {
+			continue
 		}
 		result, err := consumer.ConsumeOnce(ctx)
 		if err != nil {

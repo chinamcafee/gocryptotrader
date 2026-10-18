@@ -30,6 +30,9 @@ const (
 	DecisionTriggerAutoShadow    = "AUTO_SHADOW"
 	DecisionTriggerAutoCandidate = "AUTO_CANDIDATE"
 	DecisionTriggerAutoExecution = "AUTO_EXECUTION"
+	// DecisionTriggerPositionReview marks a manual hold/close review of an
+	// open position (docs 13 §3.3).
+	DecisionTriggerPositionReview = "MANUAL_POSITION_REVIEW"
 )
 
 // AuditKindDecisionRecorded is the audit event written for every decision run.

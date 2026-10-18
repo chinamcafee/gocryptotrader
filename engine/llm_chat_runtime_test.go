@@ -12,12 +12,12 @@ import (
 )
 
 // 生产装配 · chat 走廊测试：激活配对 → 客户端（含 loopback httptest）→ 工具
-// 运行器（真实 scope）→ LLMChatService。
+// 运行器（真实 scope）→ LLMChatService（明文 key，vault 移除后）。
 
 func TestSetupChatFromActivePairAssemblesTheCorridor(t *testing.T) {
 	setupProviderAdminDB(t)
 	ctx := t.Context()
-	dir, llmRef, jevRef := vaultFixture(t, "sk-llm-1")
+	llmKey, jevKey := keyFixture(t, "sk-llm-1")
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -25,8 +25,8 @@ func TestSetupChatFromActivePairAssemblesTheCorridor(t *testing.T) {
 	}))
 	t.Cleanup(srv.Close)
 
-	seedRevision(t, "rev-llm", ProviderKindLLM, srv.URL+"/v1", "model-a", llmRef, true)
-	seedRevision(t, "rev-jev", ProviderKindJev, "https://jev.example.com/v1", "jev-1.0.0", jevRef, false)
+	seedRevision(t, "rev-llm", ProviderKindLLM, srv.URL+"/v1", "model-a", llmKey, true)
+	seedRevision(t, "rev-jev", ProviderKindJev, "https://jev.example.com/v1", "jev-1.0.0", jevKey, false)
 	seedPair(t)
 
 	require.NoError(t, llmstore.InsertStrategy(ctx, &llmstore.Strategy{
@@ -38,10 +38,13 @@ func TestSetupChatFromActivePairAssemblesTheCorridor(t *testing.T) {
 
 	cfg := &config.LLMConfig{
 		Exchange: "Binance", Asset: "usdtmarginedfutures", AccountID: "acct-1",
-		Vault: config.LLMVaultConfig{Directory: dir},
 	}
 	markets := []string{"BTC_USDT"} // the rotator's own BASE_QUOTE spelling
-	service, err := (&LLMManager{}).setupChatFromActivePair(ctx, cfg, &fakeToolSource{candles: toolSourceFixture().candles}, markets)
+	manager := &LLMManager{}
+	cache, cacheErr := NewKlineCache(64)
+	require.NoError(t, cacheErr)
+	manager.cache = cache
+	service, err := manager.setupChatFromActivePair(ctx, cfg, &fakeToolSource{candles: toolSourceFixture().candles}, markets, t.TempDir())
 	require.NoError(t, err)
 	require.NotNil(t, service)
 	assert.NotNil(t, service.Conversations)
@@ -50,6 +53,7 @@ func TestSetupChatFromActivePairAssemblesTheCorridor(t *testing.T) {
 
 	runner, ok := service.Pipeline.Tools.(*LLMToolRunner)
 	require.True(t, ok, "the pipeline must carry the read-only tool runner")
+	assert.Same(t, cache, runner.Cache, "the screener cache is wired from the manager")
 	require.NotNil(t, runner.Scope)
 	_, inScope := runner.Scope.Markets[testMarketID("BTC")]
 	assert.True(t, inScope, "the rotator's markets are in scope under the tool-facing id")
@@ -63,18 +67,17 @@ func TestSetupChatFromActivePairAssemblesTheCorridor(t *testing.T) {
 	assert.False(t, unknownOut, "an unseeded version is not in scope")
 }
 
-func TestSetupChatFromActivePairFailsClosedWithoutAVault(t *testing.T) {
+func TestSetupChatFromActivePairFailsClosedWithoutAPair(t *testing.T) {
 	setupProviderAdminDB(t)
 	ctx := t.Context()
-	_, llmRef, jevRef := vaultFixture(t, "sk-llm-1")
-	seedRevision(t, "rev-llm", ProviderKindLLM, "https://api.example.com/v1", "model-a", llmRef, false)
-	seedRevision(t, "rev-jev", ProviderKindJev, "https://jev.example.com/v1", "jev-1.0.0", jevRef, false)
-	seedPair(t)
+	llmKey, jevKey := keyFixture(t, "sk-llm-1")
+	seedRevision(t, "rev-llm", ProviderKindLLM, "https://api.example.com/v1", "model-a", llmKey, false)
+	seedRevision(t, "rev-jev", ProviderKindJev, "https://jev.example.com/v1", "jev-1.0.0", jevKey, false)
+	// No pair: the corridor must stay fail-closed.
 
 	cfg := &config.LLMConfig{
 		Exchange: "Binance", Asset: "usdtmarginedfutures", AccountID: "acct-1",
-		Vault: config.LLMVaultConfig{Directory: t.TempDir()},
 	}
-	_, err := (&LLMManager{}).setupChatFromActivePair(ctx, cfg, &fakeToolSource{}, nil)
-	require.Error(t, err, "an uninitialised vault must leave the corridor fail-closed")
+	_, err := (&LLMManager{}).setupChatFromActivePair(ctx, cfg, &fakeToolSource{}, nil, t.TempDir())
+	require.Error(t, err, "no active pair must leave the corridor fail-closed")
 }

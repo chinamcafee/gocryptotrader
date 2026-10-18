@@ -21,8 +21,9 @@ import (
 	"strings"
 )
 
-// ConversationKeyFile is the key file's name inside the llm-vault directory
-// (docs/llm-dev 09 §5.4).
+// ConversationKeyFile is the key file's name inside the chat key directory
+// (docs/llm-dev 09 §5.4; the directory became llm-chat-keys after the vault
+// removal on 2026-10-15).
 const ConversationKeyFile = "conversation-key.bin"
 
 // KeySize is 32 bytes: AES-256, the strength the design fixed.
@@ -92,7 +93,7 @@ func LoadOrCreateConversationKey(dir string) ([]byte, error) {
 		return nil, err
 	}
 	if err := os.MkdirAll(dir, 0o700); err != nil {
-		return nil, fmt.Errorf("creating vault directory: %w", err)
+		return nil, fmt.Errorf("creating chat key directory: %w", err)
 	}
 	key = make([]byte, KeySize)
 	if _, err := rand.Read(key); err != nil {

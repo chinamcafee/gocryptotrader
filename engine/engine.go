@@ -73,6 +73,12 @@ type Engine struct {
 	// and consumed by the PAPER/LIVE bridge.
 	llmIntents    *IntentRecorder
 	llmDispatcher *OrderDispatcher
+	// llmBatchRunner runs the GUI's batch decision jobs (docs 13 §3.2).
+	llmBatchRunner *BatchRunner
+	// llmRuntimeMu guards the three runtime service pointers above (chat
+	// corridor / decision runner / batch workbench): startup assigns them once
+	// and the pair-switch RPC re-assigns them while RPC handlers read.
+	llmRuntimeMu sync.RWMutex
 	// llmReadiness is the M6-01 admission evaluator; wired with the model-free
 	// runtime seams (LLMRuntimeFacts) when the subsystem starts.
 	llmReadiness             *LLMReadinessService
@@ -554,23 +560,27 @@ func (bot *Engine) Start() error {
 		}
 
 		// The chat corridor: active-pair clients + the read-only tool runner.
-		// Any missing piece (no pair, uninitialised vault, unknown exchange)
-		// logs and leaves the chat RPCs fail-closed rather than aborting Start.
+		// Any missing piece (no active pair, unknown exchange) logs and leaves
+		// the chat RPCs fail-closed rather than aborting Start; a later pair
+		// activation rebuilds it through reassembleLLMRuntime.
 		if chat, err := bot.setupLLMChat(runtimeCtx); err != nil {
 			gctlog.Warnf(gctlog.Global, "LLM chat corridor not assembled (chat RPCs stay unavailable): %s", err)
 		} else {
-			bot.llmChatService = chat
+			bot.swapChatService(chat)
 		}
 
 		// The shadow decision runner shares the same clients and scope.
 		if runner, err := bot.setupLLMDecisionRunner(runtimeCtx); err != nil {
 			gctlog.Warnf(gctlog.Global, "LLM decision runner not assembled (trigger/preview stay unavailable): %s", err)
 		} else {
-			bot.llmDecisionRunner = runner
-			// The trigger queue's production consumer: without it the
-			// scanner's events end in a bounded queue nobody drains.
-			go bot.triggerConsumeLoop(runtimeCtx)
+			bot.swapDecisionRunner(runner)
+			bot.swapBatchRunner(bot.newBatchRunner(runner))
 		}
+		// The trigger queue's production consumer: without it the scanner's
+		// events end in a bounded queue nobody drains. The loop rebuilds its
+		// consumer each tick, so a runner assembled later (a pair activation
+		// after startup) starts being drained without a restart.
+		go bot.triggerConsumeLoop(runtimeCtx)
 	}
 
 	if bot.Settings.EnableExchangeSyncManager {

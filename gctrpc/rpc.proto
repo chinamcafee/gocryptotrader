@@ -1588,6 +1588,24 @@ message LLMSendMessageResponse {
   int64 latency_ms = 6;
   string error_code = 7;
   repeated LLMEvidenceCard evidence = 8;
+  // proposals are inert configuration drafts awaiting operator confirmation
+  // (docs/llm-dev 16); they grant no execution authority.
+  repeated LLMActionProposal proposals = 9;
+}
+
+// LLMActionProposal is one inert configuration draft produced by the
+// proposeAction tool; the webUI renders it as a confirmation card and the
+// operator's confirm calls the same governed RPC the manual pages use.
+message LLMActionProposal {
+  string action = 1;
+  string summary = 2;
+  repeated string market_ids = 3;
+  string strategy_version_id = 4;
+  string actor = 5;
+  string market_id = 6;
+  bool tracked = 7;
+  bool all_positions = 8;
+  string job_id = 9;
 }
 
 message LLMChatStreamRequest {
@@ -1602,6 +1620,17 @@ message LLMChatStreamEvent {
   LLMSendMessageResponse final = 2;
   // error carries a stream failure the client must show.
   string error = 3;
+  // progress is a live tool-progress update (e.g. a full-universe screen).
+  LLMToolProgress progress = 4;
+}
+
+// LLMToolProgress reports one tool's progress while a turn is streaming.
+message LLMToolProgress {
+  string tool = 1;
+  string phase = 2;
+  int32 done = 3;
+  int32 total = 4;
+  string message = 5;
 }
 
 // ---- docs/llm-dev 08 §3.2: strategies and approvals ----
@@ -1781,6 +1810,15 @@ message LLMGetStrategyApprovalResponse {
   LLMStrategyApproval approval = 2;
 }
 
+message LLMListActiveApprovalsRequest {
+  string account_id = 1;
+  string network = 2;
+}
+
+message LLMListActiveApprovalsResponse {
+  repeated LLMStrategyApproval approvals = 1;
+}
+
 // W5-07 market grants: the second gate ("seeing a market" never equals
 // "trading a market"); one active grant per account+network+market, <=30 days.
 message LLMListMarketGrantsRequest {
@@ -1872,6 +1910,105 @@ message LLMPreviewDecisionRequest {
   string actor = 3;
 }
 
+message LLMBatchDecisionRow {
+  string market_id = 1;
+  string status = 2;
+  string decision = 3;
+  string reason = 4;
+  string decision_run_id = 5;
+  string error = 6;
+}
+
+message LLMStartBatchDecisionRequest {
+  string strategy_version_id = 1;
+  repeated string market_ids = 2;
+  string kind = 3;
+  string actor = 4;
+}
+
+message LLMStartBatchDecisionResponse {
+  string job_id = 1;
+}
+
+message LLMGetBatchDecisionRequest {
+  string job_id = 1;
+}
+
+message LLMGetBatchDecisionResponse {
+  string job_id = 1;
+  string kind = 2;
+  string strategy_version_id = 3;
+  string actor = 4;
+  string created_at = 5;
+  bool done = 6;
+  int32 total = 7;
+  int32 finished = 8;
+  repeated LLMBatchDecisionRow rows = 9;
+}
+
+message LLMCancelBatchDecisionRequest {
+  string job_id = 1;
+  string actor = 2;
+}
+
+message LLMCancelBatchDecisionResponse {
+  string job_id = 1;
+  bool done = 2;
+  int32 cancelled = 3;
+}
+
+message LLMScreenerMetric {
+  string name = 1;
+  string kind = 2;
+  string tier = 3;
+  string unit = 4;
+  string description = 5;
+  repeated string categories = 6;
+}
+
+message LLMGetScreenerMetricsRequest {}
+
+message LLMGetScreenerMetricsResponse {
+  repeated LLMScreenerMetric metrics = 1;
+  int32 max_limit = 2;
+  int32 default_limit = 3;
+}
+
+message LLMScreenCriteria {
+  string metric = 1;
+  string op = 2;
+  double value = 3;
+  double value2 = 4;
+  string state = 5;
+}
+
+message LLMScreenSort {
+  string metric = 1;
+  bool desc = 2;
+}
+
+message LLMRunScreenRequest {
+  repeated LLMScreenCriteria criteria = 1;
+  repeated LLMScreenSort sort = 2;
+  int32 limit = 3;
+  repeated string include = 4;
+}
+
+message LLMScreenRow {
+  string market_id = 1;
+  string numbers_json = 2;
+  string states_json = 3;
+}
+
+message LLMRunScreenResponse {
+  repeated LLMScreenRow rows = 1;
+  int32 universe_size = 2;
+  int32 matched = 3;
+  int32 filtered_out = 4;
+  int32 excluded_for_missing = 5;
+  repeated string notes = 6;
+}
+
 message LLMGetDecisionLineageRequest {
   string id = 1;
 }
@@ -1954,36 +2091,9 @@ message LLMGetRiskSwitchesResponse {
 
 message LLMGetStatusRequest {}
 
-// ---- docs/llm-dev 09 §5: vault (secret custody of W4-06) ----
-
-message LLMVaultEntry {
-  string ref = 1;
-  string kind = 2;
-  string fingerprint = 3;
-  string created_at = 4;
-}
-
-message LLMVaultStatusRequest {}
-
-message LLMVaultStatusResponse {
-  bool initialized = 1;
-  string directory = 2;
-  repeated LLMVaultEntry entries = 3;
-}
-
-message LLMVaultInitRequest {}
-
-message LLMVaultAddSecretRequest {
-  // kind groups the secret, e.g. llm or jev.
-  string kind = 1;
-  // secret is write-only: it is never echoed back, only the ref + fingerprint.
-  string secret = 2;
-}
-
-message LLMVaultAddSecretResponse {
-  string ref = 1;
-  string fingerprint = 2;
-}
+// The vault (secret custody, W4-06) was removed on 2026-10-15 by operator
+// decision: provider API keys are configured as plaintext on each provider
+// revision. The former LLMVault* messages and RPCs are gone.
 
 // W7-07 coverage runtime face: the plan's arithmetic plus the rotator's
 // measured state (cycle progress, coldest market age, weight already spent,
@@ -2008,6 +2118,20 @@ message LLMGetCoverageStatusResponse {
   string last_reload = 16;
   int64 increment_spacing_ms = 17;
   string checked_at = 18;
+}
+
+// N11 coverage linkage: enable/disable one market in the exchange's tracked
+// set; the handler refreshes the rotator and records an audit event.
+message LLMSetMarketTrackedRequest {
+  string market_id = 1;
+  bool tracked = 2;
+  string actor = 3;
+}
+
+message LLMSetMarketTrackedResponse {
+  string market_id = 1;
+  bool tracked = 2;
+  string status = 3;
 }
 
 // W7-01 halt write side: the three-level stop (SOFT/MARKET/FULL) and its
@@ -2184,9 +2308,10 @@ message LLMProviderRevision {
   string kind = 4;
   string base_url = 5;
   string model_id = 6;
-  // api_key_ref is the vault reference, never the key itself.
-  string api_key_ref = 7;
-  // api_key_fingerprint is the truncated SHA-256 the vault reports (16 hex).
+  // api_key_ref is gone: the plaintext key never travels back to a client.
+  reserved 7;
+  reserved "api_key_ref";
+  // api_key_fingerprint is the server-derived SHA-256 prefix (16 hex).
   string api_key_fingerprint = 8;
   int64 timeout_seconds = 9;
   // Optional numeric fields use 0 for unset (proto3 scalars).
@@ -2245,8 +2370,11 @@ message LLMUpdateProviderProfileRequest {
   string actor = 2;
   string base_url = 3;
   string model_id = 4;
-  string api_key_ref = 5;
-  string api_key_fingerprint = 6;
+  // api_key is the plaintext provider key (vault removed 2026-10-15); the
+  // fingerprint column is derived server-side and never typed by an operator.
+  string api_key = 5;
+  reserved 6;
+  reserved "api_key_fingerprint";
   int64 timeout_seconds = 7;
   int64 max_output_tokens = 8;
   int64 max_tool_rounds = 9;
@@ -2886,6 +3014,9 @@ service GoCryptoTraderService {
   rpc LLMGetStrategyApproval(LLMGetStrategyApprovalRequest) returns (LLMGetStrategyApprovalResponse) {
     option (google.api.http) = {get: "/v1/llm/strategyversions/{strategy_version_id}/approval"};
   }
+  rpc LLMListActiveApprovals(LLMListActiveApprovalsRequest) returns (LLMListActiveApprovalsResponse) {
+    option (google.api.http) = {get: "/v1/llm/approvals/active"};
+  }
   rpc LLMListMarketGrants(LLMListMarketGrantsRequest) returns (LLMListMarketGrantsResponse) {
     option (google.api.http) = {get: "/v1/llm/marketgrants"};
   }
@@ -2909,6 +3040,21 @@ service GoCryptoTraderService {
   rpc LLMPreviewDecision(LLMPreviewDecisionRequest) returns (LLMDecisionRun) {
     option (google.api.http) = {post: "/v1/llm/decisions/preview" body: "*"};
   }
+  rpc LLMStartBatchDecision(LLMStartBatchDecisionRequest) returns (LLMStartBatchDecisionResponse) {
+    option (google.api.http) = {post: "/v1/llm/batchdecisions" body: "*"};
+  }
+  rpc LLMGetBatchDecision(LLMGetBatchDecisionRequest) returns (LLMGetBatchDecisionResponse) {
+    option (google.api.http) = {get: "/v1/llm/batchdecisions/{job_id}"};
+  }
+  rpc LLMCancelBatchDecision(LLMCancelBatchDecisionRequest) returns (LLMCancelBatchDecisionResponse) {
+    option (google.api.http) = {post: "/v1/llm/batchdecisions/{job_id}/cancel" body: "*"};
+  }
+  rpc LLMGetScreenerMetrics(LLMGetScreenerMetricsRequest) returns (LLMGetScreenerMetricsResponse) {
+    option (google.api.http) = {get: "/v1/llm/screener/metrics"};
+  }
+  rpc LLMRunScreen(LLMRunScreenRequest) returns (LLMRunScreenResponse) {
+    option (google.api.http) = {post: "/v1/llm/screener/run" body: "*"};
+  }
   rpc LLMGetDecisionLineage(LLMGetDecisionLineageRequest) returns (LLMGetDecisionLineageResponse) {
     option (google.api.http) = {get: "/v1/llm/decisions/{id}/lineage"};
   }
@@ -2929,6 +3075,9 @@ service GoCryptoTraderService {
   }
   rpc LLMGetCoverageStatus(LLMGetCoverageStatusRequest) returns (LLMGetCoverageStatusResponse) {
     option (google.api.http) = {get: "/v1/llm/coverage"};
+  }
+  rpc LLMSetMarketTracked(LLMSetMarketTrackedRequest) returns (LLMSetMarketTrackedResponse) {
+    option (google.api.http) = {post: "/v1/llm/markettracked" body: "*"};
   }
   rpc LLMListHalts(LLMListHaltsRequest) returns (LLMListHaltsResponse) {
     option (google.api.http) = {get: "/v1/llm/halts"};
@@ -2956,15 +3105,6 @@ service GoCryptoTraderService {
   }
   rpc LLMGetStatus(LLMGetStatusRequest) returns (LLMGetStatusResponse) {
     option (google.api.http) = {get: "/v1/llm/status"};
-  }
-  rpc LLMVaultStatus(LLMVaultStatusRequest) returns (LLMVaultStatusResponse) {
-    option (google.api.http) = {get: "/v1/llm/vault"};
-  }
-  rpc LLMVaultInit(LLMVaultInitRequest) returns (GenericResponse) {
-    option (google.api.http) = {post: "/v1/llm/vault/init"};
-  }
-  rpc LLMVaultAddSecret(LLMVaultAddSecretRequest) returns (LLMVaultAddSecretResponse) {
-    option (google.api.http) = {post: "/v1/llm/vault/secrets" body: "*"};
   }
   rpc LLMGetReadiness(LLMReadinessRequest) returns (LLMReadinessResponse) {
     option (google.api.http) = {get: "/v1/llm/readiness"};

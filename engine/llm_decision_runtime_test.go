@@ -18,7 +18,7 @@ import (
 func TestSetupDecisionRuntimeAssemblesTheRunner(t *testing.T) {
 	setupProviderAdminDB(t)
 	ctx := t.Context()
-	dir, llmRef, jevRef := vaultFixture(t, "sk-llm-1")
+	llmKey, jevKey := keyFixture(t, "sk-llm-1")
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -26,21 +26,27 @@ func TestSetupDecisionRuntimeAssemblesTheRunner(t *testing.T) {
 	}))
 	t.Cleanup(srv.Close)
 
-	seedRevision(t, "rev-llm", ProviderKindLLM, srv.URL+"/v1", "model-a", llmRef, true)
-	seedRevision(t, "rev-jev", ProviderKindJev, "https://jev.example.com/v1", "jev-1.0.0", jevRef, false)
+	seedRevision(t, "rev-llm", ProviderKindLLM, srv.URL+"/v1", "model-a", llmKey, true)
+	seedRevision(t, "rev-jev", ProviderKindJev, "https://jev.example.com/v1", "jev-1.0.0", jevKey, false)
 	seedPair(t)
 
 	cfg := &config.LLMConfig{
 		Exchange: "Binance", Asset: "usdtmarginedfutures", AccountID: "acct-1",
-		Vault: config.LLMVaultConfig{Directory: dir},
 	}
-	runner, err := (&LLMManager{}).setupDecisionRuntimeFromActivePair(ctx, cfg, &fakeToolSource{}, []string{"BTC_USDT"})
+	manager := &LLMManager{}
+	cache, cacheErr := NewKlineCache(64)
+	require.NoError(t, cacheErr)
+	manager.cache = cache
+	runner, err := manager.setupDecisionRuntimeFromActivePair(ctx, cfg, &fakeToolSource{}, []string{"BTC_USDT"})
 	require.NoError(t, err)
 	require.NotNil(t, runner)
 	require.NotNil(t, runner.Scheduler)
 	require.NotNil(t, runner.Analysis)
 	require.NotNil(t, runner.Jev)
 	require.NotNil(t, runner.Recorder)
+	toolRunner, ok := runner.Analysis.Tools.(*LLMToolRunner)
+	require.True(t, ok, "the analyst pipeline must carry the read-only tool runner")
+	assert.Same(t, cache, toolRunner.Cache, "the screener cache is wired from the manager")
 	assert.NotNil(t, runner.Analysis.Transport, "the analyst should run on the built client")
 	assert.NotNil(t, runner.Jev.Judge, "the judge should run on the built client")
 	client, ok := runner.Analysis.Transport.(*openai.Client)

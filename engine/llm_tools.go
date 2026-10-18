@@ -67,6 +67,24 @@ type LLMToolRunner struct {
 	// Cache, when set, serves repeated candle fetches from closed history
 	// instead of the exchange (M2-02).
 	Cache *KlineCache
+	// Markets is the covered universe in run vocabulary; screenMarkets scans
+	// it (docs 13 §3.1). Empty leaves the screener tool refuse-closed.
+	Markets []string
+	// Interval is the cached candle interval the screener reads.
+	Interval kline.Interval
+	// FlowScanLimit bounds the T2 (per-symbol taker flow) coverage; zero
+	// resolves to defaultScreenerFlowScanLimit.
+	FlowScanLimit int
+	// FullUniverse scans every available in-scope perpetual (N10), not only the
+	// covered/rotator set. Missing candles are fetched on demand (pace-limited)
+	// and backfilled into the cache.
+	FullUniverse bool
+	// JevJudge/JevModel/JevRevisionID/JevBudget configure the advisory Jev calls
+	// (assessOpeningOpportunities). Nil leaves the tool refuse-closed.
+	JevJudge      iJevBoundedJudge
+	JevModel      string
+	JevRevisionID string
+	JevBudget     iChatBudget
 	// Now, when set, is the clock (tests); nil means time.Now.
 	Now func() time.Time
 }
@@ -89,7 +107,7 @@ func (r *LLMToolRunner) now() time.Time {
 	return time.Now()
 }
 
-// Supported reports whether the name is one of the eight contract tools.
+// Supported reports whether the name is one of the contract tools.
 func (r *LLMToolRunner) Supported(name string) bool {
 	return slices.Contains(tools.Names(), name)
 }
@@ -128,6 +146,23 @@ func (r *LLMToolRunner) Run(ctx context.Context, callID, name, rawArgs string) (
 		quality = candidate.QualityDatabaseCached
 	case tools.ToolGetRiskBudget:
 		payload, asOf, strategyVersionID, err = r.runRiskBudget(ctx, rawArgs)
+		quality = candidate.QualityDatabaseCached
+	case tools.ToolScreenMarkets:
+		payload, asOf, err = r.RunScreenMarkets(ctx, rawArgs)
+		if err == nil {
+			if out, isMap := payload.(map[string]any); isMap {
+				// The chat tool path rides the evidence byte cap (which
+				// rejects); the GUI RPC calls RunScreenMarkets directly and
+				// is not trimmed.
+				payload = fitScreenResultToEvidenceBudget(out)
+			}
+		}
+		quality = candidate.QualityDatabaseCached
+	case tools.ToolProposeAction:
+		payload, asOf, err = r.runProposeAction(rawArgs)
+		quality = candidate.QualityDatabaseCached
+	case tools.ToolAssessOpening:
+		payload, asOf, err = r.runAssessOpeningOpportunities(ctx, rawArgs)
 		quality = candidate.QualityDatabaseCached
 	default:
 		return "", fmt.Errorf("%w: %s", tools.ErrUnknownTool, name)
@@ -249,7 +284,17 @@ func (r *LLMToolRunner) fetchClosedWindow(ctx context.Context, pair currency.Pai
 	start := now.Add(-time.Duration(bars+toolCandleFetchMargin) * duration)
 	window, err := fetchCandlesThroughCache(ctx, r.Source, r.Cache, pair, r.Asset, kInterval, start, now, now)
 	if err != nil {
-		return nil, err
+		// N10: the full-universe flow screens markets the operator has not
+		// enabled; the ordinary candle path refuses those pairs by design, so
+		// fall back to the venue's unrestricted read-only fetch.
+		unrestricted, canRead := r.Source.(iUnrestrictedKlineSource)
+		if !canRead || !errors.Is(err, currency.ErrPairNotEnabled) {
+			return nil, err
+		}
+		window, err = unrestricted.GetHistoricCandlesUnrestricted(ctx, pair, r.Asset, kInterval, start, now)
+		if err != nil {
+			return nil, err
+		}
 	}
 	if window == nil || len(window.Candles) == 0 {
 		return nil, fmt.Errorf("no candles returned for %s", pair)

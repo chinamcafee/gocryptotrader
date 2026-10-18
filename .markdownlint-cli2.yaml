@@ -10,3 +10,5 @@ config:
 ignores:
   - cmd/documentation/sub_templates/contributors.tmpl
   - vendor/**
+  # Not committed and absent in CI checkouts; third-party markdown is not ours to lint.
+  - "**/node_modules/**"

@@ -1,11 +1,8 @@
 package config
 
 import (
-	"path/filepath"
-	"runtime"
 	"strings"
 
-	"github.com/thrasher-corp/gocryptotrader/common"
 	"github.com/thrasher-corp/gocryptotrader/exchanges/margin"
 )
 
@@ -13,9 +10,6 @@ import (
 // docs/llm-dev/OPEN-QUESTIONS-待确认事项.md; changing one here changes the
 // behaviour of every fresh configuration.
 const (
-	// defaultLLMVaultDirName is the vault directory under the data dir.
-	defaultLLMVaultDirName = "llm-vault"
-
 	// defaultLLMRunMode is the safest mode that still allows analysis.
 	defaultLLMRunMode = "READ_ONLY"
 	// defaultLLMNetwork keeps a sandbox-first ordering: an operator must opt in
@@ -86,6 +80,16 @@ const (
 	// margin mode for the small-verification tier is cross (operator
 	// vocabulary; the venue's own spelling for it is margin.Multi:"multi").
 	defaultLLMExpectedMarginType = "CROSS"
+
+	// defaultLLMScreenerFlowScanLimit is the T2 coverage when unset; the hard
+	// cap keeps one screen bounded regardless of configuration (docs 13 §3.1).
+	defaultLLMScreenerFlowScanLimit = 100
+	maxLLMScreenerFlowScanLimit     = 600
+
+	// defaultLLMBatchMaxMarkets bounds one GUI batch job; the hard cap keeps a
+	// serial job's model draw bounded regardless of configuration.
+	defaultLLMBatchMaxMarkets = 10
+	maxLLMBatchMaxMarkets     = 50
 )
 
 // CheckLLMConfig validates the LLM section and fills defaults.
@@ -112,9 +116,6 @@ func (c *Config) CheckLLMConfig() {
 	}
 	if c.LLM.ProbeMaxAgeSeconds <= 0 {
 		c.LLM.ProbeMaxAgeSeconds = defaultLLMProbeMaxAgeSeconds
-	}
-	if c.LLM.Vault.Directory == "" {
-		c.LLM.Vault.Directory = filepath.Join(common.GetDefaultDataDir(runtime.GOOS), defaultLLMVaultDirName)
 	}
 
 	t := &c.LLM.Triggers
@@ -273,6 +274,30 @@ func (c *Config) CheckLLMConfig() {
 	}
 	if h.ReviewExpireHours <= 0 {
 		h.ReviewExpireHours = defaultLLMReviewExpireHours
+	}
+
+	// The batch bound: one job is serial, so its market cap is also its
+	// worst-case model budget draw.
+	bat := &c.LLM.Batch
+	if bat.MaxMarkets <= 0 {
+		bat.MaxMarkets = defaultLLMBatchMaxMarkets
+	}
+	if bat.MaxMarkets > maxLLMBatchMaxMarkets {
+		bat.MaxMarkets = maxLLMBatchMaxMarkets
+	}
+
+	// The screener bounds: a positive T2 coverage, capped so one screen can
+	// never fan out into an unbounded per-symbol read storm.
+	sc := &c.LLM.Screener
+	if sc.FlowScanLimit <= 0 {
+		sc.FlowScanLimit = defaultLLMScreenerFlowScanLimit
+	}
+	if sc.FlowScanLimit > maxLLMScreenerFlowScanLimit {
+		sc.FlowScanLimit = maxLLMScreenerFlowScanLimit
+	}
+	if sc.FullUniverse == nil {
+		full := true
+		sc.FullUniverse = &full
 	}
 
 	// The risk assumptions: normalise the operator's margin-mode vocabulary

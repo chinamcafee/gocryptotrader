@@ -41,7 +41,10 @@ func TestNewClientRejectsBadProfiles(t *testing.T) {
 	require.ErrorIs(t, err, httpclient.ErrNilSecret, "a nil secret callback must be refused")
 
 	_, err = NewClient(&Profile{BaseURL: "https://api.example.com", Model: "jev-latest"}, staticSecret("x"))
-	require.ErrorIs(t, err, ErrModelInvalid, "an alias model must be refused so decisions stay replayable")
+	require.NoError(t, err, "the jev-latest alias is accepted by operator decision (2026-10-15)")
+
+	_, err = NewClient(&Profile{BaseURL: "https://api.example.com", Model: "gpt-4o"}, staticSecret("x"))
+	require.ErrorIs(t, err, ErrModelInvalid, "a foreign model must be refused")
 
 	_, err = NewClient(&Profile{BaseURL: "", Model: goodModel}, staticSecret("x"))
 	require.Error(t, err, "an empty endpoint must be refused")
@@ -238,8 +241,7 @@ func probeAnswers() json.RawMessage {
 	  "synthetic_score": {
 	    "type": "score",
 	    "score": 1.0,
-	    "probabilities": {"0": 0.0, "1": 1.0, "2": 0.0},
-	    "legend": ["Insufficient", "Mixed", "Adequate"],
+	    "legend": {"Insufficient": "0", "Mixed": "1", "Adequate": "2"},
 	    "confidence": 0.8
 	  },
 	  "synthetic_noul": { "type": "noul", "noul": 1.0 }
@@ -298,7 +300,7 @@ func TestProbeReportsFailuresWithoutError(t *testing.T) {
 		},
 		{
 			name: "distribution invalid", status: http.StatusOK, wantEmpty: true,
-			body: `{"model":"jev-1.13.0","answers":{"synthetic_choice":{"type":"choice","choice":"expected","probabilities":{"expected":0.4,"other":0.4},"confidence":0.5},"synthetic_score":{"type":"score","score":1.0,"probabilities":{"0":0.0,"1":1.0,"2":0.0},"legend":["a","b","c"],"confidence":0.5},"synthetic_noul":{"type":"noul","noul":1.0}}}`,
+			body: `{"model":"jev-1.13.0","answers":{"synthetic_choice":{"type":"choice","choice":"expected","probabilities":{"expected":0.4,"other":0.4},"confidence":0.5},"synthetic_score":{"type":"score","score":1.0,"legend":{"a":"0","b":"1","c":"2"},"confidence":0.5},"synthetic_noul":{"type":"noul","noul":1.0}}}`,
 		},
 	}
 
@@ -352,4 +354,18 @@ func TestErrorCodeVocabulary(t *testing.T) {
 	} {
 		assert.Equalf(t, tc.want, ErrorCode(tc.err), "the mapping should be stable for %v", tc.err)
 	}
+}
+
+func TestNewClientAcceptsFullSystemOneEndpoint(t *testing.T) {
+	t.Parallel()
+
+	c, err := NewClient(&Profile{BaseURL: "https://api.typesafe.ai/v1/systemone", Model: goodModel}, staticSecret("x"))
+	require.NoError(t, err)
+	assert.Equal(t, "https://api.typesafe.ai/v1/systemone", c.Endpoint(),
+		"a pasted full endpoint must not be doubled (live 404 on 2026-10-16)")
+
+	c, err = NewClient(&Profile{BaseURL: "https://api.typesafe.ai", Model: goodModel}, staticSecret("x"))
+	require.NoError(t, err)
+	assert.Equal(t, "https://api.typesafe.ai/v1/systemone", c.Endpoint(),
+		"the bare site gets the path appended")
 }

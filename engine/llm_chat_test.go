@@ -226,7 +226,7 @@ func TestChatRunSealsTheTurnAndReturnsTheReply(t *testing.T) {
 	assert.Equal(t, "user", request.Messages[len(request.Messages)-1].Role)
 	assert.Equal(t, "BTC 现在能开多吗？", request.Messages[len(request.Messages)-1].Content)
 	assert.Nil(t, request.ResponseFormat, "a conversation reply is free text: no json_object")
-	assert.Len(t, request.Tools, 8, "chat shares the decision path's eight read-only tools")
+	assert.Len(t, request.Tools, 11, "chat shares the decision path's read-only tools plus the proposeAction and Jev-advisory tools")
 	assert.Equal(t, "gpt-test", request.Model)
 	assert.Equal(t, 512, request.MaxTokens)
 }

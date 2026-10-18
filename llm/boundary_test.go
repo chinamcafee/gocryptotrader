@@ -130,7 +130,7 @@ func TestLLMTreeIsPresent(t *testing.T) {
 	// The packages this contract is about. If one is renamed or moved, the
 	// checks below would still pass while proving nothing about it.
 	for _, name := range []string{
-		"candidate", "coverage", "httpclient", "jev", "openai", "secrets", "snapshot",
+		"candidate", "coverage", "httpclient", "jev", "openai", "snapshot", // "secrets" existed until the vault removal (2026-10-15)
 	} {
 		info, err := os.Stat(name)
 		require.NoErrorf(t, err, "the %s package must exist under llm/", name)

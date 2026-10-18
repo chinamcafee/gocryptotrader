@@ -1,8 +1,8 @@
-import { Alert, Card, Col, Input, Row, Segmented, Space, Table, Tag, Tooltip, Typography } from 'antd'
+import { Alert, Card, Col, Input, Row, Segmented, Space, Switch, Table, Tag, Tooltip, Typography, message } from 'antd'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSetAtom } from 'jotai'
-import { useGetExchangePairsQuery } from '@/app/api/gctApi'
+import { errorText, isNotImplemented, useGetExchangePairsQuery, useSetLlmMarketTrackedMutation } from '@/app/api/gctApi'
 import {
   EXCHANGE_WEIGHT_PER_MINUTE, EXCLUSION_LABEL, buildRotationPlan, classifySymbols, planFits,
   type SymbolRow,
@@ -38,10 +38,29 @@ const num = (v: number, digits = 1) =>
  */
 export default function MarketsPage() {
   const { data, error, isFetching } = useGetExchangePairsQuery()
+  const [setTracked] = useSetLlmMarketTrackedMutation()
+  const [pendingTrack, setPendingTrack] = useState<string>()
   const setMarket = useSetAtom(selectedMarketAtom)
   const nav = useNavigate()
   const [filter, setFilter] = useState<Filter>('IN_SCOPE')
   const [query, setQuery] = useState('')
+
+  // N11 对话/手动同源：启用=进入 SyncManager 轮询集与覆盖轮；停用=离开。
+  const onToggleTracked = async (row: SymbolRow, next: boolean) => {
+    setPendingTrack(row.symbol)
+    try {
+      const res = await setTracked({
+        marketId: `Binance:usdtmarginedfutures:${row.base}_${row.quote}`,
+        tracked: next,
+        actor: 'webui-operator',
+      }).unwrap()
+      message.success(`${res.tracked ? '已启用' : '已停用'} ${res.marketId}`)
+    } catch (err) {
+      message.error(isNotImplemented(err) ? '写操作被代理闸门拦截（GCT_ALLOW_WRITES=false）' : errorText(err))
+    } finally {
+      setPendingTrack(undefined)
+    }
+  }
 
   const uf = data?.supportedAssets?.usdtmarginedfutures
   const { rows, report } = useMemo(
@@ -176,22 +195,31 @@ export default function MarketsPage() {
                 render: (_, r) => <span className="gct-dim gct-mono" style={{ fontSize: 11 }}>{r.base} / {r.quote}</span>,
               },
               {
-                title: '状态', width: 120,
+                title: '状态', width: 170,
                 render: (_, r) =>
-                  r.enabled ? (
-                    <Tag color="green">已启用</Tag>
-                  ) : r.inScope ? (
-                    <Tooltip
-                      title={
-                        <span>
-                          未在 enabled 列表里。实测网关直接拒绝（<code>currency not enabled</code>），
-                          所以<b>现在查不了</b>；按需只读需要 M2-01 提供绕过启用校验的取数路径。
-                          届时标记 <code>onDemand</code>，且永远不进决策流水线（Q4=B）。
-                        </span>
-                      }
-                    >
-                      <Tag color="orange">未启用</Tag>
-                    </Tooltip>
+                  r.inScope ? (
+                    <Space size={6} onClick={(e) => e.stopPropagation()}>
+                      <Switch
+                        size="small"
+                        checked={r.enabled}
+                        loading={pendingTrack === r.symbol}
+                        onChange={(next) => void onToggleTracked(r, next)}
+                      />
+                      {r.enabled ? (
+                        <Tag color="green">已启用</Tag>
+                      ) : (
+                        <Tooltip
+                          title={
+                            <span>
+                              启用后该合约进入 SyncManager 轮询集与覆盖轮，可查询、可筛选；
+                              停用的合约在 N10 按需取数落地前无法取数。
+                            </span>
+                          }
+                        >
+                          <Tag color="orange">未启用</Tag>
+                        </Tooltip>
+                      )}
+                    </Space>
                   ) : (
                     <span className="gct-dim">—</span>
                   ),

@@ -26,7 +26,7 @@ func (m *LLMManager) setupDecisionRuntimeFromActivePair(ctx context.Context, cfg
 	if m == nil || cfg == nil {
 		return nil, ErrChatNotConfigured
 	}
-	clients, err := BuildActiveClients(ctx, cfg.Vault.Directory)
+	clients, err := BuildActiveClients(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("llm decision runtime: %w", err)
 	}
@@ -34,6 +34,13 @@ func (m *LLMManager) setupDecisionRuntimeFromActivePair(ctx context.Context, cfg
 	if err != nil {
 		return nil, err
 	}
+	// Same screener seam as the chat corridor: the manager's candle cache feeds
+	// screenMarkets, and the rotator fills it on every reload.
+	runner.Cache = m.Cache()
+	runner.JevJudge = clients.Jev
+	runner.JevModel = clients.JevRevision.ModelID
+	runner.JevRevisionID = clients.JevRevision.ID
+	runner.JevBudget = LLMChatBudget{}
 	approvals := LLMApprovals{}
 	return &ShadowRunner{
 		Scheduler: NewEvaluationScheduler(time.Now),
@@ -76,5 +83,13 @@ func (bot *Engine) setupLLMDecisionRunner(ctx context.Context) (*ShadowRunner, e
 		return nil, fmt.Errorf("llm decision runtime: exchange %q: %w", bot.Config.LLM.Exchange, err)
 	}
 	markets := bot.llmManager.Rotation().Markets()
+	if len(markets) == 0 {
+		// Same startup fallback as the chat corridor: the rotation loop may not
+		// have refreshed yet, and coverage can be disabled.
+		markets, err = enabledMarketKeys(ex, bot.Config.LLM.Asset)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return bot.llmManager.setupDecisionRuntimeFromActivePair(ctx, &bot.Config.LLM, ex, markets)
 }

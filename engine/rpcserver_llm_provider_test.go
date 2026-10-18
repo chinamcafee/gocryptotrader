@@ -13,13 +13,10 @@ import (
 	llmstore "github.com/thrasher-corp/gocryptotrader/database/repository/llm"
 	"github.com/thrasher-corp/gocryptotrader/encoding/json"
 	"github.com/thrasher-corp/gocryptotrader/gctrpc"
-	"github.com/thrasher-corp/gocryptotrader/llm/secrets"
 )
 
 // M1-14 测试：providers 命令族的 RPC 接缝——fail-closed、生命周期、CAS 切换、
 // 分层探针的落库与「探针失败不是 RPC 错误」语义。
-
-const testFingerprint = "abcdef0123456789"
 
 func TestLLMProviderRPCsFailClosed(t *testing.T) {
 	t.Parallel()
@@ -44,7 +41,7 @@ func TestLLMProviderRPCsFailClosed(t *testing.T) {
 
 func TestLLMProviderProfileLifecycleThroughRPC(t *testing.T) {
 	setupProviderAdminDB(t)
-	_, llmRef, _ := vaultFixture(t, "sk-llm-1")
+	llmKey, _ := keyFixture(t, "sk-llm-1")
 	server := &RPCServer{Engine: &Engine{}}
 	ctx := t.Context()
 
@@ -65,7 +62,7 @@ func TestLLMProviderProfileLifecycleThroughRPC(t *testing.T) {
 	updated, err := server.LLMUpdateProviderProfile(ctx, &gctrpc.LLMUpdateProviderProfileRequest{
 		Id: profileID, Actor: "op",
 		BaseUrl: "https://api.example.com/v1", ModelId: "deepseek-chat",
-		ApiKeyRef: llmRef, ApiKeyFingerprint: testFingerprint,
+		ApiKey:         llmKey,
 		TimeoutSeconds: 30, MaxOutputTokens: 2048, PromptVersion: "analysis-readonly-v1",
 		ReservationCap_24H: 3,
 	})
@@ -83,7 +80,7 @@ func TestLLMProviderProfileLifecycleThroughRPC(t *testing.T) {
 	updated2, err := server.LLMUpdateProviderProfile(ctx, &gctrpc.LLMUpdateProviderProfileRequest{
 		Id: profileID, Actor: "op",
 		BaseUrl: "https://api.example.com/v1", ModelId: "deepseek-reasoner",
-		ApiKeyRef: llmRef, ApiKeyFingerprint: testFingerprint,
+		ApiKey:         llmKey,
 		TimeoutSeconds: 30,
 	})
 	require.NoError(t, err)
@@ -101,10 +98,10 @@ func TestLLMProviderProfileLifecycleThroughRPC(t *testing.T) {
 	assert.Nil(t, revisions[0].SupersededAt, "newest revision first, still live")
 	assert.NotNil(t, revisions[1].SupersededAt, "oldest revision carries its supersede time")
 
-	// The wire shape must never leak the key: only the ref and fingerprint.
+	// The wire shape must never leak the key: only the fingerprint appears.
 	raw, err := json.Marshal(listed)
 	require.NoError(t, err)
-	assert.NotContains(t, string(raw), "sk-llm-1", "the secret itself never reaches the wire")
+	assert.NotContains(t, string(raw), "sk-llm-1", "the key itself never reaches the wire")
 
 	// Deleting is archiving: hidden from the default list, visible on request.
 	_, err = server.LLMDeleteProviderProfile(ctx, &gctrpc.LLMDeleteProviderProfileRequest{Id: profileID, Actor: "op"})
@@ -132,10 +129,10 @@ func TestLLMProviderRPCsValidateInput(t *testing.T) {
 	_, err = server.LLMUpdateProviderProfile(ctx, &gctrpc.LLMUpdateProviderProfileRequest{
 		Id: created.GetProfile().GetId(), Actor: "op",
 		BaseUrl: "https://api.example.com/v1", ModelId: "m",
-		ApiKeyRef: "secret://llm/nope", ApiKeyFingerprint: "short",
+		ApiKey:         "",
 		TimeoutSeconds: 30,
 	})
-	require.ErrorIs(t, err, ErrInvalidFingerprint)
+	require.ErrorIs(t, err, ErrInvalidSecretRef, "an empty API key must refuse")
 
 	_, err = server.LLMDeleteProviderProfile(ctx, &gctrpc.LLMDeleteProviderProfileRequest{Id: "missing", Actor: "op"})
 	require.Error(t, err, "archiving an unknown profile must refuse")
@@ -164,15 +161,14 @@ func TestLLMGetActiveModelPairStates(t *testing.T) {
 
 func TestLLMSwitchActiveModelPairCASAndReauth(t *testing.T) {
 	setupProviderAdminDB(t)
-	dir, llmRef, jevRef := vaultFixture(t, "sk-llm-1")
-	seedRevision(t, "rev-llm", ProviderKindLLM, "https://api.example.com/v1", "model-a", llmRef, false)
-	seedRevision(t, "rev-jev", ProviderKindJev, "https://jev.example.com/v1", "jev-1.0.0", jevRef, false)
-	seedRevision(t, "rev-llm2", ProviderKindLLM, "https://api.example.com/v1", "model-b", llmRef, false)
+	llmKey, jevKey := keyFixture(t, "sk-llm-1")
+	seedRevision(t, "rev-llm", ProviderKindLLM, "https://api.example.com/v1", "model-a", llmKey, false)
+	seedRevision(t, "rev-jev", ProviderKindJev, "https://jev.example.com/v1", "jev-1.0.0", jevKey, false)
+	seedRevision(t, "rev-llm2", ProviderKindLLM, "https://api.example.com/v1", "model-b", llmKey, false)
 	seedPair(t)
 
 	cfg := &config.Config{}
 	cfg.RemoteControl.Password = "s3cret"
-	cfg.LLM.Vault.Directory = dir
 	server := &RPCServer{Engine: &Engine{Config: cfg}}
 	ctx := t.Context()
 
@@ -206,11 +202,11 @@ func TestLLMSwitchActiveModelPairCASAndReauth(t *testing.T) {
 }
 
 // TestLLMTestProviderProfileRunsLayeredProbes proves the whole probe path: a
-// revision row -> vault reveal -> layered capability probes -> per-layer rows
-// in the append-only probe table -> verdicts on the wire.
+// revision row -> stored plaintext key -> layered capability probes -> per-layer
+// rows in the append-only probe table -> verdicts on the wire.
 func TestLLMTestProviderProfileRunsLayeredProbes(t *testing.T) {
 	setupProviderAdminDB(t)
-	dir, llmRef, _ := vaultFixture(t, "sk-llm-1")
+	llmKey, _ := keyFixture(t, "sk-llm-1")
 
 	var seenAuth string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -247,20 +243,19 @@ func TestLLMTestProviderProfileRunsLayeredProbes(t *testing.T) {
 	}))
 	require.NoError(t, llmstore.InsertProfileRevision(t.Context(), &llmstore.ProfileRevision{
 		ID: "rev-mock", ProfileID: profileID, RevisionNo: 1, Kind: ProviderKindLLM,
-		BaseURL: srv.URL + "/v1", ModelID: "model-a", APIKeyRef: llmRef, APIKeyFingerprint: testFingerprint,
+		BaseURL: srv.URL + "/v1", ModelID: "model-a", APIKeyRef: llmKey, APIKeyFingerprint: "fp",
 		TimeoutSeconds: 30, AllowInsecureLocalhost: true,
 		CreatedAt: providerAdminNow, CreatedBy: "op",
 	}))
 
 	cfg := &config.Config{}
-	cfg.LLM.Vault.Directory = dir
 	server := &RPCServer{Engine: &Engine{Config: cfg}}
 
 	out, err := server.LLMTestProviderProfile(t.Context(), &gctrpc.LLMTestProviderProfileRequest{Id: profileID})
 	require.NoError(t, err)
 	require.Len(t, out.GetResults(), 4, "all four layers report independently")
 	assert.Equal(t, "rev-mock", out.GetRevisionId())
-	assert.Equal(t, "Bearer sk-llm-1", seenAuth, "the vault secret reaches the probe on the wire")
+	assert.Equal(t, "Bearer sk-llm-1", seenAuth, "the stored key reaches the probe on the wire")
 
 	byLayer := map[string]*gctrpc.LLMProbeLayerResult{}
 	for _, result := range out.GetResults() {
@@ -280,12 +275,11 @@ func TestLLMTestProviderProfileRunsLayeredProbes(t *testing.T) {
 
 func TestLLMTestProviderProfileInfrastructureFaultsFail(t *testing.T) {
 	setupProviderAdminDB(t)
-	dir, llmRef, jevRef := vaultFixture(t, "sk-llm-1")
-	seedRevision(t, "rev-llm", ProviderKindLLM, "https://api.example.com/v1", "model-a", llmRef, false)
-	seedRevision(t, "rev-jev", ProviderKindJev, "https://jev.example.com/v1", "jev-1.0.0", jevRef, false)
+	llmKey, jevKey := keyFixture(t, "sk-llm-1")
+	seedRevision(t, "rev-llm", ProviderKindLLM, "https://api.example.com/v1", "model-a", llmKey, false)
+	seedRevision(t, "rev-jev", ProviderKindJev, "https://jev.example.com/v1", "jev-1.0.0", jevKey, false)
 
 	cfg := &config.Config{}
-	cfg.LLM.Vault.Directory = dir
 	server := &RPCServer{Engine: &Engine{Config: cfg}}
 	ctx := t.Context()
 
@@ -301,10 +295,6 @@ func TestLLMTestProviderProfileInfrastructureFaultsFail(t *testing.T) {
 	}))
 	_, err = server.LLMTestProviderProfile(ctx, &gctrpc.LLMTestProviderProfileRequest{Id: "prof-empty"})
 	require.Error(t, err, "a profile without a live revision has nothing to probe")
-
-	cfg.LLM.Vault.Directory = ""
-	_, err = server.LLMTestProviderProfile(ctx, &gctrpc.LLMTestProviderProfileRequest{Id: "prof-rev-llm"})
-	require.Error(t, err, "a missing vault is an infrastructure fault, not a probe verdict")
 }
 
 func TestLLMProviderProfileConverter(t *testing.T) {
@@ -315,7 +305,7 @@ func TestLLMProviderProfileConverter(t *testing.T) {
 	revision := providerRevisionToProto(&llmstore.ProfileRevision{
 		ID: "r1", ProfileID: "p1", RevisionNo: 2, Kind: ProviderKindLLM,
 		BaseURL: "https://api.example.com/v1", ModelID: "m",
-		APIKeyRef: "secret://llm/key", APIKeyFingerprint: testFingerprint,
+		APIKeyRef: "sk-test-1234", APIKeyFingerprint: "fp",
 		TimeoutSeconds: 30, DailyBudgetUSD: new("0"),
 		CreatedAt: now, CreatedBy: "op", SupersededAt: &future,
 	})
@@ -353,9 +343,9 @@ func TestLLMGetRiskSwitchesCatalogue(t *testing.T) {
 
 func TestLLMGetStatusStates(t *testing.T) {
 	setupProviderAdminDB(t)
-	_, llmRef, jevRef := vaultFixture(t, "sk-llm-1")
-	seedRevision(t, "rev-llm", ProviderKindLLM, "https://api.example.com/v1", "model-a", llmRef, false)
-	seedRevision(t, "rev-jev", ProviderKindJev, "https://jev.example.com/v1", "jev-1.0.0", jevRef, false)
+	llmKey, jevKey := keyFixture(t, "sk-llm-1")
+	seedRevision(t, "rev-llm", ProviderKindLLM, "https://api.example.com/v1", "model-a", llmKey, false)
+	seedRevision(t, "rev-jev", ProviderKindJev, "https://jev.example.com/v1", "jev-1.0.0", jevKey, false)
 
 	var empty *RPCServer
 	_, err := empty.LLMGetStatus(context.Background(), &gctrpc.LLMGetStatusRequest{})
@@ -404,54 +394,44 @@ func TestLLMGetStatusStates(t *testing.T) {
 	assert.Equal(t, "NONE", highestHaltLevel(nil))
 }
 
-func TestLLMVaultRPCs(t *testing.T) {
-	dir := t.TempDir()
+// TestLLMSwitchActiveModelPairReassemblesTheRuntime proves the activation hook:
+// a successful switch rebuilds the chat corridor and the decision runner onto
+// the new pair (startup assembly is one-shot; first activations and later
+// switches alike must not require a restart).
+func TestLLMSwitchActiveModelPairReassemblesTheRuntime(t *testing.T) {
+	setupProviderAdminDB(t)
+	llmKey, jevKey := keyFixture(t, "sk-llm-1")
+	seedRevision(t, "rev-llm", ProviderKindLLM, "https://api.example.com/v1", "model-a", llmKey, false)
+	seedRevision(t, "rev-jev", ProviderKindJev, "https://jev.example.com/v1", "jev-1.0.0", jevKey, false)
+	seedPair(t)
 
-	var empty *RPCServer
-	_, err := empty.LLMVaultStatus(context.Background(), &gctrpc.LLMVaultStatusRequest{})
-	require.ErrorIs(t, err, errLLMVaultUnavailable)
-
-	cfg := &config.Config{}
-	cfg.LLM.Vault.Directory = dir
-	server := &RPCServer{Engine: &Engine{Config: cfg}}
+	bot := CreateTestBot(t)
+	bot.Settings.DataDir = t.TempDir()
+	bot.llmManager = &LLMManager{}
+	bot.Config.LLM = config.LLMConfig{Exchange: testExchange, Asset: "spot", AccountID: "acct-1"}
+	bot.Config.RemoteControl.Password = "s3cret"
+	server := &RPCServer{Engine: bot}
 	ctx := t.Context()
 
-	status, err := server.LLMVaultStatus(ctx, &gctrpc.LLMVaultStatusRequest{})
-	require.NoError(t, err)
-	assert.False(t, status.GetInitialized(), "an untouched directory is a state, not an error")
-	assert.Empty(t, status.GetEntries())
+	require.Nil(t, bot.currentChatService(), "the corridor starts unassembled")
 
-	_, err = server.LLMVaultAddSecret(ctx, &gctrpc.LLMVaultAddSecretRequest{Kind: "llm", Secret: "sk-test"})
-	require.Error(t, err, "adding to an uninitialised vault must refuse")
+	llmRevision, jevRevision := "rev-llm", "rev-jev"
+	_, err := server.LLMSwitchActiveModelPair(ctx, &gctrpc.LLMSwitchActiveModelPairRequest{
+		LlmProfileRevisionId: llmRevision, JevProfileRevisionId: jevRevision,
+		ExpectedPairEpoch: 1, OperatorPassword: "s3cret", IdempotencyKey: "k-reassemble-1", Actor: "op",
+	})
+	require.NoError(t, err)
+	firstChat := bot.currentChatService()
+	require.NotNil(t, firstChat, "the activation must assemble the chat corridor")
+	require.NotNil(t, bot.currentDecisionRunner(), "the activation must assemble the decision runner")
+	require.NotNil(t, bot.currentBatchRunner(), "the batch workbench must ride the assembled runner")
 
-	_, err = server.LLMVaultInit(ctx, &gctrpc.LLMVaultInitRequest{})
+	// A second activation replaces the surfaces with fresh clients: the old
+	// corridor belonged to the previous epoch of the pair.
+	_, err = server.LLMSwitchActiveModelPair(ctx, &gctrpc.LLMSwitchActiveModelPairRequest{
+		LlmProfileRevisionId: llmRevision, JevProfileRevisionId: jevRevision,
+		ExpectedPairEpoch: 2, OperatorPassword: "s3cret", IdempotencyKey: "k-reassemble-2", Actor: "op",
+	})
 	require.NoError(t, err)
-
-	ref, err := server.LLMVaultAddSecret(ctx, &gctrpc.LLMVaultAddSecretRequest{Kind: "llm", Secret: "sk-test-1234"})
-	require.NoError(t, err)
-	assert.Contains(t, ref.GetRef(), "secret://llm/")
-	assert.Equal(t, secrets.Fingerprint("sk-test-1234"), ref.GetFingerprint())
-	assert.NotContains(t, ref.GetRef(), "sk-test-1234", "the secret itself never appears in the reply")
-
-	status, err = server.LLMVaultStatus(ctx, &gctrpc.LLMVaultStatusRequest{})
-	require.NoError(t, err)
-	assert.True(t, status.GetInitialized())
-	require.Len(t, status.GetEntries(), 1)
-	assert.Equal(t, ref.GetRef(), status.GetEntries()[0].GetRef())
-	assert.Equal(t, "llm", status.GetEntries()[0].GetKind())
-
-	// Init is idempotent: a second call must not mint a second key pair and
-	// strand the first one's secrets.
-	_, err = server.LLMVaultInit(ctx, &gctrpc.LLMVaultInitRequest{})
-	require.NoError(t, err)
-	parsed, err := secrets.ParseRef(ref.GetRef())
-	require.NoError(t, err)
-	vault, err := secrets.Open(dir)
-	require.NoError(t, err)
-	plain, err := vault.Reveal(parsed)
-	require.NoError(t, err)
-	assert.Equal(t, "sk-test-1234", plain, "the first key still opens the first secret")
-
-	_, err = server.LLMVaultAddSecret(ctx, &gctrpc.LLMVaultAddSecretRequest{Kind: "llm", Secret: ""})
-	require.Error(t, err, "an empty secret must refuse")
+	assert.NotSame(t, firstChat, bot.currentChatService(), "a re-activation should rebind the corridor")
 }

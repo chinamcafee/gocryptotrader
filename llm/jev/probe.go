@@ -195,6 +195,7 @@ func (c *Client) Probe(ctx context.Context) *ProbeResult {
 // buildProbeRequest assembles the synthetic three question request.
 func (c *Client) buildProbeRequest() (*SystemOneRequest, error) {
 	choice, err := json.Marshal(ChoiceQuestion{
+		Type:         QuestionTypeChoice,
 		Instructions: "Synthetic capability test. Select the option marked as the expected answer.",
 		Criteria: map[string]string{
 			"expected": "The answer the probe expects",
@@ -205,6 +206,7 @@ func (c *Client) buildProbeRequest() (*SystemOneRequest, error) {
 		return nil, fmt.Errorf("%w: %w", ErrQuestionsInvalid, err)
 	}
 	score, err := json.Marshal(ScoreQuestion{
+		Type:         QuestionTypeScore,
 		Instructions: "Synthetic capability test. Rate the supplied note on the three point scale.",
 		Criteria:     evidenceQualityScale,
 	})
@@ -212,6 +214,7 @@ func (c *Client) buildProbeRequest() (*SystemOneRequest, error) {
 		return nil, fmt.Errorf("%w: %w", ErrQuestionsInvalid, err)
 	}
 	noul, err := json.Marshal(NoulQuestion{
+		Type:         QuestionTypeNoul,
 		Instructions: "Synthetic capability test. Is this request a synthetic test?",
 	})
 	if err != nil {
@@ -231,10 +234,10 @@ func (c *Client) buildProbeRequest() (*SystemOneRequest, error) {
 // validateProbeResponse checks the synthetic reply against the same rules the
 // review path uses, so a passing probe exercises the real validation code.
 func validateProbeResponse(req *SystemOneRequest, resp *SystemOneResponse) error {
-	if !IsPinnedModel(req.Model) {
+	if !IsAcceptedModel(req.Model) {
 		return fmt.Errorf("%w: %q", ErrModelInvalid, req.Model)
 	}
-	if strings.TrimSpace(resp.Model) != req.Model {
+	if !ServedModelMatches(req.Model, resp.Model) {
 		return fmt.Errorf("%w: requested %q, served %q", ErrModelDrift, req.Model, resp.Model)
 	}
 

@@ -11,7 +11,6 @@ import (
 	"github.com/thrasher-corp/gocryptotrader/gctrpc"
 	"github.com/thrasher-corp/gocryptotrader/llm/jev"
 	"github.com/thrasher-corp/gocryptotrader/llm/openai"
-	"github.com/thrasher-corp/gocryptotrader/llm/secrets"
 )
 
 // errLLMProvidersUnavailable marks the provider RPCs before the runtime wiring
@@ -69,8 +68,7 @@ func (s *RPCServer) LLMUpdateProviderProfile(ctx context.Context, r *gctrpc.LLMU
 		Actor:                   r.GetActor(),
 		BaseURL:                 r.GetBaseUrl(),
 		ModelID:                 r.GetModelId(),
-		APIKeyRef:               r.GetApiKeyRef(),
-		APIKeyFingerprint:       r.GetApiKeyFingerprint(),
+		APIKey:                  r.GetApiKey(),
 		TimeoutSeconds:          r.GetTimeoutSeconds(),
 		MaxOutputTokens:         int64PtrOrNil(r.GetMaxOutputTokens()),
 		MaxToolRounds:           int64PtrOrNil(r.GetMaxToolRounds()),
@@ -125,11 +123,7 @@ func (s *RPCServer) LLMTestProviderProfile(ctx context.Context, r *gctrpc.LLMTes
 	if err != nil {
 		return nil, err
 	}
-	vault, err := secrets.Open(s.Config.LLM.Vault.Directory)
-	if err != nil {
-		return nil, fmt.Errorf("llm providers: opening vault: %w", err)
-	}
-	secretFn, err := vaultSecretFn(vault, revision.APIKeyRef)
+	secretFn, err := revisionSecretFn(revision.APIKeyRef)
 	if err != nil {
 		return nil, err
 	}
@@ -219,6 +213,11 @@ func (s *RPCServer) LLMSwitchActiveModelPair(ctx context.Context, r *gctrpc.LLMS
 	if err != nil {
 		return nil, err
 	}
+	// The activation re-points the global model pair: rebuild the chat and
+	// decision corridors onto the new clients right away. Startup assembly is
+	// one-shot, so without this they would stay unavailable (first activation)
+	// or keep the retired pair's clients (subsequent switches).
+	s.Engine.reassembleLLMRuntime(ctx, "pair activation by "+req.Actor)
 	return &gctrpc.LLMSwitchActiveModelPairResponse{PairEpoch: pair.PairEpoch, Readiness: pair.Readiness}, nil
 }
 
@@ -305,7 +304,8 @@ func providerProfileToProto(ctx context.Context, profile *llmstore.Profile) (*gc
 	return out, nil
 }
 
-// providerRevisionToProto converts one revision row.
+// providerRevisionToProto converts one revision row. The plaintext key never
+// travels: only the derived fingerprint is exposed.
 func providerRevisionToProto(r *llmstore.ProfileRevision) *gctrpc.LLMProviderRevision {
 	out := &gctrpc.LLMProviderRevision{
 		Id:                     r.ID,
@@ -314,7 +314,6 @@ func providerRevisionToProto(r *llmstore.ProfileRevision) *gctrpc.LLMProviderRev
 		Kind:                   r.Kind,
 		BaseUrl:                r.BaseURL,
 		ModelId:                r.ModelID,
-		ApiKeyRef:              r.APIKeyRef,
 		ApiKeyFingerprint:      r.APIKeyFingerprint,
 		TimeoutSeconds:         r.TimeoutSeconds,
 		ReservationCap_24H:     r.ReservationCap24H,

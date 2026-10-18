@@ -9,6 +9,7 @@ import (
 	"unicode/utf8"
 
 	llmstore "github.com/thrasher-corp/gocryptotrader/database/repository/llm"
+	"github.com/thrasher-corp/gocryptotrader/llm/candidate"
 	"github.com/thrasher-corp/gocryptotrader/llm/chat"
 	"github.com/thrasher-corp/gocryptotrader/llm/openai"
 	"github.com/thrasher-corp/gocryptotrader/llm/tools"
@@ -16,10 +17,12 @@ import (
 )
 
 // The chat path (docs/llm-dev 05 §6.3) answers the operator's questions with
-// the same eight read-only tools as the decision path but a different contract:
+// the same read-only tools as the decision path but a different contract:
 // free text instead of a Candidate, no decision_run, and every model call
-// billed through the same budget gates. The two modes share the tool set and
-// the loop; they must not share the output contract.
+// billed through the same budget gates. Configuration actions travel as inert
+// proposals (docs 16) that only a human confirmation card can execute. The two
+// modes share the tool set and the loop; they must not share the output
+// contract.
 
 var (
 	// ErrChatInputInvalid marks a turn without the conversation id or text.
@@ -123,6 +126,8 @@ type ChatRunRequest struct {
 	Input string
 	// ProfileRevisionID is the LLM profile revision to run under.
 	ProfileRevisionID string
+	// OnProgress receives live tool progress (nil is a no-op).
+	OnProgress func(ToolProgress)
 }
 
 // ChatRunResult is what one turn produced.
@@ -141,6 +146,10 @@ type ChatRunResult struct {
 	// Evidence is the display view of the tool responses this turn used
 	// (docs/llm-dev 08 §3.1 LLMSendMessageResponse.evidence).
 	Evidence []EvidenceCard `json:"evidence,omitempty"`
+	// Proposals are inert configuration drafts awaiting operator confirmation
+	// (docs/llm-dev 16). They carry no execution authority: the confirmation
+	// card calls the same governed RPC the manual pages use.
+	Proposals []candidate.ActionProposal `json:"proposals,omitempty"`
 }
 
 // ChatPipeline runs one conversational turn end to end: rebuild the context,
@@ -267,10 +276,25 @@ func (p *ChatPipeline) run(ctx context.Context, req ChatRunRequest, onDelta func
 	limits := p.Limits
 	if limits == (ToolLoopLimits{}) {
 		limits = DefaultToolLoopLimits()
+		// A conversation often needs to screen once and then read details for a
+		// few markets (three markets x indicators/funding is already six to
+		// nine calls in one round). The decision loop's tighter per-round cap
+		// refuses that ordinary flow with TOOL_ROUND_LIMIT, so chat gets a
+		// wider bound; the cumulative token budget and deadline still apply.
+		limits.MaxRounds = 6
+		limits.MaxToolsPerRound = 12
+		limits.MaxToolCalls = 24
 	}
 	maxTokens := 0
 	if revision.MaxOutputTokens != nil {
 		maxTokens = int(*revision.MaxOutputTokens)
+	}
+	if maxTokens == 0 {
+		// A conversation reply needs room: reasoning models spend tokens before
+		// the visible answer, and a zero value lets the provider pick a small
+		// default (observed truncation on deepseek-flash). 4096 is the same
+		// budget the schema probe needed to stop truncating.
+		maxTokens = 4096
 	}
 	result, err := RunToolLoop(ctx, p.Transport, p.Tools, &ToolLoopRequest{
 		Model:          revision.ModelID,
@@ -279,6 +303,7 @@ func (p *ChatPipeline) run(ctx context.Context, req ChatRunRequest, onDelta func
 		MaxTokens:      maxTokens,
 		ProfileTimeout: time.Duration(revision.TimeoutSeconds) * time.Second,
 		OnDelta:        onDelta,
+		OnProgress:     req.OnProgress,
 		// No deadline: a manual turn is not on the decision pipeline's clock.
 		// ResponseFormat stays nil: a conversation reply is free text.
 	}, limits, now)
@@ -339,5 +364,6 @@ func (p *ChatPipeline) run(ctx context.Context, req ChatRunRequest, onDelta func
 		LatencyMS:          latency,
 		ToolTranscript:     transcriptJSON,
 		Evidence:           EvidenceCards(result.Transcript),
+		Proposals:          ProposalCards(result.Transcript),
 	}, nil
 }

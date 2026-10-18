@@ -17,19 +17,36 @@ type LLMConfig struct {
 	// ProbeMaxAgeSeconds is the freshness TTL of the newest per-side provider
 	// probe; the readiness PROBE_FRESH gate and the decision pre-gates both
 	// refuse to advance when the newest passing probe is older than this.
-	ProbeMaxAgeSeconds int `json:"probeMaxAgeSeconds"`
-	// Vault locates the secret vault (docs 09 §5.4). The vault's key file
-	// names are fixed by the llm/secrets package, so only the directory is
-	// configurable; the design's masterKeyFile/keyFileMode knobs were not
-	// needed for the implemented layout.
-	Vault      LLMVaultConfig     `json:"vault"`
-	Analysis   LLMAnalysisConfig  `json:"analysis"`
-	Triggers   LLMTriggerConfig   `json:"triggers"`
-	Indicators LLMIndicatorConfig `json:"indicators"`
-	Coverage   LLMCoverageConfig  `json:"coverage"`
-	Budget     LLMBudgetConfig    `json:"budget"`
-	Halt       LLMHaltConfig      `json:"halt"`
-	Risk       LLMRiskConfig      `json:"risk"`
+	ProbeMaxAgeSeconds int                `json:"probeMaxAgeSeconds"`
+	Analysis           LLMAnalysisConfig  `json:"analysis"`
+	Triggers           LLMTriggerConfig   `json:"triggers"`
+	Indicators         LLMIndicatorConfig `json:"indicators"`
+	Coverage           LLMCoverageConfig  `json:"coverage"`
+	Budget             LLMBudgetConfig    `json:"budget"`
+	Halt               LLMHaltConfig      `json:"halt"`
+	Risk               LLMRiskConfig      `json:"risk"`
+	Screener           LLMScreenerConfig  `json:"screener"`
+	Batch              LLMBatchConfig     `json:"batch"`
+}
+
+// LLMBatchConfig bounds the GUI's batch decision jobs (docs/llm-dev/13 §3.2).
+type LLMBatchConfig struct {
+	// MaxMarkets bounds one batch; default 10, hard cap 50. Jobs run serially,
+	// so this is also the worst-case job length in decision runs.
+	MaxMarkets int `json:"maxMarkets"`
+}
+
+// LLMScreenerConfig bounds the universe screens (docs/llm-dev/13 §3.1).
+type LLMScreenerConfig struct {
+	// FlowScanLimit bounds how many top-volume markets get a per-symbol
+	// taker-flow read (the T2 tier) when a screen references it. Default 100;
+	// markets beyond the bound report the flow metrics as absent.
+	FlowScanLimit int `json:"flowScanLimit"`
+	// FullUniverse scans every available in-scope perpetual (N10) instead of
+	// only the enabled/covered markets. On-demand candle reads are paced well
+	// under the venue's weight budget. Default true; set false to scan only
+	// the covered set.
+	FullUniverse *bool `json:"fullUniverse,omitempty"`
 }
 
 // LLMRiskConfig carries the risk engine's operator-facing assumptions
@@ -57,12 +74,6 @@ type LLMTriggerConfig struct {
 	// ATRSpikeMultiple is how far the ATR must exceed its previous reading.
 	// Default 1.5.
 	ATRSpikeMultiple float64 `json:"atrSpikeMultiple"`
-}
-
-// LLMVaultConfig locates the secret vault used to resolve provider API keys.
-type LLMVaultConfig struct {
-	// Directory is the vault root; defaults to <datadir>/llm-vault.
-	Directory string `json:"directory"`
 }
 
 // LLMAnalysisConfig bounds a single decision run. The limits are hard: the

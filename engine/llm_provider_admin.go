@@ -2,21 +2,19 @@ package engine
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"net/url"
-	"regexp"
 	"strings"
 	"time"
 
 	"github.com/gofrs/uuid"
 	llmstore "github.com/thrasher-corp/gocryptotrader/database/repository/llm"
+	"github.com/thrasher-corp/gocryptotrader/llm/jev"
 	"github.com/thrasher-corp/gocryptotrader/llm/openai"
-	"github.com/thrasher-corp/gocryptotrader/llm/secrets"
 )
-
-// jevModelPattern pins the Jev endpoint's fixed model naming.
-var jevModelPattern = regexp.MustCompile(`^jev-\d+\.\d+\.\d+$`)
 
 // Provider kinds. These strings are stored in llm_provider_profiles.kind and
 // llm_provider_profile_revisions.kind and are part of the schema contract.
@@ -30,10 +28,6 @@ const (
 // readinessIncomplete marks the active pair unusable after the revision it
 // pointed at was superseded. Re-activation is M1-10's job.
 const readinessIncomplete = "INCOMPLETE"
-
-// vaultSecretKind is the ref kind the secrets vault stores provider keys
-// under; the admin layer must not accept other ref kinds here.
-const vaultSecretKind = "llm"
 
 var (
 	// ErrUnknownProviderKind is returned for kinds outside the two defined ones.
@@ -49,12 +43,9 @@ var (
 	ErrInvalidBaseURL = errors.New("llm provider admin: invalid base URL")
 	// ErrInvalidModelID is returned for empty (or non-Jev-shaped) model ids.
 	ErrInvalidModelID = errors.New("llm provider admin: invalid model id")
-	// ErrInvalidSecretRef is returned for api_key_ref values that are not
-	// vault references of the provider kind.
-	ErrInvalidSecretRef = errors.New("llm provider admin: invalid secret reference")
-	// ErrInvalidFingerprint is returned for fingerprints that are not the
-	// vault's truncated SHA-256 rendering (16 lowercase hex chars).
-	ErrInvalidFingerprint = errors.New("llm provider admin: invalid api key fingerprint")
+	// ErrInvalidSecretRef is returned for an empty API key. (The name predates
+	// the 2026-10-15 vault removal; keys are plaintext now.)
+	ErrInvalidSecretRef = errors.New("llm provider admin: the API key is required")
 	// ErrInvalidTimeout is returned for non-positive timeouts.
 	ErrInvalidTimeout = errors.New("llm provider admin: invalid timeout")
 	// ErrKindFieldMismatch is returned when a field only meaningful for the
@@ -77,16 +68,12 @@ func isLoopbackHost(host string) bool {
 	return false
 }
 
-func isHex16(s string) bool {
-	if len(s) != 16 {
-		return false
-	}
-	for _, r := range s {
-		if (r < '0' || r > '9') && (r < 'a' || r > 'f') {
-			return false
-		}
-	}
-	return true
+// deriveKeyFingerprint renders the stored key's SHA-256 prefix (16 lowercase
+// hex chars) for display; the fingerprint column is derived here, never typed
+// by an operator.
+func deriveKeyFingerprint(apiKey string) string {
+	sum := sha256.Sum256([]byte(apiKey))
+	return hex.EncodeToString(sum[:8])
 }
 
 // validDailyBudget reports whether s is a plain non-negative decimal such as
@@ -154,12 +141,12 @@ func CreateProviderProfile(ctx context.Context, kind, displayName, actor string,
 // must be nil for Jev profiles and vice versa; the shape rules are enforced
 // per kind by AddProviderRevision.
 type ProviderRevisionParams struct {
-	ProfileID               string
-	Actor                   string
-	BaseURL                 string
-	ModelID                 string
-	APIKeyRef               string
-	APIKeyFingerprint       string
+	ProfileID string
+	Actor     string
+	BaseURL   string
+	ModelID   string
+	// APIKey is the plaintext provider key (vault removed 2026-10-15).
+	APIKey                  string
 	TimeoutSeconds          int64
 	MaxOutputTokens         *int64
 	MaxToolRounds           *int64
@@ -202,21 +189,17 @@ func validateRevisionParams(kind string, p *ProviderRevisionParams) error {
 			return fmt.Errorf("%w: %q", ErrInvalidModelID, p.ModelID)
 		}
 	case ProviderKindJev:
-		// The Jev endpoint serves fixed, versioned models only.
-		if !jevModelPattern.MatchString(model) {
-			return fmt.Errorf("%w: Jev model must look like jev-<major>.<minor>.<patch>: %q", ErrInvalidModelID, p.ModelID)
+		// Versioned models plus the jev-latest alias the operator allowed
+		// (2026-10-15); the rule lives in the jev package.
+		if !jev.IsAcceptedModel(model) {
+			return fmt.Errorf("%w: Jev model must look like jev-<major>.<minor>.<patch> or jev-latest: %q", ErrInvalidModelID, p.ModelID)
 		}
 	}
 
-	ref, err := secrets.ParseRef(p.APIKeyRef)
-	if err != nil {
-		return fmt.Errorf("%w: %s", ErrInvalidSecretRef, err)
-	}
-	if ref.Kind != vaultSecretKind {
-		return fmt.Errorf("%w: expected kind %q, got %q", ErrInvalidSecretRef, vaultSecretKind, ref.Kind)
-	}
-	if !isHex16(p.APIKeyFingerprint) {
-		return fmt.Errorf("%w: %q", ErrInvalidFingerprint, p.APIKeyFingerprint)
+	// The key is stored plaintext (vault removed 2026-10-15); an empty key
+	// cannot drive any client, so it refuses here rather than at first call.
+	if strings.TrimSpace(p.APIKey) == "" {
+		return fmt.Errorf("%w", ErrInvalidSecretRef)
 	}
 	if p.TimeoutSeconds <= 0 {
 		return fmt.Errorf("%w: %d", ErrInvalidTimeout, p.TimeoutSeconds)
@@ -255,13 +238,8 @@ func validateRevisionParams(kind string, p *ProviderRevisionParams) error {
 			}
 		}
 	}
-	if p.QuestionTemplateVersion != nil {
-		if kind != ProviderKindJev {
-			return fmt.Errorf("%w: question_template_version on %s profile", ErrKindFieldMismatch, kind)
-		}
-		if strings.TrimSpace(*p.QuestionTemplateVersion) == "" {
-			return fmt.Errorf("%w: empty question template version", ErrKindFieldMismatch)
-		}
+	if p.QuestionTemplateVersion != nil && kind != ProviderKindJev {
+		return fmt.Errorf("%w: question_template_version on %s profile", ErrKindFieldMismatch, kind)
 	}
 	if p.DailyBudgetUSD != nil && !validDailyBudget(*p.DailyBudgetUSD) {
 		return fmt.Errorf("%w: %q", ErrInvalidBudget, *p.DailyBudgetUSD)
@@ -315,6 +293,13 @@ func AddProviderRevision(ctx context.Context, params *ProviderRevisionParams, no
 	if err != nil {
 		return nil, err
 	}
+	templateVersion := params.QuestionTemplateVersion
+	if profile.Kind == ProviderKindJev && (templateVersion == nil || strings.TrimSpace(*templateVersion) == "") {
+		// The question template is a system constant, not an operator input:
+		// append the version the request builder currently ships.
+		pinned := jev.QuestionVersionReviewV2
+		templateVersion = &pinned
+	}
 	revision := llmstore.ProfileRevision{
 		ID:                      id.String(),
 		ProfileID:               profile.ID,
@@ -322,15 +307,15 @@ func AddProviderRevision(ctx context.Context, params *ProviderRevisionParams, no
 		Kind:                    profile.Kind,
 		BaseURL:                 strings.TrimSpace(params.BaseURL),
 		ModelID:                 strings.TrimSpace(params.ModelID),
-		APIKeyRef:               params.APIKeyRef,
-		APIKeyFingerprint:       params.APIKeyFingerprint,
+		APIKeyRef:               params.APIKey,
+		APIKeyFingerprint:       deriveKeyFingerprint(params.APIKey),
 		TimeoutSeconds:          params.TimeoutSeconds,
 		MaxOutputTokens:         params.MaxOutputTokens,
 		MaxToolRounds:           params.MaxToolRounds,
 		MaxToolCalls:            params.MaxToolCalls,
 		MaxCumulativeTokens:     params.MaxCumulativeTokens,
 		PromptVersion:           params.PromptVersion,
-		QuestionTemplateVersion: params.QuestionTemplateVersion,
+		QuestionTemplateVersion: templateVersion,
 		DailyBudgetUSD:          params.DailyBudgetUSD,
 		ReservationCap24H:       params.ReservationCap24H,
 		AllowInsecureLocalhost:  params.AllowInsecureLocalhost,

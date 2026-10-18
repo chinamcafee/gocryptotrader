@@ -11,7 +11,7 @@ import (
 
 func TestSpecsShape(t *testing.T) {
 	specs := Specs()
-	require.Len(t, specs, 8)
+	require.Len(t, specs, 11)
 	seen := make(map[string]bool, len(specs))
 	for _, spec := range specs {
 		assert.Equal(t, "function", spec.Type)
@@ -28,6 +28,7 @@ func TestSpecsShape(t *testing.T) {
 	assert.ElementsMatch(t, []string{
 		"listMarkets", "getCandleWindow", "getIndicators", "getOrderBookSummary",
 		"getFunding", "getAccountState", "getStrategyHistory", "getRiskBudget",
+		"screenMarkets", "proposeAction", "assessOpeningOpportunities",
 	}, Names())
 }
 

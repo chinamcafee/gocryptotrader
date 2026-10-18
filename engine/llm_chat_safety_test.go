@@ -41,11 +41,13 @@ func TestChatSafetyNoExecutionSurface(t *testing.T) {
 			"field %q has a decision-flavoured type; chat produces no candidates", field.Name)
 	}
 
-	// The result is equally narrow: text plus bookkeeping, nothing actionable.
+	// The result is equally narrow: text plus bookkeeping. Proposals are inert
+	// drafts a human must confirm on a card -- they are data, not instructions.
 	resultAllowed := map[string]bool{
 		"AssistantMessageID": true, "Reply": true, "ReasonCode": true,
 		"Rounds": true, "ToolCalls": true, "InputTokens": true,
 		"OutputTokens": true, "LatencyMS": true, "ToolTranscript": true, "Evidence": true,
+		"Proposals": true,
 	}
 	resultType := reflect.TypeFor[ChatRunResult]()
 	for field := range resultType.Fields() {

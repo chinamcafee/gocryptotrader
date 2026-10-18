@@ -123,7 +123,7 @@ func TestBuildReviewRequestRejectsBadInput(t *testing.T) {
 		mutate  func(*ReviewInput)
 		wantErr error
 	}{
-		{name: "alias model", mutate: func(in *ReviewInput) { in.Model = "jev-latest" }, wantErr: ErrModelInvalid},
+		{name: "foreign model", mutate: func(in *ReviewInput) { in.Model = "gpt-4o" }, wantErr: ErrModelInvalid},
 		{name: "empty model", mutate: func(in *ReviewInput) { in.Model = "" }, wantErr: ErrModelInvalid},
 		{name: "nil candidate", mutate: func(in *ReviewInput) { in.Candidate = nil }, wantErr: ErrStateInvalid},
 		{name: "invalid candidate", mutate: func(in *ReviewInput) { in.Candidate.Action = "MOON" }, wantErr: ErrStateInvalid},
@@ -184,8 +184,7 @@ func validAnswers() json.RawMessage {
 	  "evidence_quality": {
 	    "type": "score",
 	    "score": 1.24,
-	    "probabilities": {"0": 0.18, "1": 0.40, "2": 0.42},
-	    "legend": ["Insufficient", "Mixed", "Adequate"],
+	    "legend": {"Insufficient": "0", "Mixed": "1", "Adequate": "2"},
 	    "confidence": 0.65
 	  },
 	  "strategy_alignment": { "type": "noul", "noul": 0.83 }
@@ -236,7 +235,7 @@ func TestValidateResponseRejectsBadReply(t *testing.T) {
 		{name: "not json", model: goodModel, answers: `nope`, wantErr: ErrSchemaInvalid},
 		{
 			name: "missing choice answer", model: goodModel, wantErr: ErrAnswerMissing,
-			answers: `{"evidence_quality":{"type":"score","score":1,"probabilities":{"0":0.2,"1":0.4,"2":0.4},"legend":["a","b","c"]},"strategy_alignment":{"type":"noul","noul":0.5}}`,
+			answers: `{"evidence_quality":{"type":"score","score":1,"legend":{"a":"0","b":"1","c":"2"}},"strategy_alignment":{"type":"noul","noul":0.5}}`,
 		},
 	}
 
@@ -263,7 +262,7 @@ func answersWith(choice, score, noul string) json.RawMessage {
 
 const (
 	goodChoice = `{"type":"choice","choice":"open_long","probabilities":{"open_long":0.52,"open_short":0.06,"reduce":0.04,"hold":0.28,"review":0.10},"confidence":0.71}`
-	goodScore  = `{"type":"score","score":1.24,"probabilities":{"0":0.18,"1":0.40,"2":0.42},"legend":["Insufficient","Mixed","Adequate"],"confidence":0.65}`
+	goodScore  = `{"type":"score","score":1.24,"legend":{"Insufficient":"0","Mixed":"1","Adequate":"2"},"confidence":0.65}`
 	goodNoul   = `{"type":"noul","noul":0.83}`
 )
 
@@ -335,31 +334,20 @@ func TestValidateResponseScoreRules(t *testing.T) {
 	}{
 		{
 			name: "wrong answer type", wantErr: ErrSchemaInvalid,
-			score: `{"type":"choice","score":1,"probabilities":{"0":0.2,"1":0.4,"2":0.4},"legend":["a","b","c"]}`,
+			score: `{"type":"choice","score":1}`,
 		},
 		{
 			name: "legend length mismatch", wantErr: ErrScoreInvalid,
-			score: `{"type":"score","score":1,"probabilities":{"0":0.2,"1":0.4,"2":0.4},"legend":["a","b"]}`,
-		},
-		{
-			name: "missing bucket", wantErr: ErrDistributionInvalid,
-			score: `{"type":"score","score":1,"probabilities":{"0":0.2,"1":0.8},"legend":["a","b","c"]}`,
+			score: `{"type":"score","score":1,"legend":{"a":"0"}}`,
 		},
 		{
 			name: "score above the scale", wantErr: ErrScoreInvalid,
-			score: `{"type":"score","score":7,"probabilities":{"0":0.0,"1":0.0,"2":1.0},"legend":["a","b","c"]}`,
+			score: `{"type":"score","score":7,"legend":{"a":"0","b":"1","c":"2"}}`,
 		},
-		{
-			name: "score disagrees with its distribution", wantErr: ErrScoreInvalid,
-			score: `{"type":"score","score":0.1,"probabilities":{"0":0.1,"1":0.2,"2":0.7},"legend":["a","b","c"]}`,
-		},
-		{
-			name: "distribution does not sum to one", wantErr: ErrProbabilityInvalid,
-			score: `{"type":"score","score":1,"probabilities":{"0":0.05,"1":0.05,"2":0.05},"legend":["a","b","c"]}`,
-		},
+
 		{
 			name: "confidence out of range", wantErr: ErrScoreInvalid,
-			score: `{"type":"score","score":1.24,"probabilities":{"0":0.18,"1":0.40,"2":0.42},"legend":["a","b","c"],"confidence":-1}`,
+			score: `{"type":"score","score":1.24,"legend":{"a":"0","b":"1","c":"2"},"confidence":-1}`,
 		},
 	}
 
@@ -410,14 +398,14 @@ func TestValidateResponseRejectsNilInputs(t *testing.T) {
 	require.ErrorIs(t, err, ErrSchemaInvalid, "a nil response must be refused")
 }
 
-func TestIsPinnedModel(t *testing.T) {
+func TestIsAcceptedModel(t *testing.T) {
 	t.Parallel()
 
-	for _, ok := range []string{"jev-1.13.0", "jev-2.0.1", "jev-10.20.30"} {
-		assert.Truef(t, IsPinnedModel(ok), "%q should be accepted as pinned", ok)
+	for _, ok := range []string{"jev-1.13.0", "jev-2.0.1", "jev-10.20.30", "jev-latest"} {
+		assert.Truef(t, IsAcceptedModel(ok), "%q should be accepted", ok)
 	}
-	for _, bad := range []string{"", "jev-latest", "jev", "jev-1", "jev-1.13", "gpt-4o", "jev-1.13.0-beta"} {
-		assert.Falsef(t, IsPinnedModel(bad), "%q should be refused as an alias or foreign model", bad)
+	for _, bad := range []string{"", "jev", "jev-1", "jev-1.13", "gpt-4o", "jev-1.13.0-beta"} {
+		assert.Falsef(t, IsAcceptedModel(bad), "%q should be refused as a foreign or malformed model", bad)
 	}
 }
 
@@ -444,4 +432,47 @@ func TestExportedCriteriaCoverTheOfferedQuestion(t *testing.T) {
 	for _, c := range offered {
 		assert.Contains(t, choice.Criteria, c, "an exported criterion should be one the question offers")
 	}
+}
+
+func TestQuestionsCarryTheirTypeTags(t *testing.T) {
+	t.Parallel()
+
+	// The wire contract discriminates question shapes on the "type" property
+	// (official OpenAPI). Missing tags earned HTTP 422 live on 2026-10-16.
+	req, err := BuildReviewRequest(testInput())
+	require.NoError(t, err)
+	for key, want := range map[string]string{
+		KeyCandidateAction:   QuestionTypeChoice,
+		KeyEvidenceQuality:   QuestionTypeScore,
+		KeyStrategyAlignment: QuestionTypeNoul,
+	} {
+		var tag struct {
+			Type string `json:"type"`
+		}
+		require.NoError(t, json.Unmarshal(req.Questions[key], &tag))
+		assert.Equalf(t, want, tag.Type, "%s should carry its discriminator tag", key)
+	}
+
+	c, err := NewClient(&Profile{BaseURL: "https://api.example.com", Model: goodModel}, staticSecret("x"))
+	require.NoError(t, err)
+	probeReq, err := c.buildProbeRequest()
+	require.NoError(t, err)
+	for _, key := range []string{probeKeyChoice, probeKeyScore, probeKeyNoul} {
+		var tag struct {
+			Type string `json:"type"`
+		}
+		require.NoError(t, json.Unmarshal(probeReq.Questions[key], &tag))
+		assert.NotEmptyf(t, tag.Type, "%s should carry its discriminator tag", key)
+	}
+}
+
+func TestServedModelMatches(t *testing.T) {
+	t.Parallel()
+
+	assert.True(t, ServedModelMatches("jev-1.13.0", "jev-1.13.0"), "an exact echo matches")
+	assert.False(t, ServedModelMatches("jev-1.13.0", "jev-1.12.0"), "a pinned request should detect drift")
+	assert.True(t, ServedModelMatches(ModelLatestAlias, "jev-1.13.0"), "latest is satisfied by a concrete served version")
+	assert.True(t, ServedModelMatches(ModelLatestAlias, ModelLatestAlias), "latest echo matches too")
+	assert.False(t, ServedModelMatches(ModelLatestAlias, "gpt-4o"), "latest should reject a foreign served model")
+	assert.False(t, ServedModelMatches("jev-1.13.0", ModelLatestAlias), "a pinned request should not accept latest")
 }

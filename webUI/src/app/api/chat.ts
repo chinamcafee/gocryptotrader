@@ -40,6 +40,19 @@ export interface LlmEvidenceCard {
   sha256?: string
 }
 
+/** 惰性配置提案（docs/llm-dev/16）：模型只产出草稿，执行必须由操作者在卡片上确认。 */
+export interface LlmActionProposal {
+  action: string
+  summary: string
+  marketIds?: string[]
+  allPositions?: boolean
+  strategyVersionId?: string
+  actor?: string
+  marketId?: string
+  tracked?: boolean
+  jobId?: string
+}
+
 export interface LlmSendMessageFinal {
   messageId: string
   assistantMessage: string
@@ -49,6 +62,7 @@ export interface LlmSendMessageFinal {
   latencyMs?: number
   errorCode?: string
   evidence?: LlmEvidenceCard[]
+  proposals?: LlmActionProposal[]
 }
 
 async function normalizeError(res: Response): Promise<Error> {
@@ -96,8 +110,18 @@ export const getConversationMessages = async (id: string): Promise<LlmChatMessag
 export const archiveConversation = (id: string): Promise<unknown> =>
   gatewayJSON(`llm/conversations/${encodeURIComponent(id)}/archive`, jsonInit('POST', {}))
 
+/** 工具运行进度（例如全量合约扫描）：只驱动加载卡，不进入正文。 */
+export interface LlmToolProgress {
+  tool?: string
+  phase?: string
+  done?: number
+  total?: number
+  message?: string
+}
+
 export interface StreamCallbacks {
   onDelta: (delta: string) => void
+  onProgress?: (progress: LlmToolProgress) => void
   signal?: AbortSignal
 }
 
@@ -129,6 +153,7 @@ export async function streamAssistantMessage(
     if (done) events.push(...parser.flush())
     for (const event of events) {
       if (event.delta) cb.onDelta(event.delta)
+      if (event.progress) cb.onProgress?.(event.progress as unknown as LlmToolProgress)
       if (event.error) throw new Error(`流式中断：${JSON.stringify(event.error).slice(0, 300)}`)
       if (event.final) final = event.final as unknown as LlmSendMessageFinal
     }

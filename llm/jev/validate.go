@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"strconv"
 	"strings"
 
 	"github.com/thrasher-corp/gocryptotrader/encoding/json"
@@ -69,11 +68,11 @@ func ValidateResponse(req *SystemOneRequest, resp *SystemOneResponse) (*Assessme
 	if req == nil || resp == nil {
 		return nil, fmt.Errorf("%w: nil request or response", ErrSchemaInvalid)
 	}
-	if !IsPinnedModel(req.Model) {
+	if !IsAcceptedModel(req.Model) {
 		return nil, fmt.Errorf("%w: %q", ErrModelInvalid, req.Model)
 	}
 	served := strings.TrimSpace(resp.Model)
-	if served != req.Model {
+	if !ServedModelMatches(req.Model, served) {
 		return nil, fmt.Errorf("%w: requested %q, served %q", ErrModelDrift, req.Model, served)
 	}
 	if len(resp.Answers) == 0 {
@@ -175,37 +174,18 @@ func validateScore(q *ScoreQuestion, a *ScoreAnswer) error {
 	if len(q.Criteria) < 2 {
 		return fmt.Errorf("%w: score question offered %d criteria", ErrQuestionsInvalid, len(q.Criteria))
 	}
-	if len(a.Legend) != len(q.Criteria) {
-		return fmt.Errorf("%w: legend holds %d entries for a %d point scale", ErrScoreInvalid, len(a.Legend), len(q.Criteria))
-	}
-	if len(a.Probabilities) != len(q.Criteria) {
-		return fmt.Errorf("%w: %d probabilities for a %d point scale", ErrDistributionInvalid, len(a.Probabilities), len(q.Criteria))
-	}
-	var sum, weighted float64
-	for i := range len(q.Criteria) {
-		key := strconv.Itoa(i)
-		p, ok := a.Probabilities[key]
-		if !ok {
-			return fmt.Errorf("%w: missing bucket %q", ErrDistributionInvalid, key)
-		}
-		if math.IsNaN(p) || p < 0 || p > 1 {
-			return fmt.Errorf("%w: bucket %q = %v", ErrProbabilityInvalid, key, p)
-		}
-		sum += p
-		weighted += float64(i) * p
-	}
-	if math.Abs(sum-1) > ProbabilitySumTolerance {
-		return fmt.Errorf("%w: sum %v", ErrProbabilityInvalid, sum)
-	}
+	// Official ScoreAnswer shape: score is the probability-weighted expected
+	// level (may fall between integers); legend is an object mapping the
+	// requested criteria to their levels; there is no bucket distribution.
 	maxScore := float64(len(q.Criteria) - 1)
 	if math.IsNaN(a.Score) || a.Score < 0 || a.Score > maxScore {
 		return fmt.Errorf("%w: score %v must be 0..%v", ErrScoreInvalid, a.Score, maxScore)
 	}
-	if math.Abs(a.Score-weighted) > WeightedScoreTolerance {
-		return fmt.Errorf("%w: score %v disagrees with its distribution (%v)", ErrScoreInvalid, a.Score, weighted)
-	}
 	if math.IsNaN(a.Confidence) || a.Confidence < 0 || a.Confidence > 1 {
 		return fmt.Errorf("%w: confidence %v", ErrScoreInvalid, a.Confidence)
+	}
+	if a.Legend != nil && len(a.Legend) != len(q.Criteria) {
+		return fmt.Errorf("%w: legend holds %d entries for a %d point scale", ErrScoreInvalid, len(a.Legend), len(q.Criteria))
 	}
 	return nil
 }

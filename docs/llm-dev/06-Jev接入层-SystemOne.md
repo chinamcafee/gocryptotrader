@@ -351,6 +351,8 @@ questions: {
 
 **本方案要求**：配置里的 `modelId` 必须匹配 `^jev-\d+\.\d+\.\d+$`，拒绝 `jev-latest`。开发期可以用 latest 探索，但**任何进入决策流水线的运行必须用固定版本**。
 
+**变更注记（2026-10-15，以实现为准）**：`jev-latest` 经用户拍板**放开**（实现校验 `^jev-(\d+\.\d+\.\d+|latest)$`，单点于 `llm/jev.IsAcceptedModel`）；回放对冲=每次评审的响应原文（含实际 model）照旧落库，审计可回读当时真实版本。见 workLog session-54 §十八。
+
 ## 6. 输入证据清单（Manifest）
 
 ### 6.1 结构
@@ -462,7 +464,7 @@ else                                  → REVIEW, reason = AWAITING_HARD_RISK_AN
 | --- | --- | --- |
 | `kind` | `LLM_OPENAI_COMPAT` | `JEV` |
 | `baseUrl` | OpenAI 兼容端点 | **System One 端点**（默认 `https://api.typesafe.ai`） |
-| `modelId` | 任意字符串 | **必须匹配 `^jev-\d+\.\d+\.\d+$`**（拒绝 `jev-latest`） |
+| `modelId` | 任意字符串 | 必须匹配 `^jev-\d+\.\d+\.\d+$`；`jev-latest` 亦被接受（**2026-10-15 变更**，见上注） |
 | `maxOutputTokens` | 有 | 无（Jev 不控制输出长度） |
 | `maxToolRounds` / `maxToolCalls` | 有 | 无（Jev 无工具） |
 | **`questionTemplateVersion`** | 无 | **有**（如 `jev-review-v2`） |

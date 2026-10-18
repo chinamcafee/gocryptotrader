@@ -171,6 +171,12 @@
   },
   "risk": {
    "expectedMarginType": "CROSS"
+  },
+  "screener": {
+   "flowScanLimit": 100
+  },
+  "batch": {
+   "maxMarkets": 10
   }
  },
  "currencyStateManager": {

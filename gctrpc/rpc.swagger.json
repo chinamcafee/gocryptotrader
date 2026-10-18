@@ -3591,6 +3591,42 @@
         ]
       }
     },
+    "/v1/llm/approvals/active": {
+      "get": {
+        "operationId": "GoCryptoTraderService_LLMListActiveApprovals",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMListActiveApprovalsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "network",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
     "/v1/llm/approvals/{id}/revoke": {
       "post": {
         "operationId": "GoCryptoTraderService_LLMRevokeApproval",
@@ -3659,6 +3695,106 @@
             "required": false,
             "type": "integer",
             "format": "int32"
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/batchdecisions": {
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMStartBatchDecision",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMStartBatchDecisionResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMStartBatchDecisionRequest"
+            }
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/batchdecisions/{jobId}": {
+      "get": {
+        "operationId": "GoCryptoTraderService_LLMGetBatchDecision",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMGetBatchDecisionResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/batchdecisions/{jobId}/cancel": {
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMCancelBatchDecision",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMCancelBatchDecisionResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GoCryptoTraderServiceLLMCancelBatchDecisionBody"
+            }
           }
         ],
         "tags": [
@@ -4341,6 +4477,39 @@
         ]
       }
     },
+    "/v1/llm/markettracked": {
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMSetMarketTracked",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMSetMarketTrackedResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "N11 coverage linkage: enable/disable one market in the exchange's tracked\nset; the handler refreshes the rotator and records an audit event.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMSetMarketTrackedRequest"
+            }
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
     "/v1/llm/metrics": {
       "get": {
         "operationId": "GoCryptoTraderService_LLMGetMetrics",
@@ -4736,6 +4905,60 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/gctrpcLLMSetRunModeRequest"
+            }
+          }
+        ],
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/screener/metrics": {
+      "get": {
+        "operationId": "GoCryptoTraderService_LLMGetScreenerMetrics",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMGetScreenerMetricsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "GoCryptoTraderService"
+        ]
+      }
+    },
+    "/v1/llm/screener/run": {
+      "post": {
+        "operationId": "GoCryptoTraderService_LLMRunScreen",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMRunScreenResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gctrpcLLMRunScreenRequest"
             }
           }
         ],
@@ -5168,82 +5391,6 @@
             "required": false,
             "type": "string",
             "format": "int64"
-          }
-        ],
-        "tags": [
-          "GoCryptoTraderService"
-        ]
-      }
-    },
-    "/v1/llm/vault": {
-      "get": {
-        "operationId": "GoCryptoTraderService_LLMVaultStatus",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/gctrpcLLMVaultStatusResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "tags": [
-          "GoCryptoTraderService"
-        ]
-      }
-    },
-    "/v1/llm/vault/init": {
-      "post": {
-        "operationId": "GoCryptoTraderService_LLMVaultInit",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/gctrpcGenericResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "tags": [
-          "GoCryptoTraderService"
-        ]
-      }
-    },
-    "/v1/llm/vault/secrets": {
-      "post": {
-        "operationId": "GoCryptoTraderService_LLMVaultAddSecret",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/gctrpcLLMVaultAddSecretResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/gctrpcLLMVaultAddSecretRequest"
-            }
           }
         ],
         "tags": [
@@ -6217,6 +6364,14 @@
     "GoCryptoTraderServiceLLMArchiveConversationBody": {
       "type": "object"
     },
+    "GoCryptoTraderServiceLLMCancelBatchDecisionBody": {
+      "type": "object",
+      "properties": {
+        "actor": {
+          "type": "string"
+        }
+      }
+    },
     "GoCryptoTraderServiceLLMClearHaltBody": {
       "type": "object",
       "properties": {
@@ -6322,11 +6477,9 @@
         "modelId": {
           "type": "string"
         },
-        "apiKeyRef": {
-          "type": "string"
-        },
-        "apiKeyFingerprint": {
-          "type": "string"
+        "apiKey": {
+          "type": "string",
+          "description": "api_key is the plaintext provider key (vault removed 2026-10-15); the\nfingerprint column is derived server-side and never typed by an operator."
         },
         "timeoutSeconds": {
           "type": "string",
@@ -8214,6 +8367,42 @@
         }
       }
     },
+    "gctrpcLLMActionProposal": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "marketIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "strategyVersionId": {
+          "type": "string"
+        },
+        "actor": {
+          "type": "string"
+        },
+        "marketId": {
+          "type": "string"
+        },
+        "tracked": {
+          "type": "boolean"
+        },
+        "allPositions": {
+          "type": "boolean"
+        },
+        "jobId": {
+          "type": "string"
+        }
+      },
+      "description": "LLMActionProposal is one inert configuration draft produced by the\nproposeAction tool; the webUI renders it as a confirmation card and the\noperator's confirm calls the same governed RPC the manual pages use."
+    },
     "gctrpcLLMApproveStrategyVersionResponse": {
       "type": "object",
       "properties": {
@@ -8251,6 +8440,44 @@
         },
         "createdAt": {
           "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMBatchDecisionRow": {
+      "type": "object",
+      "properties": {
+        "marketId": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "decision": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "decisionRunId": {
+          "type": "string"
+        },
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMCancelBatchDecisionResponse": {
+      "type": "object",
+      "properties": {
+        "jobId": {
+          "type": "string"
+        },
+        "done": {
+          "type": "boolean"
+        },
+        "cancelled": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -8305,6 +8532,10 @@
         "error": {
           "type": "string",
           "description": "error carries a stream failure the client must show."
+        },
+        "progress": {
+          "$ref": "#/definitions/gctrpcLLMToolProgress",
+          "description": "progress is a live tool-progress update (e.g. a full-universe screen)."
         }
       }
     },
@@ -8600,6 +8831,44 @@
         }
       }
     },
+    "gctrpcLLMGetBatchDecisionResponse": {
+      "type": "object",
+      "properties": {
+        "jobId": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "strategyVersionId": {
+          "type": "string"
+        },
+        "actor": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "done": {
+          "type": "boolean"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "finished": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMBatchDecisionRow"
+          }
+        }
+      }
+    },
     "gctrpcLLMGetCoverageStatusResponse": {
       "type": "object",
       "properties": {
@@ -8761,6 +9030,26 @@
             "type": "object",
             "$ref": "#/definitions/gctrpcLLMRiskSwitch"
           }
+        }
+      }
+    },
+    "gctrpcLLMGetScreenerMetricsResponse": {
+      "type": "object",
+      "properties": {
+        "metrics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMScreenerMetric"
+          }
+        },
+        "maxLimit": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "defaultLimit": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -8953,6 +9242,18 @@
         }
       },
       "description": "W7-01 halt write side: the three-level stop (SOFT/MARKET/FULL) and its\nre-authenticated clear that never auto-resumes anything."
+    },
+    "gctrpcLLMListActiveApprovalsResponse": {
+      "type": "object",
+      "properties": {
+        "approvals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMStrategyApproval"
+          }
+        }
+      }
     },
     "gctrpcLLMListAuditEventsResponse": {
       "type": "object",
@@ -9253,13 +9554,9 @@
         "modelId": {
           "type": "string"
         },
-        "apiKeyRef": {
-          "type": "string",
-          "description": "api_key_ref is the vault reference, never the key itself."
-        },
         "apiKeyFingerprint": {
           "type": "string",
-          "description": "api_key_fingerprint is the truncated SHA-256 the vault reports (16 hex)."
+          "description": "api_key_fingerprint is the server-derived SHA-256 prefix (16 hex)."
         },
         "timeoutSeconds": {
           "type": "string",
@@ -9454,11 +9751,147 @@
         }
       }
     },
+    "gctrpcLLMRunScreenRequest": {
+      "type": "object",
+      "properties": {
+        "criteria": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMScreenCriteria"
+          }
+        },
+        "sort": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMScreenSort"
+          }
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "include": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "gctrpcLLMRunScreenResponse": {
+      "type": "object",
+      "properties": {
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMScreenRow"
+          }
+        },
+        "universeSize": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "matched": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "filteredOut": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "excludedForMissing": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "gctrpcLLMSaveStrategyDraftResponse": {
       "type": "object",
       "properties": {
         "version": {
           "$ref": "#/definitions/gctrpcLLMStrategyVersion"
+        }
+      }
+    },
+    "gctrpcLLMScreenCriteria": {
+      "type": "object",
+      "properties": {
+        "metric": {
+          "type": "string"
+        },
+        "op": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number",
+          "format": "double"
+        },
+        "value2": {
+          "type": "number",
+          "format": "double"
+        },
+        "state": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMScreenRow": {
+      "type": "object",
+      "properties": {
+        "marketId": {
+          "type": "string"
+        },
+        "numbersJson": {
+          "type": "string"
+        },
+        "statesJson": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMScreenSort": {
+      "type": "object",
+      "properties": {
+        "metric": {
+          "type": "string"
+        },
+        "desc": {
+          "type": "boolean"
+        }
+      }
+    },
+    "gctrpcLLMScreenerMetric": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "tier": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "categories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -9495,6 +9928,14 @@
             "type": "object",
             "$ref": "#/definitions/gctrpcLLMEvidenceCard"
           }
+        },
+        "proposals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gctrpcLLMActionProposal"
+          },
+          "description": "proposals are inert configuration drafts awaiting operator confirmation\n(docs/llm-dev 16); they grant no execution authority."
         }
       }
     },
@@ -9541,6 +9982,35 @@
         }
       }
     },
+    "gctrpcLLMSetMarketTrackedRequest": {
+      "type": "object",
+      "properties": {
+        "marketId": {
+          "type": "string"
+        },
+        "tracked": {
+          "type": "boolean"
+        },
+        "actor": {
+          "type": "string"
+        }
+      },
+      "description": "N11 coverage linkage: enable/disable one market in the exchange's tracked\nset; the handler refreshes the rotator and records an audit event."
+    },
+    "gctrpcLLMSetMarketTrackedResponse": {
+      "type": "object",
+      "properties": {
+        "marketId": {
+          "type": "string"
+        },
+        "tracked": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
     "gctrpcLLMSetRiskSwitchRequest": {
       "type": "object",
       "properties": {
@@ -9572,6 +10042,34 @@
         }
       },
       "description": "08 §3.6 run control: the operator-facing caller of ModeSwitcher. The\npassword is re-authentication; switching to LIVE additionally needs the\ntyped acknowledgement phrase (the approval binding and envelope are read\nserver-side)."
+    },
+    "gctrpcLLMStartBatchDecisionRequest": {
+      "type": "object",
+      "properties": {
+        "strategyVersionId": {
+          "type": "string"
+        },
+        "marketIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "kind": {
+          "type": "string"
+        },
+        "actor": {
+          "type": "string"
+        }
+      }
+    },
+    "gctrpcLLMStartBatchDecisionResponse": {
+      "type": "object",
+      "properties": {
+        "jobId": {
+          "type": "string"
+        }
+      }
     },
     "gctrpcLLMStrategy": {
       "type": "object",
@@ -9755,6 +10253,29 @@
         }
       }
     },
+    "gctrpcLLMToolProgress": {
+      "type": "object",
+      "properties": {
+        "tool": {
+          "type": "string"
+        },
+        "phase": {
+          "type": "string"
+        },
+        "done": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "description": "LLMToolProgress reports one tool's progress while a turn is streaming."
+    },
     "gctrpcLLMTriggerAnalysisRequest": {
       "type": "object",
       "properties": {
@@ -9801,65 +10322,6 @@
         "avgLatencyMs": {
           "type": "string",
           "format": "int64"
-        }
-      }
-    },
-    "gctrpcLLMVaultAddSecretRequest": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "type": "string",
-          "description": "kind groups the secret, e.g. llm or jev."
-        },
-        "secret": {
-          "type": "string",
-          "description": "secret is write-only: it is never echoed back, only the ref + fingerprint."
-        }
-      }
-    },
-    "gctrpcLLMVaultAddSecretResponse": {
-      "type": "object",
-      "properties": {
-        "ref": {
-          "type": "string"
-        },
-        "fingerprint": {
-          "type": "string"
-        }
-      }
-    },
-    "gctrpcLLMVaultEntry": {
-      "type": "object",
-      "properties": {
-        "ref": {
-          "type": "string"
-        },
-        "kind": {
-          "type": "string"
-        },
-        "fingerprint": {
-          "type": "string"
-        },
-        "createdAt": {
-          "type": "string"
-        }
-      }
-    },
-    "gctrpcLLMVaultStatusResponse": {
-      "type": "object",
-      "properties": {
-        "initialized": {
-          "type": "boolean"
-        },
-        "directory": {
-          "type": "string"
-        },
-        "entries": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/gctrpcLLMVaultEntry"
-          }
         }
       }
     },

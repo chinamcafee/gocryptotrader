@@ -3,6 +3,7 @@ package llm
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -579,46 +580,53 @@ func ListProtectiveExitsByParent(ctx context.Context, parentIntentID string) ([]
 	return out, nil
 }
 
-// LastEntryIntentAt returns the creation time of the most recent opening
-// intent (OPEN_LONG/OPEN_SHORT) for one market.
+// LastEntryIntentAt returns the id and creation time of the most recent
+// opening intent (OPEN_LONG/OPEN_SHORT) for one market.
 //
 // It is the data side of the risk engine's market-cooldown check ("time since
 // this market was last entered"); the cooldown duration itself is a policy
 // input raised by the assembler. ok is false when the market has no opening
 // intent yet -- a market never entered is past any cooldown. Reduces are not
-// entries and do not count.
-func LastEntryIntentAt(ctx context.Context, exchange, pair, asset string) (time.Time, bool, error) {
+// entries and do not count. The id lets callers walk to follow-on material
+// (for example the protective exit opened for that entry).
+func LastEntryIntentAt(ctx context.Context, exchange, pair, asset string) (id string, at time.Time, ok bool, err error) {
 	if err := available(); err != nil {
-		return time.Time{}, false, err
+		return "", time.Time{}, false, err
 	}
 	if dialectIsSQLite() {
 		var raw sql.NullString
-		err := database.DB.SQL.QueryRowContext(ctx,
-			"SELECT MAX(created_at) FROM llm_order_intents WHERE exchange = ? AND pair = ? AND asset = ? AND action IN (?, ?)",
-			exchange, pair, asset, "OPEN_LONG", "OPEN_SHORT").Scan(&raw)
+		err = database.DB.SQL.QueryRowContext(ctx,
+			"SELECT id, created_at FROM llm_order_intents WHERE exchange = ? AND pair = ? AND asset = ? AND action IN (?, ?) ORDER BY created_at DESC, id DESC LIMIT 1",
+			exchange, pair, asset, "OPEN_LONG", "OPEN_SHORT").Scan(&id, &raw)
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", time.Time{}, false, nil
+		}
 		if err != nil {
-			return time.Time{}, false, err
+			return "", time.Time{}, false, err
 		}
 		if !raw.Valid {
-			return time.Time{}, false, nil
+			return "", time.Time{}, false, nil
 		}
-		at, err := tsFromText(raw.String)
+		at, err = tsFromText(raw.String)
 		if err != nil {
-			return time.Time{}, false, err
+			return "", time.Time{}, false, err
 		}
-		return at, true, nil
+		return id, at, true, nil
 	}
-	var at sql.NullTime
-	err := database.DB.SQL.QueryRowContext(ctx,
-		"SELECT MAX(created_at) FROM llm_order_intents WHERE exchange = $1 AND pair = $2 AND asset = $3 AND action IN ($4, $5)",
-		exchange, pair, asset, "OPEN_LONG", "OPEN_SHORT").Scan(&at)
+	var pgAt sql.NullTime
+	err = database.DB.SQL.QueryRowContext(ctx,
+		"SELECT id, created_at FROM llm_order_intents WHERE exchange = $1 AND pair = $2 AND asset = $3 AND action IN ($4, $5) ORDER BY created_at DESC, id DESC LIMIT 1",
+		exchange, pair, asset, "OPEN_LONG", "OPEN_SHORT").Scan(&id, &pgAt)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", time.Time{}, false, nil
+	}
 	if err != nil {
-		return time.Time{}, false, err
+		return "", time.Time{}, false, err
 	}
-	if !at.Valid {
-		return time.Time{}, false, nil
+	if !pgAt.Valid {
+		return "", time.Time{}, false, nil
 	}
-	return at.Time.UTC(), true, nil
+	return id, pgAt.Time.UTC(), true, nil
 }
 
 // CountOrderIntentsByStatus counts the intents currently in one lifecycle

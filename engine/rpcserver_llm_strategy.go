@@ -522,7 +522,11 @@ func (s *RPCServer) LLMPreviewDecision(ctx context.Context, r *gctrpc.LLMPreview
 
 // runShadowDecision executes one trigger/preview and returns the recorded run.
 func (s *RPCServer) runShadowDecision(ctx context.Context, strategyVersionID, marketID string) (*gctrpc.LLMDecisionRun, error) {
-	if s.Engine == nil || s.Engine.llmDecisionRunner == nil {
+	if s.Engine == nil {
+		return nil, errLLMDecisionRunner
+	}
+	runner := s.Engine.currentDecisionRunner()
+	if runner == nil {
 		return nil, errLLMDecisionRunner
 	}
 	if strings.TrimSpace(strategyVersionID) == "" || strings.TrimSpace(marketID) == "" {
@@ -532,7 +536,7 @@ func (s *RPCServer) runShadowDecision(ctx context.Context, strategyVersionID, ma
 	if err != nil {
 		return nil, err
 	}
-	result, err := s.Engine.llmDecisionRunner.RunOnce(ctx, request)
+	result, err := runner.RunOnce(ctx, request)
 	if err != nil {
 		return nil, err
 	}

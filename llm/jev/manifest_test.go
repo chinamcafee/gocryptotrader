@@ -101,10 +101,10 @@ func TestBuildInputManifestRejectsIncompleteInput(t *testing.T) {
 	_, err = BuildInputManifest(req, requestBody, responseBody, cand, testStrategyInstruction, nil)
 	require.ErrorIs(t, err, ErrManifestIncomplete, "a manifest without tool responses proves nothing")
 
-	unpinned := *req
-	unpinned.Model = "jev-latest"
-	_, err = BuildInputManifest(&unpinned, requestBody, responseBody, cand, testStrategyInstruction, refs)
-	require.ErrorIs(t, err, ErrModelInvalid, "an alias model must be refused")
+	foreign := *req
+	foreign.Model = "gpt-4o"
+	_, err = BuildInputManifest(&foreign, requestBody, responseBody, cand, testStrategyInstruction, refs)
+	require.ErrorIs(t, err, ErrModelInvalid, "a foreign model must be refused")
 }
 
 func TestInputManifestValidateRejectsTampering(t *testing.T) {

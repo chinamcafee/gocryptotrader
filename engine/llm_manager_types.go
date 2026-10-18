@@ -36,9 +36,10 @@ const liveTradingAck = "I_UNDERSTAND"
 
 // defaultLLMCacheKeys bounds the candle cache the manager owns. Eviction is
 // whole-key (pair + asset + interval) and one key holds a single market's
-// history, so a few hundred keys cover every tracked market at the typical one
-// or two intervals without letting memory grow with uptime.
-const defaultLLMCacheKeys = 256
+// history. The full-universe screener warms every in-scope perpetual (~590)
+// across up to three intervals, so the capacity covers that working set
+// without letting memory grow with uptime.
+const defaultLLMCacheKeys = 2048
 
 // Pair readiness values reported for the active LLM x Jev pairing.
 const (

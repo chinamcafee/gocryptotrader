@@ -60,7 +60,7 @@ func NewClient(p *Profile, secretFn SecretFn) (*Client, error) {
 	if secretFn == nil {
 		return nil, httpclient.ErrNilSecret
 	}
-	if !IsPinnedModel(p.Model) {
+	if !IsAcceptedModel(p.Model) {
 		return nil, fmt.Errorf("%w: %q", ErrModelInvalid, p.Model)
 	}
 	timeout := defaultTimeout(p.TimeoutSeconds)
@@ -80,9 +80,16 @@ func NewClient(p *Profile, secretFn SecretFn) (*Client, error) {
 	if err != nil {
 		return nil, fmt.Errorf("parsing endpoint: %w", err)
 	}
+	// Accept both spellings of the base URL: the bare site (the path is
+	// appended here) and the full endpoint (a live 404 on 2026-10-16 showed an
+	// operator pasting the complete /v1/systemone URL, which was then doubled).
+	endpoint := strings.TrimRight(base.String(), "/")
+	if !strings.HasSuffix(endpoint, SystemOnePath) {
+		endpoint = httpclient.BasePath(base, SystemOnePath)
+	}
 	return &Client{
 		http:             hc,
-		endpoint:         httpclient.BasePath(base, SystemOnePath),
+		endpoint:         endpoint,
 		model:            p.Model,
 		secretFn:         secretFn,
 		maxResponseBytes: p.MaxResponseBytes,

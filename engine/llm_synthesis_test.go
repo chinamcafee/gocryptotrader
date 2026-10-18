@@ -36,11 +36,10 @@ func synthAssessment(choice string, score, noul float64) *jev.Assessment {
 			Confidence:    0.8,
 		},
 		EvidenceQuality: &jev.ScoreAnswer{
-			Type:          jev.AnswerScore,
-			Score:         score,
-			Probabilities: map[string]float64{"0": 0.1, "1": 0.1, "2": 0.8},
-			Legend:        []string{"Insufficient", "Mixed", "Adequate"},
-			Confidence:    0.7,
+			Type:       jev.AnswerScore,
+			Score:      score,
+			Confidence: 0.7,
+			Legend:     map[string]any{"0": "Insufficient", "1": "Mixed", "2": "Adequate"},
 		},
 		StrategyAlignment: &jev.NoulAnswer{Type: jev.AnswerNoul, Noul: noul},
 	}

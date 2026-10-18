@@ -25,7 +25,7 @@ export default function SettingsPage() {
             <Descriptions.Item label="指标默认">1h / MACD(12,26,9) / EMA20 + SMA200 / RSI14 / 布林(20,2,2) / ATR14（Q16）</Descriptions.Item>
             <Descriptions.Item label="风控信封档位">小额验证档（Q8）：单笔 20 / 总敞口 100 / 日损 20 / 杠杆 1 / 滑点 20bps</Descriptions.Item>
             <Descriptions.Item label="数据库">PostgreSQL（Q20）</Descriptions.Item>
-            <Descriptions.Item label="密钥隔离">包级隔离 + 独立 llm-vault（Q22，单机 Mac）</Descriptions.Item>
+            <Descriptions.Item label="密钥存放">Provider API Key 明文存于本地数据库修订版行（2026-10-15 简化，用户拍板）</Descriptions.Item>
           </Descriptions>
         </Card>
       </Col>
@@ -37,7 +37,7 @@ export default function SettingsPage() {
             description={
               <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12 }}>
                 <li>币安 API Key 存在 <code>~/.gocryptotrader/config.json</code>，只有 Go 侧使用</li>
-                <li>模型 API Key 存在 <code>llm-vault</code>，只有 Go 侧 <code>llm/secrets</code> 能解</li>
+                <li>模型 API Key 明文存于 provider 修订版行（<code>api_key_ref</code> 列承载；指纹服务端派生），不经过浏览器之外的任何第三方</li>
                 <li>REST 网关的 Basic Auth 由<b>本地代理进程</b>注入，不进浏览器</li>
                 <li>写操作默认关闭（<code>GCT_ALLOW_WRITES=false</code>），代理返回 501</li>
                 <li>批准/撤销/清 halt 需重新认证，不在聊天软件里一键完成</li>

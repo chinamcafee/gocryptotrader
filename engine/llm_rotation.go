@@ -161,9 +161,13 @@ type Rotator struct {
 	// via attachDelistWatcher, so the loop's reads need no lock.
 	delist *MarketDelistWatcher
 
-	cursor               int
-	reloadCursor         int
-	reloadHour           time.Time
+	cursor       int
+	reloadCursor int
+	reloadHour   time.Time
+	// warmOnFirstSweep makes the production assembly warm the candle cache on
+	// the first sweep instead of waiting for the next clock hour. Direct
+	// NewRotator callers (tests) leave it false and keep the clock-hour contract.
+	warmOnFirstSweep     bool
 	visited              map[string]bool
 	lastVisit            map[string]time.Time
 	cycleStartedAt       time.Time
@@ -276,8 +280,17 @@ func (r *Rotator) RefreshMarkets(_ context.Context) error {
 func (r *Rotator) reloadWindowLocked(now time.Time) (time.Time, bool) {
 	hour := now.Truncate(time.Hour)
 	spread := time.Duration(r.plan.FullReloadSpreadMinutes) * time.Minute
-	if now.Sub(hour) >= spread {
-		return hour, false
+	inWindow := now.Sub(hour) < spread
+	if !inWindow {
+		// Production cold start warms the candle cache immediately and keeps the
+		// reload running until every market has been loaded once, even after the
+		// clock-hour window has closed. Direct NewRotator callers (tests) keep
+		// the clock-hour contract.
+		warming := r.warmOnFirstSweep && r.reloadCursor < len(r.markets) &&
+			(r.reloadHour.IsZero() || r.reloadHour.Equal(hour))
+		if !warming {
+			return hour, false
+		}
 	}
 	if r.reloadHour.Equal(hour) && r.reloadCursor >= len(r.markets) {
 		// This hour's reload is finished.

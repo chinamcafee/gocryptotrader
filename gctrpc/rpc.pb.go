@@ -15404,8 +15404,11 @@ type LLMSendMessageResponse struct {
 	LatencyMs        int64                  `protobuf:"varint,6,opt,name=latency_ms,json=latencyMs,proto3" json:"latency_ms,omitempty"`
 	ErrorCode        string                 `protobuf:"bytes,7,opt,name=error_code,json=errorCode,proto3" json:"error_code,omitempty"`
 	Evidence         []*LLMEvidenceCard     `protobuf:"bytes,8,rep,name=evidence,proto3" json:"evidence,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	// proposals are inert configuration drafts awaiting operator confirmation
+	// (docs/llm-dev 16); they grant no execution authority.
+	Proposals     []*LLMActionProposal `protobuf:"bytes,9,rep,name=proposals,proto3" json:"proposals,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *LLMSendMessageResponse) Reset() {
@@ -15494,6 +15497,124 @@ func (x *LLMSendMessageResponse) GetEvidence() []*LLMEvidenceCard {
 	return nil
 }
 
+func (x *LLMSendMessageResponse) GetProposals() []*LLMActionProposal {
+	if x != nil {
+		return x.Proposals
+	}
+	return nil
+}
+
+// LLMActionProposal is one inert configuration draft produced by the
+// proposeAction tool; the webUI renders it as a confirmation card and the
+// operator's confirm calls the same governed RPC the manual pages use.
+type LLMActionProposal struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	Action            string                 `protobuf:"bytes,1,opt,name=action,proto3" json:"action,omitempty"`
+	Summary           string                 `protobuf:"bytes,2,opt,name=summary,proto3" json:"summary,omitempty"`
+	MarketIds         []string               `protobuf:"bytes,3,rep,name=market_ids,json=marketIds,proto3" json:"market_ids,omitempty"`
+	StrategyVersionId string                 `protobuf:"bytes,4,opt,name=strategy_version_id,json=strategyVersionId,proto3" json:"strategy_version_id,omitempty"`
+	Actor             string                 `protobuf:"bytes,5,opt,name=actor,proto3" json:"actor,omitempty"`
+	MarketId          string                 `protobuf:"bytes,6,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+	Tracked           bool                   `protobuf:"varint,7,opt,name=tracked,proto3" json:"tracked,omitempty"`
+	AllPositions      bool                   `protobuf:"varint,8,opt,name=all_positions,json=allPositions,proto3" json:"all_positions,omitempty"`
+	JobId             string                 `protobuf:"bytes,9,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *LLMActionProposal) Reset() {
+	*x = LLMActionProposal{}
+	mi := &file_rpc_proto_msgTypes[227]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LLMActionProposal) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LLMActionProposal) ProtoMessage() {}
+
+func (x *LLMActionProposal) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[227]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LLMActionProposal.ProtoReflect.Descriptor instead.
+func (*LLMActionProposal) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{227}
+}
+
+func (x *LLMActionProposal) GetAction() string {
+	if x != nil {
+		return x.Action
+	}
+	return ""
+}
+
+func (x *LLMActionProposal) GetSummary() string {
+	if x != nil {
+		return x.Summary
+	}
+	return ""
+}
+
+func (x *LLMActionProposal) GetMarketIds() []string {
+	if x != nil {
+		return x.MarketIds
+	}
+	return nil
+}
+
+func (x *LLMActionProposal) GetStrategyVersionId() string {
+	if x != nil {
+		return x.StrategyVersionId
+	}
+	return ""
+}
+
+func (x *LLMActionProposal) GetActor() string {
+	if x != nil {
+		return x.Actor
+	}
+	return ""
+}
+
+func (x *LLMActionProposal) GetMarketId() string {
+	if x != nil {
+		return x.MarketId
+	}
+	return ""
+}
+
+func (x *LLMActionProposal) GetTracked() bool {
+	if x != nil {
+		return x.Tracked
+	}
+	return false
+}
+
+func (x *LLMActionProposal) GetAllPositions() bool {
+	if x != nil {
+		return x.AllPositions
+	}
+	return false
+}
+
+func (x *LLMActionProposal) GetJobId() string {
+	if x != nil {
+		return x.JobId
+	}
+	return ""
+}
+
 type LLMChatStreamRequest struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	ConversationId string                 `protobuf:"bytes,1,opt,name=conversation_id,json=conversationId,proto3" json:"conversation_id,omitempty"`
@@ -15504,7 +15625,7 @@ type LLMChatStreamRequest struct {
 
 func (x *LLMChatStreamRequest) Reset() {
 	*x = LLMChatStreamRequest{}
-	mi := &file_rpc_proto_msgTypes[227]
+	mi := &file_rpc_proto_msgTypes[228]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15516,7 +15637,7 @@ func (x *LLMChatStreamRequest) String() string {
 func (*LLMChatStreamRequest) ProtoMessage() {}
 
 func (x *LLMChatStreamRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[227]
+	mi := &file_rpc_proto_msgTypes[228]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15529,7 +15650,7 @@ func (x *LLMChatStreamRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMChatStreamRequest.ProtoReflect.Descriptor instead.
 func (*LLMChatStreamRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{227}
+	return file_rpc_proto_rawDescGZIP(), []int{228}
 }
 
 func (x *LLMChatStreamRequest) GetConversationId() string {
@@ -15553,14 +15674,16 @@ type LLMChatStreamEvent struct {
 	// final carries the completed turn; the last event of a successful stream.
 	Final *LLMSendMessageResponse `protobuf:"bytes,2,opt,name=final,proto3" json:"final,omitempty"`
 	// error carries a stream failure the client must show.
-	Error         string `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`
+	Error string `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`
+	// progress is a live tool-progress update (e.g. a full-universe screen).
+	Progress      *LLMToolProgress `protobuf:"bytes,4,opt,name=progress,proto3" json:"progress,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *LLMChatStreamEvent) Reset() {
 	*x = LLMChatStreamEvent{}
-	mi := &file_rpc_proto_msgTypes[228]
+	mi := &file_rpc_proto_msgTypes[229]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15572,7 +15695,7 @@ func (x *LLMChatStreamEvent) String() string {
 func (*LLMChatStreamEvent) ProtoMessage() {}
 
 func (x *LLMChatStreamEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[228]
+	mi := &file_rpc_proto_msgTypes[229]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15585,7 +15708,7 @@ func (x *LLMChatStreamEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMChatStreamEvent.ProtoReflect.Descriptor instead.
 func (*LLMChatStreamEvent) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{228}
+	return file_rpc_proto_rawDescGZIP(), []int{229}
 }
 
 func (x *LLMChatStreamEvent) GetDelta() string {
@@ -15609,6 +15732,90 @@ func (x *LLMChatStreamEvent) GetError() string {
 	return ""
 }
 
+func (x *LLMChatStreamEvent) GetProgress() *LLMToolProgress {
+	if x != nil {
+		return x.Progress
+	}
+	return nil
+}
+
+// LLMToolProgress reports one tool's progress while a turn is streaming.
+type LLMToolProgress struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Tool          string                 `protobuf:"bytes,1,opt,name=tool,proto3" json:"tool,omitempty"`
+	Phase         string                 `protobuf:"bytes,2,opt,name=phase,proto3" json:"phase,omitempty"`
+	Done          int32                  `protobuf:"varint,3,opt,name=done,proto3" json:"done,omitempty"`
+	Total         int32                  `protobuf:"varint,4,opt,name=total,proto3" json:"total,omitempty"`
+	Message       string                 `protobuf:"bytes,5,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LLMToolProgress) Reset() {
+	*x = LLMToolProgress{}
+	mi := &file_rpc_proto_msgTypes[230]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LLMToolProgress) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LLMToolProgress) ProtoMessage() {}
+
+func (x *LLMToolProgress) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[230]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LLMToolProgress.ProtoReflect.Descriptor instead.
+func (*LLMToolProgress) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{230}
+}
+
+func (x *LLMToolProgress) GetTool() string {
+	if x != nil {
+		return x.Tool
+	}
+	return ""
+}
+
+func (x *LLMToolProgress) GetPhase() string {
+	if x != nil {
+		return x.Phase
+	}
+	return ""
+}
+
+func (x *LLMToolProgress) GetDone() int32 {
+	if x != nil {
+		return x.Done
+	}
+	return 0
+}
+
+func (x *LLMToolProgress) GetTotal() int32 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+func (x *LLMToolProgress) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
 type LLMStrategy struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -15622,7 +15829,7 @@ type LLMStrategy struct {
 
 func (x *LLMStrategy) Reset() {
 	*x = LLMStrategy{}
-	mi := &file_rpc_proto_msgTypes[229]
+	mi := &file_rpc_proto_msgTypes[231]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15634,7 +15841,7 @@ func (x *LLMStrategy) String() string {
 func (*LLMStrategy) ProtoMessage() {}
 
 func (x *LLMStrategy) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[229]
+	mi := &file_rpc_proto_msgTypes[231]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15647,7 +15854,7 @@ func (x *LLMStrategy) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMStrategy.ProtoReflect.Descriptor instead.
 func (*LLMStrategy) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{229}
+	return file_rpc_proto_rawDescGZIP(), []int{231}
 }
 
 func (x *LLMStrategy) GetId() string {
@@ -15694,7 +15901,7 @@ type LLMListStrategiesRequest struct {
 
 func (x *LLMListStrategiesRequest) Reset() {
 	*x = LLMListStrategiesRequest{}
-	mi := &file_rpc_proto_msgTypes[230]
+	mi := &file_rpc_proto_msgTypes[232]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15706,7 +15913,7 @@ func (x *LLMListStrategiesRequest) String() string {
 func (*LLMListStrategiesRequest) ProtoMessage() {}
 
 func (x *LLMListStrategiesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[230]
+	mi := &file_rpc_proto_msgTypes[232]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15719,7 +15926,7 @@ func (x *LLMListStrategiesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMListStrategiesRequest.ProtoReflect.Descriptor instead.
 func (*LLMListStrategiesRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{230}
+	return file_rpc_proto_rawDescGZIP(), []int{232}
 }
 
 func (x *LLMListStrategiesRequest) GetIncludeArchived() bool {
@@ -15738,7 +15945,7 @@ type LLMListStrategiesResponse struct {
 
 func (x *LLMListStrategiesResponse) Reset() {
 	*x = LLMListStrategiesResponse{}
-	mi := &file_rpc_proto_msgTypes[231]
+	mi := &file_rpc_proto_msgTypes[233]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15750,7 +15957,7 @@ func (x *LLMListStrategiesResponse) String() string {
 func (*LLMListStrategiesResponse) ProtoMessage() {}
 
 func (x *LLMListStrategiesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[231]
+	mi := &file_rpc_proto_msgTypes[233]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15763,7 +15970,7 @@ func (x *LLMListStrategiesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMListStrategiesResponse.ProtoReflect.Descriptor instead.
 func (*LLMListStrategiesResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{231}
+	return file_rpc_proto_rawDescGZIP(), []int{233}
 }
 
 func (x *LLMListStrategiesResponse) GetStrategies() []*LLMStrategy {
@@ -15790,7 +15997,7 @@ type LLMStrategyVersion struct {
 
 func (x *LLMStrategyVersion) Reset() {
 	*x = LLMStrategyVersion{}
-	mi := &file_rpc_proto_msgTypes[232]
+	mi := &file_rpc_proto_msgTypes[234]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15802,7 +16009,7 @@ func (x *LLMStrategyVersion) String() string {
 func (*LLMStrategyVersion) ProtoMessage() {}
 
 func (x *LLMStrategyVersion) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[232]
+	mi := &file_rpc_proto_msgTypes[234]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15815,7 +16022,7 @@ func (x *LLMStrategyVersion) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMStrategyVersion.ProtoReflect.Descriptor instead.
 func (*LLMStrategyVersion) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{232}
+	return file_rpc_proto_rawDescGZIP(), []int{234}
 }
 
 func (x *LLMStrategyVersion) GetId() string {
@@ -15890,7 +16097,7 @@ type LLMGetStrategyVersionRequest struct {
 
 func (x *LLMGetStrategyVersionRequest) Reset() {
 	*x = LLMGetStrategyVersionRequest{}
-	mi := &file_rpc_proto_msgTypes[233]
+	mi := &file_rpc_proto_msgTypes[235]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15902,7 +16109,7 @@ func (x *LLMGetStrategyVersionRequest) String() string {
 func (*LLMGetStrategyVersionRequest) ProtoMessage() {}
 
 func (x *LLMGetStrategyVersionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[233]
+	mi := &file_rpc_proto_msgTypes[235]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15915,7 +16122,7 @@ func (x *LLMGetStrategyVersionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMGetStrategyVersionRequest.ProtoReflect.Descriptor instead.
 func (*LLMGetStrategyVersionRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{233}
+	return file_rpc_proto_rawDescGZIP(), []int{235}
 }
 
 func (x *LLMGetStrategyVersionRequest) GetId() string {
@@ -15936,7 +16143,7 @@ type LLMGetStrategyVersionResponse struct {
 
 func (x *LLMGetStrategyVersionResponse) Reset() {
 	*x = LLMGetStrategyVersionResponse{}
-	mi := &file_rpc_proto_msgTypes[234]
+	mi := &file_rpc_proto_msgTypes[236]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15948,7 +16155,7 @@ func (x *LLMGetStrategyVersionResponse) String() string {
 func (*LLMGetStrategyVersionResponse) ProtoMessage() {}
 
 func (x *LLMGetStrategyVersionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[234]
+	mi := &file_rpc_proto_msgTypes[236]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15961,7 +16168,7 @@ func (x *LLMGetStrategyVersionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMGetStrategyVersionResponse.ProtoReflect.Descriptor instead.
 func (*LLMGetStrategyVersionResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{234}
+	return file_rpc_proto_rawDescGZIP(), []int{236}
 }
 
 func (x *LLMGetStrategyVersionResponse) GetVersion() *LLMStrategyVersion {
@@ -15996,7 +16203,7 @@ type LLMExtractPolicyRequest struct {
 
 func (x *LLMExtractPolicyRequest) Reset() {
 	*x = LLMExtractPolicyRequest{}
-	mi := &file_rpc_proto_msgTypes[235]
+	mi := &file_rpc_proto_msgTypes[237]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16008,7 +16215,7 @@ func (x *LLMExtractPolicyRequest) String() string {
 func (*LLMExtractPolicyRequest) ProtoMessage() {}
 
 func (x *LLMExtractPolicyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[235]
+	mi := &file_rpc_proto_msgTypes[237]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16021,7 +16228,7 @@ func (x *LLMExtractPolicyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMExtractPolicyRequest.ProtoReflect.Descriptor instead.
 func (*LLMExtractPolicyRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{235}
+	return file_rpc_proto_rawDescGZIP(), []int{237}
 }
 
 func (x *LLMExtractPolicyRequest) GetConversationId() string {
@@ -16059,7 +16266,7 @@ type LLMExtractPolicyResponse struct {
 
 func (x *LLMExtractPolicyResponse) Reset() {
 	*x = LLMExtractPolicyResponse{}
-	mi := &file_rpc_proto_msgTypes[236]
+	mi := &file_rpc_proto_msgTypes[238]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16071,7 +16278,7 @@ func (x *LLMExtractPolicyResponse) String() string {
 func (*LLMExtractPolicyResponse) ProtoMessage() {}
 
 func (x *LLMExtractPolicyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[236]
+	mi := &file_rpc_proto_msgTypes[238]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16084,7 +16291,7 @@ func (x *LLMExtractPolicyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMExtractPolicyResponse.ProtoReflect.Descriptor instead.
 func (*LLMExtractPolicyResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{236}
+	return file_rpc_proto_rawDescGZIP(), []int{238}
 }
 
 func (x *LLMExtractPolicyResponse) GetProposalJson() string {
@@ -16142,7 +16349,7 @@ type LLMFreezeStrategyVersionRequest struct {
 
 func (x *LLMFreezeStrategyVersionRequest) Reset() {
 	*x = LLMFreezeStrategyVersionRequest{}
-	mi := &file_rpc_proto_msgTypes[237]
+	mi := &file_rpc_proto_msgTypes[239]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16154,7 +16361,7 @@ func (x *LLMFreezeStrategyVersionRequest) String() string {
 func (*LLMFreezeStrategyVersionRequest) ProtoMessage() {}
 
 func (x *LLMFreezeStrategyVersionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[237]
+	mi := &file_rpc_proto_msgTypes[239]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16167,7 +16374,7 @@ func (x *LLMFreezeStrategyVersionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMFreezeStrategyVersionRequest.ProtoReflect.Descriptor instead.
 func (*LLMFreezeStrategyVersionRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{237}
+	return file_rpc_proto_rawDescGZIP(), []int{239}
 }
 
 func (x *LLMFreezeStrategyVersionRequest) GetId() string {
@@ -16203,7 +16410,7 @@ type LLMFreezeStrategyVersionResponse struct {
 
 func (x *LLMFreezeStrategyVersionResponse) Reset() {
 	*x = LLMFreezeStrategyVersionResponse{}
-	mi := &file_rpc_proto_msgTypes[238]
+	mi := &file_rpc_proto_msgTypes[240]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16215,7 +16422,7 @@ func (x *LLMFreezeStrategyVersionResponse) String() string {
 func (*LLMFreezeStrategyVersionResponse) ProtoMessage() {}
 
 func (x *LLMFreezeStrategyVersionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[238]
+	mi := &file_rpc_proto_msgTypes[240]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16228,7 +16435,7 @@ func (x *LLMFreezeStrategyVersionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMFreezeStrategyVersionResponse.ProtoReflect.Descriptor instead.
 func (*LLMFreezeStrategyVersionResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{238}
+	return file_rpc_proto_rawDescGZIP(), []int{240}
 }
 
 func (x *LLMFreezeStrategyVersionResponse) GetStrategyHash() string {
@@ -16277,7 +16484,7 @@ type LLMApproveStrategyVersionRequest struct {
 
 func (x *LLMApproveStrategyVersionRequest) Reset() {
 	*x = LLMApproveStrategyVersionRequest{}
-	mi := &file_rpc_proto_msgTypes[239]
+	mi := &file_rpc_proto_msgTypes[241]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16289,7 +16496,7 @@ func (x *LLMApproveStrategyVersionRequest) String() string {
 func (*LLMApproveStrategyVersionRequest) ProtoMessage() {}
 
 func (x *LLMApproveStrategyVersionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[239]
+	mi := &file_rpc_proto_msgTypes[241]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16302,7 +16509,7 @@ func (x *LLMApproveStrategyVersionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMApproveStrategyVersionRequest.ProtoReflect.Descriptor instead.
 func (*LLMApproveStrategyVersionRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{239}
+	return file_rpc_proto_rawDescGZIP(), []int{241}
 }
 
 func (x *LLMApproveStrategyVersionRequest) GetStrategyVersionId() string {
@@ -16387,7 +16594,7 @@ type LLMApproveStrategyVersionResponse struct {
 
 func (x *LLMApproveStrategyVersionResponse) Reset() {
 	*x = LLMApproveStrategyVersionResponse{}
-	mi := &file_rpc_proto_msgTypes[240]
+	mi := &file_rpc_proto_msgTypes[242]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16399,7 +16606,7 @@ func (x *LLMApproveStrategyVersionResponse) String() string {
 func (*LLMApproveStrategyVersionResponse) ProtoMessage() {}
 
 func (x *LLMApproveStrategyVersionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[240]
+	mi := &file_rpc_proto_msgTypes[242]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16412,7 +16619,7 @@ func (x *LLMApproveStrategyVersionResponse) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use LLMApproveStrategyVersionResponse.ProtoReflect.Descriptor instead.
 func (*LLMApproveStrategyVersionResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{240}
+	return file_rpc_proto_rawDescGZIP(), []int{242}
 }
 
 func (x *LLMApproveStrategyVersionResponse) GetApprovalId() string {
@@ -16454,7 +16661,7 @@ type LLMRevokeApprovalRequest struct {
 
 func (x *LLMRevokeApprovalRequest) Reset() {
 	*x = LLMRevokeApprovalRequest{}
-	mi := &file_rpc_proto_msgTypes[241]
+	mi := &file_rpc_proto_msgTypes[243]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16466,7 +16673,7 @@ func (x *LLMRevokeApprovalRequest) String() string {
 func (*LLMRevokeApprovalRequest) ProtoMessage() {}
 
 func (x *LLMRevokeApprovalRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[241]
+	mi := &file_rpc_proto_msgTypes[243]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16479,7 +16686,7 @@ func (x *LLMRevokeApprovalRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMRevokeApprovalRequest.ProtoReflect.Descriptor instead.
 func (*LLMRevokeApprovalRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{241}
+	return file_rpc_proto_rawDescGZIP(), []int{243}
 }
 
 func (x *LLMRevokeApprovalRequest) GetId() string {
@@ -16514,7 +16721,7 @@ type LLMPauseStrategyRequest struct {
 
 func (x *LLMPauseStrategyRequest) Reset() {
 	*x = LLMPauseStrategyRequest{}
-	mi := &file_rpc_proto_msgTypes[242]
+	mi := &file_rpc_proto_msgTypes[244]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16526,7 +16733,7 @@ func (x *LLMPauseStrategyRequest) String() string {
 func (*LLMPauseStrategyRequest) ProtoMessage() {}
 
 func (x *LLMPauseStrategyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[242]
+	mi := &file_rpc_proto_msgTypes[244]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16539,7 +16746,7 @@ func (x *LLMPauseStrategyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMPauseStrategyRequest.ProtoReflect.Descriptor instead.
 func (*LLMPauseStrategyRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{242}
+	return file_rpc_proto_rawDescGZIP(), []int{244}
 }
 
 func (x *LLMPauseStrategyRequest) GetStrategyVersionId() string {
@@ -16574,7 +16781,7 @@ type LLMResumeStrategyRequest struct {
 
 func (x *LLMResumeStrategyRequest) Reset() {
 	*x = LLMResumeStrategyRequest{}
-	mi := &file_rpc_proto_msgTypes[243]
+	mi := &file_rpc_proto_msgTypes[245]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16586,7 +16793,7 @@ func (x *LLMResumeStrategyRequest) String() string {
 func (*LLMResumeStrategyRequest) ProtoMessage() {}
 
 func (x *LLMResumeStrategyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[243]
+	mi := &file_rpc_proto_msgTypes[245]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16599,7 +16806,7 @@ func (x *LLMResumeStrategyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMResumeStrategyRequest.ProtoReflect.Descriptor instead.
 func (*LLMResumeStrategyRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{243}
+	return file_rpc_proto_rawDescGZIP(), []int{245}
 }
 
 func (x *LLMResumeStrategyRequest) GetStrategyVersionId() string {
@@ -16633,7 +16840,7 @@ type LLMDiffStrategyVersionsRequest struct {
 
 func (x *LLMDiffStrategyVersionsRequest) Reset() {
 	*x = LLMDiffStrategyVersionsRequest{}
-	mi := &file_rpc_proto_msgTypes[244]
+	mi := &file_rpc_proto_msgTypes[246]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16645,7 +16852,7 @@ func (x *LLMDiffStrategyVersionsRequest) String() string {
 func (*LLMDiffStrategyVersionsRequest) ProtoMessage() {}
 
 func (x *LLMDiffStrategyVersionsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[244]
+	mi := &file_rpc_proto_msgTypes[246]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16658,7 +16865,7 @@ func (x *LLMDiffStrategyVersionsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMDiffStrategyVersionsRequest.ProtoReflect.Descriptor instead.
 func (*LLMDiffStrategyVersionsRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{244}
+	return file_rpc_proto_rawDescGZIP(), []int{246}
 }
 
 func (x *LLMDiffStrategyVersionsRequest) GetFromId() string {
@@ -16686,7 +16893,7 @@ type LLMPolicyChange struct {
 
 func (x *LLMPolicyChange) Reset() {
 	*x = LLMPolicyChange{}
-	mi := &file_rpc_proto_msgTypes[245]
+	mi := &file_rpc_proto_msgTypes[247]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16698,7 +16905,7 @@ func (x *LLMPolicyChange) String() string {
 func (*LLMPolicyChange) ProtoMessage() {}
 
 func (x *LLMPolicyChange) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[245]
+	mi := &file_rpc_proto_msgTypes[247]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16711,7 +16918,7 @@ func (x *LLMPolicyChange) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMPolicyChange.ProtoReflect.Descriptor instead.
 func (*LLMPolicyChange) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{245}
+	return file_rpc_proto_rawDescGZIP(), []int{247}
 }
 
 func (x *LLMPolicyChange) GetField() string {
@@ -16746,7 +16953,7 @@ type LLMDiffStrategyVersionsResponse struct {
 
 func (x *LLMDiffStrategyVersionsResponse) Reset() {
 	*x = LLMDiffStrategyVersionsResponse{}
-	mi := &file_rpc_proto_msgTypes[246]
+	mi := &file_rpc_proto_msgTypes[248]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16758,7 +16965,7 @@ func (x *LLMDiffStrategyVersionsResponse) String() string {
 func (*LLMDiffStrategyVersionsResponse) ProtoMessage() {}
 
 func (x *LLMDiffStrategyVersionsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[246]
+	mi := &file_rpc_proto_msgTypes[248]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16771,7 +16978,7 @@ func (x *LLMDiffStrategyVersionsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMDiffStrategyVersionsResponse.ProtoReflect.Descriptor instead.
 func (*LLMDiffStrategyVersionsResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{246}
+	return file_rpc_proto_rawDescGZIP(), []int{248}
 }
 
 func (x *LLMDiffStrategyVersionsResponse) GetFromVersionId() string {
@@ -16807,7 +17014,7 @@ type LLMCreateStrategyRequest struct {
 
 func (x *LLMCreateStrategyRequest) Reset() {
 	*x = LLMCreateStrategyRequest{}
-	mi := &file_rpc_proto_msgTypes[247]
+	mi := &file_rpc_proto_msgTypes[249]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16819,7 +17026,7 @@ func (x *LLMCreateStrategyRequest) String() string {
 func (*LLMCreateStrategyRequest) ProtoMessage() {}
 
 func (x *LLMCreateStrategyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[247]
+	mi := &file_rpc_proto_msgTypes[249]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16832,7 +17039,7 @@ func (x *LLMCreateStrategyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMCreateStrategyRequest.ProtoReflect.Descriptor instead.
 func (*LLMCreateStrategyRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{247}
+	return file_rpc_proto_rawDescGZIP(), []int{249}
 }
 
 func (x *LLMCreateStrategyRequest) GetName() string {
@@ -16858,7 +17065,7 @@ type LLMCreateStrategyResponse struct {
 
 func (x *LLMCreateStrategyResponse) Reset() {
 	*x = LLMCreateStrategyResponse{}
-	mi := &file_rpc_proto_msgTypes[248]
+	mi := &file_rpc_proto_msgTypes[250]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16870,7 +17077,7 @@ func (x *LLMCreateStrategyResponse) String() string {
 func (*LLMCreateStrategyResponse) ProtoMessage() {}
 
 func (x *LLMCreateStrategyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[248]
+	mi := &file_rpc_proto_msgTypes[250]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16883,7 +17090,7 @@ func (x *LLMCreateStrategyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMCreateStrategyResponse.ProtoReflect.Descriptor instead.
 func (*LLMCreateStrategyResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{248}
+	return file_rpc_proto_rawDescGZIP(), []int{250}
 }
 
 func (x *LLMCreateStrategyResponse) GetStrategy() *LLMStrategy {
@@ -16902,7 +17109,7 @@ type LLMListStrategyVersionsRequest struct {
 
 func (x *LLMListStrategyVersionsRequest) Reset() {
 	*x = LLMListStrategyVersionsRequest{}
-	mi := &file_rpc_proto_msgTypes[249]
+	mi := &file_rpc_proto_msgTypes[251]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16914,7 +17121,7 @@ func (x *LLMListStrategyVersionsRequest) String() string {
 func (*LLMListStrategyVersionsRequest) ProtoMessage() {}
 
 func (x *LLMListStrategyVersionsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[249]
+	mi := &file_rpc_proto_msgTypes[251]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16927,7 +17134,7 @@ func (x *LLMListStrategyVersionsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMListStrategyVersionsRequest.ProtoReflect.Descriptor instead.
 func (*LLMListStrategyVersionsRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{249}
+	return file_rpc_proto_rawDescGZIP(), []int{251}
 }
 
 func (x *LLMListStrategyVersionsRequest) GetStrategyId() string {
@@ -16946,7 +17153,7 @@ type LLMListStrategyVersionsResponse struct {
 
 func (x *LLMListStrategyVersionsResponse) Reset() {
 	*x = LLMListStrategyVersionsResponse{}
-	mi := &file_rpc_proto_msgTypes[250]
+	mi := &file_rpc_proto_msgTypes[252]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16958,7 +17165,7 @@ func (x *LLMListStrategyVersionsResponse) String() string {
 func (*LLMListStrategyVersionsResponse) ProtoMessage() {}
 
 func (x *LLMListStrategyVersionsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[250]
+	mi := &file_rpc_proto_msgTypes[252]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16971,7 +17178,7 @@ func (x *LLMListStrategyVersionsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMListStrategyVersionsResponse.ProtoReflect.Descriptor instead.
 func (*LLMListStrategyVersionsResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{250}
+	return file_rpc_proto_rawDescGZIP(), []int{252}
 }
 
 func (x *LLMListStrategyVersionsResponse) GetVersions() []*LLMStrategyVersion {
@@ -16995,7 +17202,7 @@ type LLMSaveStrategyDraftRequest struct {
 
 func (x *LLMSaveStrategyDraftRequest) Reset() {
 	*x = LLMSaveStrategyDraftRequest{}
-	mi := &file_rpc_proto_msgTypes[251]
+	mi := &file_rpc_proto_msgTypes[253]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17007,7 +17214,7 @@ func (x *LLMSaveStrategyDraftRequest) String() string {
 func (*LLMSaveStrategyDraftRequest) ProtoMessage() {}
 
 func (x *LLMSaveStrategyDraftRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[251]
+	mi := &file_rpc_proto_msgTypes[253]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17020,7 +17227,7 @@ func (x *LLMSaveStrategyDraftRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMSaveStrategyDraftRequest.ProtoReflect.Descriptor instead.
 func (*LLMSaveStrategyDraftRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{251}
+	return file_rpc_proto_rawDescGZIP(), []int{253}
 }
 
 func (x *LLMSaveStrategyDraftRequest) GetStrategyId() string {
@@ -17060,7 +17267,7 @@ type LLMSaveStrategyDraftResponse struct {
 
 func (x *LLMSaveStrategyDraftResponse) Reset() {
 	*x = LLMSaveStrategyDraftResponse{}
-	mi := &file_rpc_proto_msgTypes[252]
+	mi := &file_rpc_proto_msgTypes[254]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17072,7 +17279,7 @@ func (x *LLMSaveStrategyDraftResponse) String() string {
 func (*LLMSaveStrategyDraftResponse) ProtoMessage() {}
 
 func (x *LLMSaveStrategyDraftResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[252]
+	mi := &file_rpc_proto_msgTypes[254]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17085,7 +17292,7 @@ func (x *LLMSaveStrategyDraftResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMSaveStrategyDraftResponse.ProtoReflect.Descriptor instead.
 func (*LLMSaveStrategyDraftResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{252}
+	return file_rpc_proto_rawDescGZIP(), []int{254}
 }
 
 func (x *LLMSaveStrategyDraftResponse) GetVersion() *LLMStrategyVersion {
@@ -17104,7 +17311,7 @@ type LLMGetStrategyApprovalRequest struct {
 
 func (x *LLMGetStrategyApprovalRequest) Reset() {
 	*x = LLMGetStrategyApprovalRequest{}
-	mi := &file_rpc_proto_msgTypes[253]
+	mi := &file_rpc_proto_msgTypes[255]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17116,7 +17323,7 @@ func (x *LLMGetStrategyApprovalRequest) String() string {
 func (*LLMGetStrategyApprovalRequest) ProtoMessage() {}
 
 func (x *LLMGetStrategyApprovalRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[253]
+	mi := &file_rpc_proto_msgTypes[255]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17129,7 +17336,7 @@ func (x *LLMGetStrategyApprovalRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMGetStrategyApprovalRequest.ProtoReflect.Descriptor instead.
 func (*LLMGetStrategyApprovalRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{253}
+	return file_rpc_proto_rawDescGZIP(), []int{255}
 }
 
 func (x *LLMGetStrategyApprovalRequest) GetStrategyVersionId() string {
@@ -17163,7 +17370,7 @@ type LLMStrategyApproval struct {
 
 func (x *LLMStrategyApproval) Reset() {
 	*x = LLMStrategyApproval{}
-	mi := &file_rpc_proto_msgTypes[254]
+	mi := &file_rpc_proto_msgTypes[256]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17175,7 +17382,7 @@ func (x *LLMStrategyApproval) String() string {
 func (*LLMStrategyApproval) ProtoMessage() {}
 
 func (x *LLMStrategyApproval) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[254]
+	mi := &file_rpc_proto_msgTypes[256]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17188,7 +17395,7 @@ func (x *LLMStrategyApproval) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMStrategyApproval.ProtoReflect.Descriptor instead.
 func (*LLMStrategyApproval) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{254}
+	return file_rpc_proto_rawDescGZIP(), []int{256}
 }
 
 func (x *LLMStrategyApproval) GetId() string {
@@ -17313,7 +17520,7 @@ type LLMGetStrategyApprovalResponse struct {
 
 func (x *LLMGetStrategyApprovalResponse) Reset() {
 	*x = LLMGetStrategyApprovalResponse{}
-	mi := &file_rpc_proto_msgTypes[255]
+	mi := &file_rpc_proto_msgTypes[257]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17325,7 +17532,7 @@ func (x *LLMGetStrategyApprovalResponse) String() string {
 func (*LLMGetStrategyApprovalResponse) ProtoMessage() {}
 
 func (x *LLMGetStrategyApprovalResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[255]
+	mi := &file_rpc_proto_msgTypes[257]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17338,7 +17545,7 @@ func (x *LLMGetStrategyApprovalResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMGetStrategyApprovalResponse.ProtoReflect.Descriptor instead.
 func (*LLMGetStrategyApprovalResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{255}
+	return file_rpc_proto_rawDescGZIP(), []int{257}
 }
 
 func (x *LLMGetStrategyApprovalResponse) GetFound() bool {
@@ -17355,6 +17562,102 @@ func (x *LLMGetStrategyApprovalResponse) GetApproval() *LLMStrategyApproval {
 	return nil
 }
 
+type LLMListActiveApprovalsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AccountId     string                 `protobuf:"bytes,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	Network       string                 `protobuf:"bytes,2,opt,name=network,proto3" json:"network,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LLMListActiveApprovalsRequest) Reset() {
+	*x = LLMListActiveApprovalsRequest{}
+	mi := &file_rpc_proto_msgTypes[258]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LLMListActiveApprovalsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LLMListActiveApprovalsRequest) ProtoMessage() {}
+
+func (x *LLMListActiveApprovalsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[258]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LLMListActiveApprovalsRequest.ProtoReflect.Descriptor instead.
+func (*LLMListActiveApprovalsRequest) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{258}
+}
+
+func (x *LLMListActiveApprovalsRequest) GetAccountId() string {
+	if x != nil {
+		return x.AccountId
+	}
+	return ""
+}
+
+func (x *LLMListActiveApprovalsRequest) GetNetwork() string {
+	if x != nil {
+		return x.Network
+	}
+	return ""
+}
+
+type LLMListActiveApprovalsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Approvals     []*LLMStrategyApproval `protobuf:"bytes,1,rep,name=approvals,proto3" json:"approvals,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LLMListActiveApprovalsResponse) Reset() {
+	*x = LLMListActiveApprovalsResponse{}
+	mi := &file_rpc_proto_msgTypes[259]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LLMListActiveApprovalsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LLMListActiveApprovalsResponse) ProtoMessage() {}
+
+func (x *LLMListActiveApprovalsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[259]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LLMListActiveApprovalsResponse.ProtoReflect.Descriptor instead.
+func (*LLMListActiveApprovalsResponse) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{259}
+}
+
+func (x *LLMListActiveApprovalsResponse) GetApprovals() []*LLMStrategyApproval {
+	if x != nil {
+		return x.Approvals
+	}
+	return nil
+}
+
 // W5-07 market grants: the second gate ("seeing a market" never equals
 // "trading a market"); one active grant per account+network+market, <=30 days.
 type LLMListMarketGrantsRequest struct {
@@ -17366,7 +17669,7 @@ type LLMListMarketGrantsRequest struct {
 
 func (x *LLMListMarketGrantsRequest) Reset() {
 	*x = LLMListMarketGrantsRequest{}
-	mi := &file_rpc_proto_msgTypes[256]
+	mi := &file_rpc_proto_msgTypes[260]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17378,7 +17681,7 @@ func (x *LLMListMarketGrantsRequest) String() string {
 func (*LLMListMarketGrantsRequest) ProtoMessage() {}
 
 func (x *LLMListMarketGrantsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[256]
+	mi := &file_rpc_proto_msgTypes[260]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17391,7 +17694,7 @@ func (x *LLMListMarketGrantsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMListMarketGrantsRequest.ProtoReflect.Descriptor instead.
 func (*LLMListMarketGrantsRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{256}
+	return file_rpc_proto_rawDescGZIP(), []int{260}
 }
 
 func (x *LLMListMarketGrantsRequest) GetAccountId() string {
@@ -17419,7 +17722,7 @@ type LLMMarketGrant struct {
 
 func (x *LLMMarketGrant) Reset() {
 	*x = LLMMarketGrant{}
-	mi := &file_rpc_proto_msgTypes[257]
+	mi := &file_rpc_proto_msgTypes[261]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17431,7 +17734,7 @@ func (x *LLMMarketGrant) String() string {
 func (*LLMMarketGrant) ProtoMessage() {}
 
 func (x *LLMMarketGrant) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[257]
+	mi := &file_rpc_proto_msgTypes[261]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17444,7 +17747,7 @@ func (x *LLMMarketGrant) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMMarketGrant.ProtoReflect.Descriptor instead.
 func (*LLMMarketGrant) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{257}
+	return file_rpc_proto_rawDescGZIP(), []int{261}
 }
 
 func (x *LLMMarketGrant) GetId() string {
@@ -17526,7 +17829,7 @@ type LLMListMarketGrantsResponse struct {
 
 func (x *LLMListMarketGrantsResponse) Reset() {
 	*x = LLMListMarketGrantsResponse{}
-	mi := &file_rpc_proto_msgTypes[258]
+	mi := &file_rpc_proto_msgTypes[262]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17538,7 +17841,7 @@ func (x *LLMListMarketGrantsResponse) String() string {
 func (*LLMListMarketGrantsResponse) ProtoMessage() {}
 
 func (x *LLMListMarketGrantsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[258]
+	mi := &file_rpc_proto_msgTypes[262]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17551,7 +17854,7 @@ func (x *LLMListMarketGrantsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMListMarketGrantsResponse.ProtoReflect.Descriptor instead.
 func (*LLMListMarketGrantsResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{258}
+	return file_rpc_proto_rawDescGZIP(), []int{262}
 }
 
 func (x *LLMListMarketGrantsResponse) GetGrants() []*LLMMarketGrant {
@@ -17574,7 +17877,7 @@ type LLMGrantMarketRequest struct {
 
 func (x *LLMGrantMarketRequest) Reset() {
 	*x = LLMGrantMarketRequest{}
-	mi := &file_rpc_proto_msgTypes[259]
+	mi := &file_rpc_proto_msgTypes[263]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17586,7 +17889,7 @@ func (x *LLMGrantMarketRequest) String() string {
 func (*LLMGrantMarketRequest) ProtoMessage() {}
 
 func (x *LLMGrantMarketRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[259]
+	mi := &file_rpc_proto_msgTypes[263]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17599,7 +17902,7 @@ func (x *LLMGrantMarketRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMGrantMarketRequest.ProtoReflect.Descriptor instead.
 func (*LLMGrantMarketRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{259}
+	return file_rpc_proto_rawDescGZIP(), []int{263}
 }
 
 func (x *LLMGrantMarketRequest) GetAccountId() string {
@@ -17646,7 +17949,7 @@ type LLMGrantMarketResponse struct {
 
 func (x *LLMGrantMarketResponse) Reset() {
 	*x = LLMGrantMarketResponse{}
-	mi := &file_rpc_proto_msgTypes[260]
+	mi := &file_rpc_proto_msgTypes[264]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17658,7 +17961,7 @@ func (x *LLMGrantMarketResponse) String() string {
 func (*LLMGrantMarketResponse) ProtoMessage() {}
 
 func (x *LLMGrantMarketResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[260]
+	mi := &file_rpc_proto_msgTypes[264]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17671,7 +17974,7 @@ func (x *LLMGrantMarketResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMGrantMarketResponse.ProtoReflect.Descriptor instead.
 func (*LLMGrantMarketResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{260}
+	return file_rpc_proto_rawDescGZIP(), []int{264}
 }
 
 func (x *LLMGrantMarketResponse) GetGrant() *LLMMarketGrant {
@@ -17692,7 +17995,7 @@ type LLMRevokeMarketGrantRequest struct {
 
 func (x *LLMRevokeMarketGrantRequest) Reset() {
 	*x = LLMRevokeMarketGrantRequest{}
-	mi := &file_rpc_proto_msgTypes[261]
+	mi := &file_rpc_proto_msgTypes[265]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17704,7 +18007,7 @@ func (x *LLMRevokeMarketGrantRequest) String() string {
 func (*LLMRevokeMarketGrantRequest) ProtoMessage() {}
 
 func (x *LLMRevokeMarketGrantRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[261]
+	mi := &file_rpc_proto_msgTypes[265]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17717,7 +18020,7 @@ func (x *LLMRevokeMarketGrantRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMRevokeMarketGrantRequest.ProtoReflect.Descriptor instead.
 func (*LLMRevokeMarketGrantRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{261}
+	return file_rpc_proto_rawDescGZIP(), []int{265}
 }
 
 func (x *LLMRevokeMarketGrantRequest) GetId() string {
@@ -17751,7 +18054,7 @@ type LLMRevokeMarketGrantResponse struct {
 
 func (x *LLMRevokeMarketGrantResponse) Reset() {
 	*x = LLMRevokeMarketGrantResponse{}
-	mi := &file_rpc_proto_msgTypes[262]
+	mi := &file_rpc_proto_msgTypes[266]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17763,7 +18066,7 @@ func (x *LLMRevokeMarketGrantResponse) String() string {
 func (*LLMRevokeMarketGrantResponse) ProtoMessage() {}
 
 func (x *LLMRevokeMarketGrantResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[262]
+	mi := &file_rpc_proto_msgTypes[266]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17776,7 +18079,7 @@ func (x *LLMRevokeMarketGrantResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMRevokeMarketGrantResponse.ProtoReflect.Descriptor instead.
 func (*LLMRevokeMarketGrantResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{262}
+	return file_rpc_proto_rawDescGZIP(), []int{266}
 }
 
 func (x *LLMRevokeMarketGrantResponse) GetGrantId() string {
@@ -17815,7 +18118,7 @@ type LLMDecisionRun struct {
 
 func (x *LLMDecisionRun) Reset() {
 	*x = LLMDecisionRun{}
-	mi := &file_rpc_proto_msgTypes[263]
+	mi := &file_rpc_proto_msgTypes[267]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17827,7 +18130,7 @@ func (x *LLMDecisionRun) String() string {
 func (*LLMDecisionRun) ProtoMessage() {}
 
 func (x *LLMDecisionRun) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[263]
+	mi := &file_rpc_proto_msgTypes[267]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17840,7 +18143,7 @@ func (x *LLMDecisionRun) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMDecisionRun.ProtoReflect.Descriptor instead.
 func (*LLMDecisionRun) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{263}
+	return file_rpc_proto_rawDescGZIP(), []int{267}
 }
 
 func (x *LLMDecisionRun) GetId() string {
@@ -17951,7 +18254,7 @@ type LLMListDecisionRunsRequest struct {
 
 func (x *LLMListDecisionRunsRequest) Reset() {
 	*x = LLMListDecisionRunsRequest{}
-	mi := &file_rpc_proto_msgTypes[264]
+	mi := &file_rpc_proto_msgTypes[268]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17963,7 +18266,7 @@ func (x *LLMListDecisionRunsRequest) String() string {
 func (*LLMListDecisionRunsRequest) ProtoMessage() {}
 
 func (x *LLMListDecisionRunsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[264]
+	mi := &file_rpc_proto_msgTypes[268]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17976,7 +18279,7 @@ func (x *LLMListDecisionRunsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMListDecisionRunsRequest.ProtoReflect.Descriptor instead.
 func (*LLMListDecisionRunsRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{264}
+	return file_rpc_proto_rawDescGZIP(), []int{268}
 }
 
 func (x *LLMListDecisionRunsRequest) GetStrategyVersionId() string {
@@ -18002,7 +18305,7 @@ type LLMListDecisionRunsResponse struct {
 
 func (x *LLMListDecisionRunsResponse) Reset() {
 	*x = LLMListDecisionRunsResponse{}
-	mi := &file_rpc_proto_msgTypes[265]
+	mi := &file_rpc_proto_msgTypes[269]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18014,7 +18317,7 @@ func (x *LLMListDecisionRunsResponse) String() string {
 func (*LLMListDecisionRunsResponse) ProtoMessage() {}
 
 func (x *LLMListDecisionRunsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[265]
+	mi := &file_rpc_proto_msgTypes[269]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18027,7 +18330,7 @@ func (x *LLMListDecisionRunsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMListDecisionRunsResponse.ProtoReflect.Descriptor instead.
 func (*LLMListDecisionRunsResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{265}
+	return file_rpc_proto_rawDescGZIP(), []int{269}
 }
 
 func (x *LLMListDecisionRunsResponse) GetRuns() []*LLMDecisionRun {
@@ -18046,7 +18349,7 @@ type LLMGetDecisionRunRequest struct {
 
 func (x *LLMGetDecisionRunRequest) Reset() {
 	*x = LLMGetDecisionRunRequest{}
-	mi := &file_rpc_proto_msgTypes[266]
+	mi := &file_rpc_proto_msgTypes[270]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18058,7 +18361,7 @@ func (x *LLMGetDecisionRunRequest) String() string {
 func (*LLMGetDecisionRunRequest) ProtoMessage() {}
 
 func (x *LLMGetDecisionRunRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[266]
+	mi := &file_rpc_proto_msgTypes[270]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18071,7 +18374,7 @@ func (x *LLMGetDecisionRunRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMGetDecisionRunRequest.ProtoReflect.Descriptor instead.
 func (*LLMGetDecisionRunRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{266}
+	return file_rpc_proto_rawDescGZIP(), []int{270}
 }
 
 func (x *LLMGetDecisionRunRequest) GetId() string {
@@ -18093,7 +18396,7 @@ type LLMGetDecisionRunResponse struct {
 
 func (x *LLMGetDecisionRunResponse) Reset() {
 	*x = LLMGetDecisionRunResponse{}
-	mi := &file_rpc_proto_msgTypes[267]
+	mi := &file_rpc_proto_msgTypes[271]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18105,7 +18408,7 @@ func (x *LLMGetDecisionRunResponse) String() string {
 func (*LLMGetDecisionRunResponse) ProtoMessage() {}
 
 func (x *LLMGetDecisionRunResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[267]
+	mi := &file_rpc_proto_msgTypes[271]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18118,7 +18421,7 @@ func (x *LLMGetDecisionRunResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMGetDecisionRunResponse.ProtoReflect.Descriptor instead.
 func (*LLMGetDecisionRunResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{267}
+	return file_rpc_proto_rawDescGZIP(), []int{271}
 }
 
 func (x *LLMGetDecisionRunResponse) GetRun() *LLMDecisionRun {
@@ -18160,7 +18463,7 @@ type LLMTriggerAnalysisRequest struct {
 
 func (x *LLMTriggerAnalysisRequest) Reset() {
 	*x = LLMTriggerAnalysisRequest{}
-	mi := &file_rpc_proto_msgTypes[268]
+	mi := &file_rpc_proto_msgTypes[272]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18172,7 +18475,7 @@ func (x *LLMTriggerAnalysisRequest) String() string {
 func (*LLMTriggerAnalysisRequest) ProtoMessage() {}
 
 func (x *LLMTriggerAnalysisRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[268]
+	mi := &file_rpc_proto_msgTypes[272]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18185,7 +18488,7 @@ func (x *LLMTriggerAnalysisRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMTriggerAnalysisRequest.ProtoReflect.Descriptor instead.
 func (*LLMTriggerAnalysisRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{268}
+	return file_rpc_proto_rawDescGZIP(), []int{272}
 }
 
 func (x *LLMTriggerAnalysisRequest) GetStrategyVersionId() string {
@@ -18220,7 +18523,7 @@ type LLMPreviewDecisionRequest struct {
 
 func (x *LLMPreviewDecisionRequest) Reset() {
 	*x = LLMPreviewDecisionRequest{}
-	mi := &file_rpc_proto_msgTypes[269]
+	mi := &file_rpc_proto_msgTypes[273]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18232,7 +18535,7 @@ func (x *LLMPreviewDecisionRequest) String() string {
 func (*LLMPreviewDecisionRequest) ProtoMessage() {}
 
 func (x *LLMPreviewDecisionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[269]
+	mi := &file_rpc_proto_msgTypes[273]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18245,7 +18548,7 @@ func (x *LLMPreviewDecisionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMPreviewDecisionRequest.ProtoReflect.Descriptor instead.
 func (*LLMPreviewDecisionRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{269}
+	return file_rpc_proto_rawDescGZIP(), []int{273}
 }
 
 func (x *LLMPreviewDecisionRequest) GetStrategyVersionId() string {
@@ -18269,6 +18572,986 @@ func (x *LLMPreviewDecisionRequest) GetActor() string {
 	return ""
 }
 
+type LLMBatchDecisionRow struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	MarketId      string                 `protobuf:"bytes,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
+	Decision      string                 `protobuf:"bytes,3,opt,name=decision,proto3" json:"decision,omitempty"`
+	Reason        string                 `protobuf:"bytes,4,opt,name=reason,proto3" json:"reason,omitempty"`
+	DecisionRunId string                 `protobuf:"bytes,5,opt,name=decision_run_id,json=decisionRunId,proto3" json:"decision_run_id,omitempty"`
+	Error         string                 `protobuf:"bytes,6,opt,name=error,proto3" json:"error,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LLMBatchDecisionRow) Reset() {
+	*x = LLMBatchDecisionRow{}
+	mi := &file_rpc_proto_msgTypes[274]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LLMBatchDecisionRow) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LLMBatchDecisionRow) ProtoMessage() {}
+
+func (x *LLMBatchDecisionRow) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[274]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LLMBatchDecisionRow.ProtoReflect.Descriptor instead.
+func (*LLMBatchDecisionRow) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{274}
+}
+
+func (x *LLMBatchDecisionRow) GetMarketId() string {
+	if x != nil {
+		return x.MarketId
+	}
+	return ""
+}
+
+func (x *LLMBatchDecisionRow) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *LLMBatchDecisionRow) GetDecision() string {
+	if x != nil {
+		return x.Decision
+	}
+	return ""
+}
+
+func (x *LLMBatchDecisionRow) GetReason() string {
+	if x != nil {
+		return x.Reason
+	}
+	return ""
+}
+
+func (x *LLMBatchDecisionRow) GetDecisionRunId() string {
+	if x != nil {
+		return x.DecisionRunId
+	}
+	return ""
+}
+
+func (x *LLMBatchDecisionRow) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
+type LLMStartBatchDecisionRequest struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	StrategyVersionId string                 `protobuf:"bytes,1,opt,name=strategy_version_id,json=strategyVersionId,proto3" json:"strategy_version_id,omitempty"`
+	MarketIds         []string               `protobuf:"bytes,2,rep,name=market_ids,json=marketIds,proto3" json:"market_ids,omitempty"`
+	Kind              string                 `protobuf:"bytes,3,opt,name=kind,proto3" json:"kind,omitempty"`
+	Actor             string                 `protobuf:"bytes,4,opt,name=actor,proto3" json:"actor,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *LLMStartBatchDecisionRequest) Reset() {
+	*x = LLMStartBatchDecisionRequest{}
+	mi := &file_rpc_proto_msgTypes[275]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LLMStartBatchDecisionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LLMStartBatchDecisionRequest) ProtoMessage() {}
+
+func (x *LLMStartBatchDecisionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[275]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LLMStartBatchDecisionRequest.ProtoReflect.Descriptor instead.
+func (*LLMStartBatchDecisionRequest) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{275}
+}
+
+func (x *LLMStartBatchDecisionRequest) GetStrategyVersionId() string {
+	if x != nil {
+		return x.StrategyVersionId
+	}
+	return ""
+}
+
+func (x *LLMStartBatchDecisionRequest) GetMarketIds() []string {
+	if x != nil {
+		return x.MarketIds
+	}
+	return nil
+}
+
+func (x *LLMStartBatchDecisionRequest) GetKind() string {
+	if x != nil {
+		return x.Kind
+	}
+	return ""
+}
+
+func (x *LLMStartBatchDecisionRequest) GetActor() string {
+	if x != nil {
+		return x.Actor
+	}
+	return ""
+}
+
+type LLMStartBatchDecisionResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LLMStartBatchDecisionResponse) Reset() {
+	*x = LLMStartBatchDecisionResponse{}
+	mi := &file_rpc_proto_msgTypes[276]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LLMStartBatchDecisionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LLMStartBatchDecisionResponse) ProtoMessage() {}
+
+func (x *LLMStartBatchDecisionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[276]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LLMStartBatchDecisionResponse.ProtoReflect.Descriptor instead.
+func (*LLMStartBatchDecisionResponse) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{276}
+}
+
+func (x *LLMStartBatchDecisionResponse) GetJobId() string {
+	if x != nil {
+		return x.JobId
+	}
+	return ""
+}
+
+type LLMGetBatchDecisionRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LLMGetBatchDecisionRequest) Reset() {
+	*x = LLMGetBatchDecisionRequest{}
+	mi := &file_rpc_proto_msgTypes[277]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LLMGetBatchDecisionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LLMGetBatchDecisionRequest) ProtoMessage() {}
+
+func (x *LLMGetBatchDecisionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[277]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LLMGetBatchDecisionRequest.ProtoReflect.Descriptor instead.
+func (*LLMGetBatchDecisionRequest) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{277}
+}
+
+func (x *LLMGetBatchDecisionRequest) GetJobId() string {
+	if x != nil {
+		return x.JobId
+	}
+	return ""
+}
+
+type LLMGetBatchDecisionResponse struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	JobId             string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
+	Kind              string                 `protobuf:"bytes,2,opt,name=kind,proto3" json:"kind,omitempty"`
+	StrategyVersionId string                 `protobuf:"bytes,3,opt,name=strategy_version_id,json=strategyVersionId,proto3" json:"strategy_version_id,omitempty"`
+	Actor             string                 `protobuf:"bytes,4,opt,name=actor,proto3" json:"actor,omitempty"`
+	CreatedAt         string                 `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	Done              bool                   `protobuf:"varint,6,opt,name=done,proto3" json:"done,omitempty"`
+	Total             int32                  `protobuf:"varint,7,opt,name=total,proto3" json:"total,omitempty"`
+	Finished          int32                  `protobuf:"varint,8,opt,name=finished,proto3" json:"finished,omitempty"`
+	Rows              []*LLMBatchDecisionRow `protobuf:"bytes,9,rep,name=rows,proto3" json:"rows,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *LLMGetBatchDecisionResponse) Reset() {
+	*x = LLMGetBatchDecisionResponse{}
+	mi := &file_rpc_proto_msgTypes[278]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LLMGetBatchDecisionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LLMGetBatchDecisionResponse) ProtoMessage() {}
+
+func (x *LLMGetBatchDecisionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[278]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LLMGetBatchDecisionResponse.ProtoReflect.Descriptor instead.
+func (*LLMGetBatchDecisionResponse) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{278}
+}
+
+func (x *LLMGetBatchDecisionResponse) GetJobId() string {
+	if x != nil {
+		return x.JobId
+	}
+	return ""
+}
+
+func (x *LLMGetBatchDecisionResponse) GetKind() string {
+	if x != nil {
+		return x.Kind
+	}
+	return ""
+}
+
+func (x *LLMGetBatchDecisionResponse) GetStrategyVersionId() string {
+	if x != nil {
+		return x.StrategyVersionId
+	}
+	return ""
+}
+
+func (x *LLMGetBatchDecisionResponse) GetActor() string {
+	if x != nil {
+		return x.Actor
+	}
+	return ""
+}
+
+func (x *LLMGetBatchDecisionResponse) GetCreatedAt() string {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return ""
+}
+
+func (x *LLMGetBatchDecisionResponse) GetDone() bool {
+	if x != nil {
+		return x.Done
+	}
+	return false
+}
+
+func (x *LLMGetBatchDecisionResponse) GetTotal() int32 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+func (x *LLMGetBatchDecisionResponse) GetFinished() int32 {
+	if x != nil {
+		return x.Finished
+	}
+	return 0
+}
+
+func (x *LLMGetBatchDecisionResponse) GetRows() []*LLMBatchDecisionRow {
+	if x != nil {
+		return x.Rows
+	}
+	return nil
+}
+
+type LLMCancelBatchDecisionRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
+	Actor         string                 `protobuf:"bytes,2,opt,name=actor,proto3" json:"actor,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LLMCancelBatchDecisionRequest) Reset() {
+	*x = LLMCancelBatchDecisionRequest{}
+	mi := &file_rpc_proto_msgTypes[279]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LLMCancelBatchDecisionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LLMCancelBatchDecisionRequest) ProtoMessage() {}
+
+func (x *LLMCancelBatchDecisionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[279]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LLMCancelBatchDecisionRequest.ProtoReflect.Descriptor instead.
+func (*LLMCancelBatchDecisionRequest) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{279}
+}
+
+func (x *LLMCancelBatchDecisionRequest) GetJobId() string {
+	if x != nil {
+		return x.JobId
+	}
+	return ""
+}
+
+func (x *LLMCancelBatchDecisionRequest) GetActor() string {
+	if x != nil {
+		return x.Actor
+	}
+	return ""
+}
+
+type LLMCancelBatchDecisionResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
+	Done          bool                   `protobuf:"varint,2,opt,name=done,proto3" json:"done,omitempty"`
+	Cancelled     int32                  `protobuf:"varint,3,opt,name=cancelled,proto3" json:"cancelled,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LLMCancelBatchDecisionResponse) Reset() {
+	*x = LLMCancelBatchDecisionResponse{}
+	mi := &file_rpc_proto_msgTypes[280]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LLMCancelBatchDecisionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LLMCancelBatchDecisionResponse) ProtoMessage() {}
+
+func (x *LLMCancelBatchDecisionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[280]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LLMCancelBatchDecisionResponse.ProtoReflect.Descriptor instead.
+func (*LLMCancelBatchDecisionResponse) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{280}
+}
+
+func (x *LLMCancelBatchDecisionResponse) GetJobId() string {
+	if x != nil {
+		return x.JobId
+	}
+	return ""
+}
+
+func (x *LLMCancelBatchDecisionResponse) GetDone() bool {
+	if x != nil {
+		return x.Done
+	}
+	return false
+}
+
+func (x *LLMCancelBatchDecisionResponse) GetCancelled() int32 {
+	if x != nil {
+		return x.Cancelled
+	}
+	return 0
+}
+
+type LLMScreenerMetric struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Kind          string                 `protobuf:"bytes,2,opt,name=kind,proto3" json:"kind,omitempty"`
+	Tier          string                 `protobuf:"bytes,3,opt,name=tier,proto3" json:"tier,omitempty"`
+	Unit          string                 `protobuf:"bytes,4,opt,name=unit,proto3" json:"unit,omitempty"`
+	Description   string                 `protobuf:"bytes,5,opt,name=description,proto3" json:"description,omitempty"`
+	Categories    []string               `protobuf:"bytes,6,rep,name=categories,proto3" json:"categories,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LLMScreenerMetric) Reset() {
+	*x = LLMScreenerMetric{}
+	mi := &file_rpc_proto_msgTypes[281]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LLMScreenerMetric) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LLMScreenerMetric) ProtoMessage() {}
+
+func (x *LLMScreenerMetric) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[281]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LLMScreenerMetric.ProtoReflect.Descriptor instead.
+func (*LLMScreenerMetric) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{281}
+}
+
+func (x *LLMScreenerMetric) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *LLMScreenerMetric) GetKind() string {
+	if x != nil {
+		return x.Kind
+	}
+	return ""
+}
+
+func (x *LLMScreenerMetric) GetTier() string {
+	if x != nil {
+		return x.Tier
+	}
+	return ""
+}
+
+func (x *LLMScreenerMetric) GetUnit() string {
+	if x != nil {
+		return x.Unit
+	}
+	return ""
+}
+
+func (x *LLMScreenerMetric) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *LLMScreenerMetric) GetCategories() []string {
+	if x != nil {
+		return x.Categories
+	}
+	return nil
+}
+
+type LLMGetScreenerMetricsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LLMGetScreenerMetricsRequest) Reset() {
+	*x = LLMGetScreenerMetricsRequest{}
+	mi := &file_rpc_proto_msgTypes[282]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LLMGetScreenerMetricsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LLMGetScreenerMetricsRequest) ProtoMessage() {}
+
+func (x *LLMGetScreenerMetricsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[282]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LLMGetScreenerMetricsRequest.ProtoReflect.Descriptor instead.
+func (*LLMGetScreenerMetricsRequest) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{282}
+}
+
+type LLMGetScreenerMetricsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Metrics       []*LLMScreenerMetric   `protobuf:"bytes,1,rep,name=metrics,proto3" json:"metrics,omitempty"`
+	MaxLimit      int32                  `protobuf:"varint,2,opt,name=max_limit,json=maxLimit,proto3" json:"max_limit,omitempty"`
+	DefaultLimit  int32                  `protobuf:"varint,3,opt,name=default_limit,json=defaultLimit,proto3" json:"default_limit,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LLMGetScreenerMetricsResponse) Reset() {
+	*x = LLMGetScreenerMetricsResponse{}
+	mi := &file_rpc_proto_msgTypes[283]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LLMGetScreenerMetricsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LLMGetScreenerMetricsResponse) ProtoMessage() {}
+
+func (x *LLMGetScreenerMetricsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[283]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LLMGetScreenerMetricsResponse.ProtoReflect.Descriptor instead.
+func (*LLMGetScreenerMetricsResponse) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{283}
+}
+
+func (x *LLMGetScreenerMetricsResponse) GetMetrics() []*LLMScreenerMetric {
+	if x != nil {
+		return x.Metrics
+	}
+	return nil
+}
+
+func (x *LLMGetScreenerMetricsResponse) GetMaxLimit() int32 {
+	if x != nil {
+		return x.MaxLimit
+	}
+	return 0
+}
+
+func (x *LLMGetScreenerMetricsResponse) GetDefaultLimit() int32 {
+	if x != nil {
+		return x.DefaultLimit
+	}
+	return 0
+}
+
+type LLMScreenCriteria struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Metric        string                 `protobuf:"bytes,1,opt,name=metric,proto3" json:"metric,omitempty"`
+	Op            string                 `protobuf:"bytes,2,opt,name=op,proto3" json:"op,omitempty"`
+	Value         float64                `protobuf:"fixed64,3,opt,name=value,proto3" json:"value,omitempty"`
+	Value2        float64                `protobuf:"fixed64,4,opt,name=value2,proto3" json:"value2,omitempty"`
+	State         string                 `protobuf:"bytes,5,opt,name=state,proto3" json:"state,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LLMScreenCriteria) Reset() {
+	*x = LLMScreenCriteria{}
+	mi := &file_rpc_proto_msgTypes[284]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LLMScreenCriteria) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LLMScreenCriteria) ProtoMessage() {}
+
+func (x *LLMScreenCriteria) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[284]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LLMScreenCriteria.ProtoReflect.Descriptor instead.
+func (*LLMScreenCriteria) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{284}
+}
+
+func (x *LLMScreenCriteria) GetMetric() string {
+	if x != nil {
+		return x.Metric
+	}
+	return ""
+}
+
+func (x *LLMScreenCriteria) GetOp() string {
+	if x != nil {
+		return x.Op
+	}
+	return ""
+}
+
+func (x *LLMScreenCriteria) GetValue() float64 {
+	if x != nil {
+		return x.Value
+	}
+	return 0
+}
+
+func (x *LLMScreenCriteria) GetValue2() float64 {
+	if x != nil {
+		return x.Value2
+	}
+	return 0
+}
+
+func (x *LLMScreenCriteria) GetState() string {
+	if x != nil {
+		return x.State
+	}
+	return ""
+}
+
+type LLMScreenSort struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Metric        string                 `protobuf:"bytes,1,opt,name=metric,proto3" json:"metric,omitempty"`
+	Desc          bool                   `protobuf:"varint,2,opt,name=desc,proto3" json:"desc,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LLMScreenSort) Reset() {
+	*x = LLMScreenSort{}
+	mi := &file_rpc_proto_msgTypes[285]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LLMScreenSort) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LLMScreenSort) ProtoMessage() {}
+
+func (x *LLMScreenSort) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[285]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LLMScreenSort.ProtoReflect.Descriptor instead.
+func (*LLMScreenSort) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{285}
+}
+
+func (x *LLMScreenSort) GetMetric() string {
+	if x != nil {
+		return x.Metric
+	}
+	return ""
+}
+
+func (x *LLMScreenSort) GetDesc() bool {
+	if x != nil {
+		return x.Desc
+	}
+	return false
+}
+
+type LLMRunScreenRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Criteria      []*LLMScreenCriteria   `protobuf:"bytes,1,rep,name=criteria,proto3" json:"criteria,omitempty"`
+	Sort          []*LLMScreenSort       `protobuf:"bytes,2,rep,name=sort,proto3" json:"sort,omitempty"`
+	Limit         int32                  `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
+	Include       []string               `protobuf:"bytes,4,rep,name=include,proto3" json:"include,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LLMRunScreenRequest) Reset() {
+	*x = LLMRunScreenRequest{}
+	mi := &file_rpc_proto_msgTypes[286]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LLMRunScreenRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LLMRunScreenRequest) ProtoMessage() {}
+
+func (x *LLMRunScreenRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[286]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LLMRunScreenRequest.ProtoReflect.Descriptor instead.
+func (*LLMRunScreenRequest) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{286}
+}
+
+func (x *LLMRunScreenRequest) GetCriteria() []*LLMScreenCriteria {
+	if x != nil {
+		return x.Criteria
+	}
+	return nil
+}
+
+func (x *LLMRunScreenRequest) GetSort() []*LLMScreenSort {
+	if x != nil {
+		return x.Sort
+	}
+	return nil
+}
+
+func (x *LLMRunScreenRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+func (x *LLMRunScreenRequest) GetInclude() []string {
+	if x != nil {
+		return x.Include
+	}
+	return nil
+}
+
+type LLMScreenRow struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	MarketId      string                 `protobuf:"bytes,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+	NumbersJson   string                 `protobuf:"bytes,2,opt,name=numbers_json,json=numbersJson,proto3" json:"numbers_json,omitempty"`
+	StatesJson    string                 `protobuf:"bytes,3,opt,name=states_json,json=statesJson,proto3" json:"states_json,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LLMScreenRow) Reset() {
+	*x = LLMScreenRow{}
+	mi := &file_rpc_proto_msgTypes[287]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LLMScreenRow) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LLMScreenRow) ProtoMessage() {}
+
+func (x *LLMScreenRow) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[287]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LLMScreenRow.ProtoReflect.Descriptor instead.
+func (*LLMScreenRow) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{287}
+}
+
+func (x *LLMScreenRow) GetMarketId() string {
+	if x != nil {
+		return x.MarketId
+	}
+	return ""
+}
+
+func (x *LLMScreenRow) GetNumbersJson() string {
+	if x != nil {
+		return x.NumbersJson
+	}
+	return ""
+}
+
+func (x *LLMScreenRow) GetStatesJson() string {
+	if x != nil {
+		return x.StatesJson
+	}
+	return ""
+}
+
+type LLMRunScreenResponse struct {
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	Rows               []*LLMScreenRow        `protobuf:"bytes,1,rep,name=rows,proto3" json:"rows,omitempty"`
+	UniverseSize       int32                  `protobuf:"varint,2,opt,name=universe_size,json=universeSize,proto3" json:"universe_size,omitempty"`
+	Matched            int32                  `protobuf:"varint,3,opt,name=matched,proto3" json:"matched,omitempty"`
+	FilteredOut        int32                  `protobuf:"varint,4,opt,name=filtered_out,json=filteredOut,proto3" json:"filtered_out,omitempty"`
+	ExcludedForMissing int32                  `protobuf:"varint,5,opt,name=excluded_for_missing,json=excludedForMissing,proto3" json:"excluded_for_missing,omitempty"`
+	Notes              []string               `protobuf:"bytes,6,rep,name=notes,proto3" json:"notes,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
+}
+
+func (x *LLMRunScreenResponse) Reset() {
+	*x = LLMRunScreenResponse{}
+	mi := &file_rpc_proto_msgTypes[288]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LLMRunScreenResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LLMRunScreenResponse) ProtoMessage() {}
+
+func (x *LLMRunScreenResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[288]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LLMRunScreenResponse.ProtoReflect.Descriptor instead.
+func (*LLMRunScreenResponse) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{288}
+}
+
+func (x *LLMRunScreenResponse) GetRows() []*LLMScreenRow {
+	if x != nil {
+		return x.Rows
+	}
+	return nil
+}
+
+func (x *LLMRunScreenResponse) GetUniverseSize() int32 {
+	if x != nil {
+		return x.UniverseSize
+	}
+	return 0
+}
+
+func (x *LLMRunScreenResponse) GetMatched() int32 {
+	if x != nil {
+		return x.Matched
+	}
+	return 0
+}
+
+func (x *LLMRunScreenResponse) GetFilteredOut() int32 {
+	if x != nil {
+		return x.FilteredOut
+	}
+	return 0
+}
+
+func (x *LLMRunScreenResponse) GetExcludedForMissing() int32 {
+	if x != nil {
+		return x.ExcludedForMissing
+	}
+	return 0
+}
+
+func (x *LLMRunScreenResponse) GetNotes() []string {
+	if x != nil {
+		return x.Notes
+	}
+	return nil
+}
+
 type LLMGetDecisionLineageRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -18278,7 +19561,7 @@ type LLMGetDecisionLineageRequest struct {
 
 func (x *LLMGetDecisionLineageRequest) Reset() {
 	*x = LLMGetDecisionLineageRequest{}
-	mi := &file_rpc_proto_msgTypes[270]
+	mi := &file_rpc_proto_msgTypes[289]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18290,7 +19573,7 @@ func (x *LLMGetDecisionLineageRequest) String() string {
 func (*LLMGetDecisionLineageRequest) ProtoMessage() {}
 
 func (x *LLMGetDecisionLineageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[270]
+	mi := &file_rpc_proto_msgTypes[289]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18303,7 +19586,7 @@ func (x *LLMGetDecisionLineageRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMGetDecisionLineageRequest.ProtoReflect.Descriptor instead.
 func (*LLMGetDecisionLineageRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{270}
+	return file_rpc_proto_rawDescGZIP(), []int{289}
 }
 
 func (x *LLMGetDecisionLineageRequest) GetId() string {
@@ -18331,7 +19614,7 @@ type LLMRiskEvidence struct {
 
 func (x *LLMRiskEvidence) Reset() {
 	*x = LLMRiskEvidence{}
-	mi := &file_rpc_proto_msgTypes[271]
+	mi := &file_rpc_proto_msgTypes[290]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18343,7 +19626,7 @@ func (x *LLMRiskEvidence) String() string {
 func (*LLMRiskEvidence) ProtoMessage() {}
 
 func (x *LLMRiskEvidence) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[271]
+	mi := &file_rpc_proto_msgTypes[290]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18356,7 +19639,7 @@ func (x *LLMRiskEvidence) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMRiskEvidence.ProtoReflect.Descriptor instead.
 func (*LLMRiskEvidence) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{271}
+	return file_rpc_proto_rawDescGZIP(), []int{290}
 }
 
 func (x *LLMRiskEvidence) GetRiskEvaluationId() string {
@@ -18440,7 +19723,7 @@ type LLMGetDecisionLineageResponse struct {
 
 func (x *LLMGetDecisionLineageResponse) Reset() {
 	*x = LLMGetDecisionLineageResponse{}
-	mi := &file_rpc_proto_msgTypes[272]
+	mi := &file_rpc_proto_msgTypes[291]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18452,7 +19735,7 @@ func (x *LLMGetDecisionLineageResponse) String() string {
 func (*LLMGetDecisionLineageResponse) ProtoMessage() {}
 
 func (x *LLMGetDecisionLineageResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[272]
+	mi := &file_rpc_proto_msgTypes[291]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18465,7 +19748,7 @@ func (x *LLMGetDecisionLineageResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMGetDecisionLineageResponse.ProtoReflect.Descriptor instead.
 func (*LLMGetDecisionLineageResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{272}
+	return file_rpc_proto_rawDescGZIP(), []int{291}
 }
 
 func (x *LLMGetDecisionLineageResponse) GetRun() *LLMDecisionRun {
@@ -18503,7 +19786,7 @@ type LLMAuditEvent struct {
 
 func (x *LLMAuditEvent) Reset() {
 	*x = LLMAuditEvent{}
-	mi := &file_rpc_proto_msgTypes[273]
+	mi := &file_rpc_proto_msgTypes[292]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18515,7 +19798,7 @@ func (x *LLMAuditEvent) String() string {
 func (*LLMAuditEvent) ProtoMessage() {}
 
 func (x *LLMAuditEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[273]
+	mi := &file_rpc_proto_msgTypes[292]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18528,7 +19811,7 @@ func (x *LLMAuditEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMAuditEvent.ProtoReflect.Descriptor instead.
 func (*LLMAuditEvent) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{273}
+	return file_rpc_proto_rawDescGZIP(), []int{292}
 }
 
 func (x *LLMAuditEvent) GetId() string {
@@ -18583,7 +19866,7 @@ type LLMListAuditEventsRequest struct {
 
 func (x *LLMListAuditEventsRequest) Reset() {
 	*x = LLMListAuditEventsRequest{}
-	mi := &file_rpc_proto_msgTypes[274]
+	mi := &file_rpc_proto_msgTypes[293]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18595,7 +19878,7 @@ func (x *LLMListAuditEventsRequest) String() string {
 func (*LLMListAuditEventsRequest) ProtoMessage() {}
 
 func (x *LLMListAuditEventsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[274]
+	mi := &file_rpc_proto_msgTypes[293]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18608,7 +19891,7 @@ func (x *LLMListAuditEventsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMListAuditEventsRequest.ProtoReflect.Descriptor instead.
 func (*LLMListAuditEventsRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{274}
+	return file_rpc_proto_rawDescGZIP(), []int{293}
 }
 
 func (x *LLMListAuditEventsRequest) GetKind() string {
@@ -18634,7 +19917,7 @@ type LLMListAuditEventsResponse struct {
 
 func (x *LLMListAuditEventsResponse) Reset() {
 	*x = LLMListAuditEventsResponse{}
-	mi := &file_rpc_proto_msgTypes[275]
+	mi := &file_rpc_proto_msgTypes[294]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18646,7 +19929,7 @@ func (x *LLMListAuditEventsResponse) String() string {
 func (*LLMListAuditEventsResponse) ProtoMessage() {}
 
 func (x *LLMListAuditEventsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[275]
+	mi := &file_rpc_proto_msgTypes[294]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18659,7 +19942,7 @@ func (x *LLMListAuditEventsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMListAuditEventsResponse.ProtoReflect.Descriptor instead.
 func (*LLMListAuditEventsResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{275}
+	return file_rpc_proto_rawDescGZIP(), []int{294}
 }
 
 func (x *LLMListAuditEventsResponse) GetEvents() []*LLMAuditEvent {
@@ -18678,7 +19961,7 @@ type LLMGetRiskEvidenceRequest struct {
 
 func (x *LLMGetRiskEvidenceRequest) Reset() {
 	*x = LLMGetRiskEvidenceRequest{}
-	mi := &file_rpc_proto_msgTypes[276]
+	mi := &file_rpc_proto_msgTypes[295]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18690,7 +19973,7 @@ func (x *LLMGetRiskEvidenceRequest) String() string {
 func (*LLMGetRiskEvidenceRequest) ProtoMessage() {}
 
 func (x *LLMGetRiskEvidenceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[276]
+	mi := &file_rpc_proto_msgTypes[295]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18703,7 +19986,7 @@ func (x *LLMGetRiskEvidenceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMGetRiskEvidenceRequest.ProtoReflect.Descriptor instead.
 func (*LLMGetRiskEvidenceRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{276}
+	return file_rpc_proto_rawDescGZIP(), []int{295}
 }
 
 func (x *LLMGetRiskEvidenceRequest) GetDecisionRunId() string {
@@ -18722,7 +20005,7 @@ type LLMGetRiskEvidenceResponse struct {
 
 func (x *LLMGetRiskEvidenceResponse) Reset() {
 	*x = LLMGetRiskEvidenceResponse{}
-	mi := &file_rpc_proto_msgTypes[277]
+	mi := &file_rpc_proto_msgTypes[296]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18734,7 +20017,7 @@ func (x *LLMGetRiskEvidenceResponse) String() string {
 func (*LLMGetRiskEvidenceResponse) ProtoMessage() {}
 
 func (x *LLMGetRiskEvidenceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[277]
+	mi := &file_rpc_proto_msgTypes[296]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18747,7 +20030,7 @@ func (x *LLMGetRiskEvidenceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMGetRiskEvidenceResponse.ProtoReflect.Descriptor instead.
 func (*LLMGetRiskEvidenceResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{277}
+	return file_rpc_proto_rawDescGZIP(), []int{296}
 }
 
 func (x *LLMGetRiskEvidenceResponse) GetRiskEvaluations() []*LLMRiskEvidence {
@@ -18765,7 +20048,7 @@ type LLMGetMetricsRequest struct {
 
 func (x *LLMGetMetricsRequest) Reset() {
 	*x = LLMGetMetricsRequest{}
-	mi := &file_rpc_proto_msgTypes[278]
+	mi := &file_rpc_proto_msgTypes[297]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18777,7 +20060,7 @@ func (x *LLMGetMetricsRequest) String() string {
 func (*LLMGetMetricsRequest) ProtoMessage() {}
 
 func (x *LLMGetMetricsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[278]
+	mi := &file_rpc_proto_msgTypes[297]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18790,7 +20073,7 @@ func (x *LLMGetMetricsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMGetMetricsRequest.ProtoReflect.Descriptor instead.
 func (*LLMGetMetricsRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{278}
+	return file_rpc_proto_rawDescGZIP(), []int{297}
 }
 
 type LLMGetMetricsResponse struct {
@@ -18804,7 +20087,7 @@ type LLMGetMetricsResponse struct {
 
 func (x *LLMGetMetricsResponse) Reset() {
 	*x = LLMGetMetricsResponse{}
-	mi := &file_rpc_proto_msgTypes[279]
+	mi := &file_rpc_proto_msgTypes[298]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18816,7 +20099,7 @@ func (x *LLMGetMetricsResponse) String() string {
 func (*LLMGetMetricsResponse) ProtoMessage() {}
 
 func (x *LLMGetMetricsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[279]
+	mi := &file_rpc_proto_msgTypes[298]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18829,7 +20112,7 @@ func (x *LLMGetMetricsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMGetMetricsResponse.ProtoReflect.Descriptor instead.
 func (*LLMGetMetricsResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{279}
+	return file_rpc_proto_rawDescGZIP(), []int{298}
 }
 
 func (x *LLMGetMetricsResponse) GetMetricsJson() string {
@@ -18857,7 +20140,7 @@ type LLMSetRiskSwitchRequest struct {
 
 func (x *LLMSetRiskSwitchRequest) Reset() {
 	*x = LLMSetRiskSwitchRequest{}
-	mi := &file_rpc_proto_msgTypes[280]
+	mi := &file_rpc_proto_msgTypes[299]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18869,7 +20152,7 @@ func (x *LLMSetRiskSwitchRequest) String() string {
 func (*LLMSetRiskSwitchRequest) ProtoMessage() {}
 
 func (x *LLMSetRiskSwitchRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[280]
+	mi := &file_rpc_proto_msgTypes[299]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18882,7 +20165,7 @@ func (x *LLMSetRiskSwitchRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMSetRiskSwitchRequest.ProtoReflect.Descriptor instead.
 func (*LLMSetRiskSwitchRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{280}
+	return file_rpc_proto_rawDescGZIP(), []int{299}
 }
 
 func (x *LLMSetRiskSwitchRequest) GetName() string {
@@ -18920,7 +20203,7 @@ type LLMRiskSwitch struct {
 
 func (x *LLMRiskSwitch) Reset() {
 	*x = LLMRiskSwitch{}
-	mi := &file_rpc_proto_msgTypes[281]
+	mi := &file_rpc_proto_msgTypes[300]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18932,7 +20215,7 @@ func (x *LLMRiskSwitch) String() string {
 func (*LLMRiskSwitch) ProtoMessage() {}
 
 func (x *LLMRiskSwitch) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[281]
+	mi := &file_rpc_proto_msgTypes[300]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18945,7 +20228,7 @@ func (x *LLMRiskSwitch) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMRiskSwitch.ProtoReflect.Descriptor instead.
 func (*LLMRiskSwitch) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{281}
+	return file_rpc_proto_rawDescGZIP(), []int{300}
 }
 
 func (x *LLMRiskSwitch) GetName() string {
@@ -18991,7 +20274,7 @@ type LLMGetRiskSwitchesRequest struct {
 
 func (x *LLMGetRiskSwitchesRequest) Reset() {
 	*x = LLMGetRiskSwitchesRequest{}
-	mi := &file_rpc_proto_msgTypes[282]
+	mi := &file_rpc_proto_msgTypes[301]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19003,7 +20286,7 @@ func (x *LLMGetRiskSwitchesRequest) String() string {
 func (*LLMGetRiskSwitchesRequest) ProtoMessage() {}
 
 func (x *LLMGetRiskSwitchesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[282]
+	mi := &file_rpc_proto_msgTypes[301]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19016,7 +20299,7 @@ func (x *LLMGetRiskSwitchesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMGetRiskSwitchesRequest.ProtoReflect.Descriptor instead.
 func (*LLMGetRiskSwitchesRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{282}
+	return file_rpc_proto_rawDescGZIP(), []int{301}
 }
 
 type LLMGetRiskSwitchesResponse struct {
@@ -19028,7 +20311,7 @@ type LLMGetRiskSwitchesResponse struct {
 
 func (x *LLMGetRiskSwitchesResponse) Reset() {
 	*x = LLMGetRiskSwitchesResponse{}
-	mi := &file_rpc_proto_msgTypes[283]
+	mi := &file_rpc_proto_msgTypes[302]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19040,7 +20323,7 @@ func (x *LLMGetRiskSwitchesResponse) String() string {
 func (*LLMGetRiskSwitchesResponse) ProtoMessage() {}
 
 func (x *LLMGetRiskSwitchesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[283]
+	mi := &file_rpc_proto_msgTypes[302]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19053,7 +20336,7 @@ func (x *LLMGetRiskSwitchesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMGetRiskSwitchesResponse.ProtoReflect.Descriptor instead.
 func (*LLMGetRiskSwitchesResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{283}
+	return file_rpc_proto_rawDescGZIP(), []int{302}
 }
 
 func (x *LLMGetRiskSwitchesResponse) GetSwitches() []*LLMRiskSwitch {
@@ -19071,7 +20354,7 @@ type LLMGetStatusRequest struct {
 
 func (x *LLMGetStatusRequest) Reset() {
 	*x = LLMGetStatusRequest{}
-	mi := &file_rpc_proto_msgTypes[284]
+	mi := &file_rpc_proto_msgTypes[303]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19083,7 +20366,7 @@ func (x *LLMGetStatusRequest) String() string {
 func (*LLMGetStatusRequest) ProtoMessage() {}
 
 func (x *LLMGetStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[284]
+	mi := &file_rpc_proto_msgTypes[303]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19096,313 +20379,7 @@ func (x *LLMGetStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMGetStatusRequest.ProtoReflect.Descriptor instead.
 func (*LLMGetStatusRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{284}
-}
-
-type LLMVaultEntry struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Ref           string                 `protobuf:"bytes,1,opt,name=ref,proto3" json:"ref,omitempty"`
-	Kind          string                 `protobuf:"bytes,2,opt,name=kind,proto3" json:"kind,omitempty"`
-	Fingerprint   string                 `protobuf:"bytes,3,opt,name=fingerprint,proto3" json:"fingerprint,omitempty"`
-	CreatedAt     string                 `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *LLMVaultEntry) Reset() {
-	*x = LLMVaultEntry{}
-	mi := &file_rpc_proto_msgTypes[285]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *LLMVaultEntry) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*LLMVaultEntry) ProtoMessage() {}
-
-func (x *LLMVaultEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[285]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use LLMVaultEntry.ProtoReflect.Descriptor instead.
-func (*LLMVaultEntry) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{285}
-}
-
-func (x *LLMVaultEntry) GetRef() string {
-	if x != nil {
-		return x.Ref
-	}
-	return ""
-}
-
-func (x *LLMVaultEntry) GetKind() string {
-	if x != nil {
-		return x.Kind
-	}
-	return ""
-}
-
-func (x *LLMVaultEntry) GetFingerprint() string {
-	if x != nil {
-		return x.Fingerprint
-	}
-	return ""
-}
-
-func (x *LLMVaultEntry) GetCreatedAt() string {
-	if x != nil {
-		return x.CreatedAt
-	}
-	return ""
-}
-
-type LLMVaultStatusRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *LLMVaultStatusRequest) Reset() {
-	*x = LLMVaultStatusRequest{}
-	mi := &file_rpc_proto_msgTypes[286]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *LLMVaultStatusRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*LLMVaultStatusRequest) ProtoMessage() {}
-
-func (x *LLMVaultStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[286]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use LLMVaultStatusRequest.ProtoReflect.Descriptor instead.
-func (*LLMVaultStatusRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{286}
-}
-
-type LLMVaultStatusResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Initialized   bool                   `protobuf:"varint,1,opt,name=initialized,proto3" json:"initialized,omitempty"`
-	Directory     string                 `protobuf:"bytes,2,opt,name=directory,proto3" json:"directory,omitempty"`
-	Entries       []*LLMVaultEntry       `protobuf:"bytes,3,rep,name=entries,proto3" json:"entries,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *LLMVaultStatusResponse) Reset() {
-	*x = LLMVaultStatusResponse{}
-	mi := &file_rpc_proto_msgTypes[287]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *LLMVaultStatusResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*LLMVaultStatusResponse) ProtoMessage() {}
-
-func (x *LLMVaultStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[287]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use LLMVaultStatusResponse.ProtoReflect.Descriptor instead.
-func (*LLMVaultStatusResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{287}
-}
-
-func (x *LLMVaultStatusResponse) GetInitialized() bool {
-	if x != nil {
-		return x.Initialized
-	}
-	return false
-}
-
-func (x *LLMVaultStatusResponse) GetDirectory() string {
-	if x != nil {
-		return x.Directory
-	}
-	return ""
-}
-
-func (x *LLMVaultStatusResponse) GetEntries() []*LLMVaultEntry {
-	if x != nil {
-		return x.Entries
-	}
-	return nil
-}
-
-type LLMVaultInitRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *LLMVaultInitRequest) Reset() {
-	*x = LLMVaultInitRequest{}
-	mi := &file_rpc_proto_msgTypes[288]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *LLMVaultInitRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*LLMVaultInitRequest) ProtoMessage() {}
-
-func (x *LLMVaultInitRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[288]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use LLMVaultInitRequest.ProtoReflect.Descriptor instead.
-func (*LLMVaultInitRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{288}
-}
-
-type LLMVaultAddSecretRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// kind groups the secret, e.g. llm or jev.
-	Kind string `protobuf:"bytes,1,opt,name=kind,proto3" json:"kind,omitempty"`
-	// secret is write-only: it is never echoed back, only the ref + fingerprint.
-	Secret        string `protobuf:"bytes,2,opt,name=secret,proto3" json:"secret,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *LLMVaultAddSecretRequest) Reset() {
-	*x = LLMVaultAddSecretRequest{}
-	mi := &file_rpc_proto_msgTypes[289]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *LLMVaultAddSecretRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*LLMVaultAddSecretRequest) ProtoMessage() {}
-
-func (x *LLMVaultAddSecretRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[289]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use LLMVaultAddSecretRequest.ProtoReflect.Descriptor instead.
-func (*LLMVaultAddSecretRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{289}
-}
-
-func (x *LLMVaultAddSecretRequest) GetKind() string {
-	if x != nil {
-		return x.Kind
-	}
-	return ""
-}
-
-func (x *LLMVaultAddSecretRequest) GetSecret() string {
-	if x != nil {
-		return x.Secret
-	}
-	return ""
-}
-
-type LLMVaultAddSecretResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Ref           string                 `protobuf:"bytes,1,opt,name=ref,proto3" json:"ref,omitempty"`
-	Fingerprint   string                 `protobuf:"bytes,2,opt,name=fingerprint,proto3" json:"fingerprint,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *LLMVaultAddSecretResponse) Reset() {
-	*x = LLMVaultAddSecretResponse{}
-	mi := &file_rpc_proto_msgTypes[290]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *LLMVaultAddSecretResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*LLMVaultAddSecretResponse) ProtoMessage() {}
-
-func (x *LLMVaultAddSecretResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[290]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use LLMVaultAddSecretResponse.ProtoReflect.Descriptor instead.
-func (*LLMVaultAddSecretResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{290}
-}
-
-func (x *LLMVaultAddSecretResponse) GetRef() string {
-	if x != nil {
-		return x.Ref
-	}
-	return ""
-}
-
-func (x *LLMVaultAddSecretResponse) GetFingerprint() string {
-	if x != nil {
-		return x.Fingerprint
-	}
-	return ""
+	return file_rpc_proto_rawDescGZIP(), []int{303}
 }
 
 // W7-07 coverage runtime face: the plan's arithmetic plus the rotator's
@@ -19416,7 +20393,7 @@ type LLMGetCoverageStatusRequest struct {
 
 func (x *LLMGetCoverageStatusRequest) Reset() {
 	*x = LLMGetCoverageStatusRequest{}
-	mi := &file_rpc_proto_msgTypes[291]
+	mi := &file_rpc_proto_msgTypes[304]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19428,7 +20405,7 @@ func (x *LLMGetCoverageStatusRequest) String() string {
 func (*LLMGetCoverageStatusRequest) ProtoMessage() {}
 
 func (x *LLMGetCoverageStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[291]
+	mi := &file_rpc_proto_msgTypes[304]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19441,7 +20418,7 @@ func (x *LLMGetCoverageStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMGetCoverageStatusRequest.ProtoReflect.Descriptor instead.
 func (*LLMGetCoverageStatusRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{291}
+	return file_rpc_proto_rawDescGZIP(), []int{304}
 }
 
 type LLMGetCoverageStatusResponse struct {
@@ -19470,7 +20447,7 @@ type LLMGetCoverageStatusResponse struct {
 
 func (x *LLMGetCoverageStatusResponse) Reset() {
 	*x = LLMGetCoverageStatusResponse{}
-	mi := &file_rpc_proto_msgTypes[292]
+	mi := &file_rpc_proto_msgTypes[305]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19482,7 +20459,7 @@ func (x *LLMGetCoverageStatusResponse) String() string {
 func (*LLMGetCoverageStatusResponse) ProtoMessage() {}
 
 func (x *LLMGetCoverageStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[292]
+	mi := &file_rpc_proto_msgTypes[305]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19495,7 +20472,7 @@ func (x *LLMGetCoverageStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMGetCoverageStatusResponse.ProtoReflect.Descriptor instead.
 func (*LLMGetCoverageStatusResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{292}
+	return file_rpc_proto_rawDescGZIP(), []int{305}
 }
 
 func (x *LLMGetCoverageStatusResponse) GetEnabled() bool {
@@ -19624,6 +20601,128 @@ func (x *LLMGetCoverageStatusResponse) GetCheckedAt() string {
 	return ""
 }
 
+// N11 coverage linkage: enable/disable one market in the exchange's tracked
+// set; the handler refreshes the rotator and records an audit event.
+type LLMSetMarketTrackedRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	MarketId      string                 `protobuf:"bytes,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+	Tracked       bool                   `protobuf:"varint,2,opt,name=tracked,proto3" json:"tracked,omitempty"`
+	Actor         string                 `protobuf:"bytes,3,opt,name=actor,proto3" json:"actor,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LLMSetMarketTrackedRequest) Reset() {
+	*x = LLMSetMarketTrackedRequest{}
+	mi := &file_rpc_proto_msgTypes[306]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LLMSetMarketTrackedRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LLMSetMarketTrackedRequest) ProtoMessage() {}
+
+func (x *LLMSetMarketTrackedRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[306]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LLMSetMarketTrackedRequest.ProtoReflect.Descriptor instead.
+func (*LLMSetMarketTrackedRequest) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{306}
+}
+
+func (x *LLMSetMarketTrackedRequest) GetMarketId() string {
+	if x != nil {
+		return x.MarketId
+	}
+	return ""
+}
+
+func (x *LLMSetMarketTrackedRequest) GetTracked() bool {
+	if x != nil {
+		return x.Tracked
+	}
+	return false
+}
+
+func (x *LLMSetMarketTrackedRequest) GetActor() string {
+	if x != nil {
+		return x.Actor
+	}
+	return ""
+}
+
+type LLMSetMarketTrackedResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	MarketId      string                 `protobuf:"bytes,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+	Tracked       bool                   `protobuf:"varint,2,opt,name=tracked,proto3" json:"tracked,omitempty"`
+	Status        string                 `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LLMSetMarketTrackedResponse) Reset() {
+	*x = LLMSetMarketTrackedResponse{}
+	mi := &file_rpc_proto_msgTypes[307]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LLMSetMarketTrackedResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LLMSetMarketTrackedResponse) ProtoMessage() {}
+
+func (x *LLMSetMarketTrackedResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[307]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LLMSetMarketTrackedResponse.ProtoReflect.Descriptor instead.
+func (*LLMSetMarketTrackedResponse) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{307}
+}
+
+func (x *LLMSetMarketTrackedResponse) GetMarketId() string {
+	if x != nil {
+		return x.MarketId
+	}
+	return ""
+}
+
+func (x *LLMSetMarketTrackedResponse) GetTracked() bool {
+	if x != nil {
+		return x.Tracked
+	}
+	return false
+}
+
+func (x *LLMSetMarketTrackedResponse) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
 // W7-01 halt write side: the three-level stop (SOFT/MARKET/FULL) and its
 // re-authenticated clear that never auto-resumes anything.
 type LLMHaltRow struct {
@@ -19642,7 +20741,7 @@ type LLMHaltRow struct {
 
 func (x *LLMHaltRow) Reset() {
 	*x = LLMHaltRow{}
-	mi := &file_rpc_proto_msgTypes[293]
+	mi := &file_rpc_proto_msgTypes[308]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19654,7 +20753,7 @@ func (x *LLMHaltRow) String() string {
 func (*LLMHaltRow) ProtoMessage() {}
 
 func (x *LLMHaltRow) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[293]
+	mi := &file_rpc_proto_msgTypes[308]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19667,7 +20766,7 @@ func (x *LLMHaltRow) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMHaltRow.ProtoReflect.Descriptor instead.
 func (*LLMHaltRow) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{293}
+	return file_rpc_proto_rawDescGZIP(), []int{308}
 }
 
 func (x *LLMHaltRow) GetId() string {
@@ -19734,7 +20833,7 @@ type LLMListHaltsRequest struct {
 
 func (x *LLMListHaltsRequest) Reset() {
 	*x = LLMListHaltsRequest{}
-	mi := &file_rpc_proto_msgTypes[294]
+	mi := &file_rpc_proto_msgTypes[309]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19746,7 +20845,7 @@ func (x *LLMListHaltsRequest) String() string {
 func (*LLMListHaltsRequest) ProtoMessage() {}
 
 func (x *LLMListHaltsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[294]
+	mi := &file_rpc_proto_msgTypes[309]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19759,7 +20858,7 @@ func (x *LLMListHaltsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMListHaltsRequest.ProtoReflect.Descriptor instead.
 func (*LLMListHaltsRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{294}
+	return file_rpc_proto_rawDescGZIP(), []int{309}
 }
 
 type LLMListHaltsResponse struct {
@@ -19771,7 +20870,7 @@ type LLMListHaltsResponse struct {
 
 func (x *LLMListHaltsResponse) Reset() {
 	*x = LLMListHaltsResponse{}
-	mi := &file_rpc_proto_msgTypes[295]
+	mi := &file_rpc_proto_msgTypes[310]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19783,7 +20882,7 @@ func (x *LLMListHaltsResponse) String() string {
 func (*LLMListHaltsResponse) ProtoMessage() {}
 
 func (x *LLMListHaltsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[295]
+	mi := &file_rpc_proto_msgTypes[310]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19796,7 +20895,7 @@ func (x *LLMListHaltsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMListHaltsResponse.ProtoReflect.Descriptor instead.
 func (*LLMListHaltsResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{295}
+	return file_rpc_proto_rawDescGZIP(), []int{310}
 }
 
 func (x *LLMListHaltsResponse) GetHalts() []*LLMHaltRow {
@@ -19820,7 +20919,7 @@ type LLMSetHaltRequest struct {
 
 func (x *LLMSetHaltRequest) Reset() {
 	*x = LLMSetHaltRequest{}
-	mi := &file_rpc_proto_msgTypes[296]
+	mi := &file_rpc_proto_msgTypes[311]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19832,7 +20931,7 @@ func (x *LLMSetHaltRequest) String() string {
 func (*LLMSetHaltRequest) ProtoMessage() {}
 
 func (x *LLMSetHaltRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[296]
+	mi := &file_rpc_proto_msgTypes[311]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19845,7 +20944,7 @@ func (x *LLMSetHaltRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMSetHaltRequest.ProtoReflect.Descriptor instead.
 func (*LLMSetHaltRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{296}
+	return file_rpc_proto_rawDescGZIP(), []int{311}
 }
 
 func (x *LLMSetHaltRequest) GetLevel() string {
@@ -19902,7 +21001,7 @@ type LLMSetHaltResponse struct {
 
 func (x *LLMSetHaltResponse) Reset() {
 	*x = LLMSetHaltResponse{}
-	mi := &file_rpc_proto_msgTypes[297]
+	mi := &file_rpc_proto_msgTypes[312]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19914,7 +21013,7 @@ func (x *LLMSetHaltResponse) String() string {
 func (*LLMSetHaltResponse) ProtoMessage() {}
 
 func (x *LLMSetHaltResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[297]
+	mi := &file_rpc_proto_msgTypes[312]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19927,7 +21026,7 @@ func (x *LLMSetHaltResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMSetHaltResponse.ProtoReflect.Descriptor instead.
 func (*LLMSetHaltResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{297}
+	return file_rpc_proto_rawDescGZIP(), []int{312}
 }
 
 func (x *LLMSetHaltResponse) GetHalt() *LLMHaltRow {
@@ -19970,7 +21069,7 @@ type LLMClearHaltRequest struct {
 
 func (x *LLMClearHaltRequest) Reset() {
 	*x = LLMClearHaltRequest{}
-	mi := &file_rpc_proto_msgTypes[298]
+	mi := &file_rpc_proto_msgTypes[313]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19982,7 +21081,7 @@ func (x *LLMClearHaltRequest) String() string {
 func (*LLMClearHaltRequest) ProtoMessage() {}
 
 func (x *LLMClearHaltRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[298]
+	mi := &file_rpc_proto_msgTypes[313]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19995,7 +21094,7 @@ func (x *LLMClearHaltRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMClearHaltRequest.ProtoReflect.Descriptor instead.
 func (*LLMClearHaltRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{298}
+	return file_rpc_proto_rawDescGZIP(), []int{313}
 }
 
 func (x *LLMClearHaltRequest) GetId() string {
@@ -20042,7 +21141,7 @@ type LLMSetRunModeRequest struct {
 
 func (x *LLMSetRunModeRequest) Reset() {
 	*x = LLMSetRunModeRequest{}
-	mi := &file_rpc_proto_msgTypes[299]
+	mi := &file_rpc_proto_msgTypes[314]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20054,7 +21153,7 @@ func (x *LLMSetRunModeRequest) String() string {
 func (*LLMSetRunModeRequest) ProtoMessage() {}
 
 func (x *LLMSetRunModeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[299]
+	mi := &file_rpc_proto_msgTypes[314]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20067,7 +21166,7 @@ func (x *LLMSetRunModeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMSetRunModeRequest.ProtoReflect.Descriptor instead.
 func (*LLMSetRunModeRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{299}
+	return file_rpc_proto_rawDescGZIP(), []int{314}
 }
 
 func (x *LLMSetRunModeRequest) GetRunMode() string {
@@ -20112,7 +21211,7 @@ type LLMPositionDelta struct {
 
 func (x *LLMPositionDelta) Reset() {
 	*x = LLMPositionDelta{}
-	mi := &file_rpc_proto_msgTypes[300]
+	mi := &file_rpc_proto_msgTypes[315]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20124,7 +21223,7 @@ func (x *LLMPositionDelta) String() string {
 func (*LLMPositionDelta) ProtoMessage() {}
 
 func (x *LLMPositionDelta) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[300]
+	mi := &file_rpc_proto_msgTypes[315]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20137,7 +21236,7 @@ func (x *LLMPositionDelta) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMPositionDelta.ProtoReflect.Descriptor instead.
 func (*LLMPositionDelta) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{300}
+	return file_rpc_proto_rawDescGZIP(), []int{315}
 }
 
 func (x *LLMPositionDelta) GetMarketId() string {
@@ -20177,7 +21276,7 @@ type LLMReconcileRequest struct {
 
 func (x *LLMReconcileRequest) Reset() {
 	*x = LLMReconcileRequest{}
-	mi := &file_rpc_proto_msgTypes[301]
+	mi := &file_rpc_proto_msgTypes[316]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20189,7 +21288,7 @@ func (x *LLMReconcileRequest) String() string {
 func (*LLMReconcileRequest) ProtoMessage() {}
 
 func (x *LLMReconcileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[301]
+	mi := &file_rpc_proto_msgTypes[316]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20202,7 +21301,7 @@ func (x *LLMReconcileRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMReconcileRequest.ProtoReflect.Descriptor instead.
 func (*LLMReconcileRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{301}
+	return file_rpc_proto_rawDescGZIP(), []int{316}
 }
 
 func (x *LLMReconcileRequest) GetActor() string {
@@ -20224,7 +21323,7 @@ type LLMReconcileResponse struct {
 
 func (x *LLMReconcileResponse) Reset() {
 	*x = LLMReconcileResponse{}
-	mi := &file_rpc_proto_msgTypes[302]
+	mi := &file_rpc_proto_msgTypes[317]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20236,7 +21335,7 @@ func (x *LLMReconcileResponse) String() string {
 func (*LLMReconcileResponse) ProtoMessage() {}
 
 func (x *LLMReconcileResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[302]
+	mi := &file_rpc_proto_msgTypes[317]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20249,7 +21348,7 @@ func (x *LLMReconcileResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMReconcileResponse.ProtoReflect.Descriptor instead.
 func (*LLMReconcileResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{302}
+	return file_rpc_proto_rawDescGZIP(), []int{317}
 }
 
 func (x *LLMReconcileResponse) GetReconciliationId() string {
@@ -20293,7 +21392,7 @@ type LLMGetUsageRequest struct {
 
 func (x *LLMGetUsageRequest) Reset() {
 	*x = LLMGetUsageRequest{}
-	mi := &file_rpc_proto_msgTypes[303]
+	mi := &file_rpc_proto_msgTypes[318]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20305,7 +21404,7 @@ func (x *LLMGetUsageRequest) String() string {
 func (*LLMGetUsageRequest) ProtoMessage() {}
 
 func (x *LLMGetUsageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[303]
+	mi := &file_rpc_proto_msgTypes[318]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20318,7 +21417,7 @@ func (x *LLMGetUsageRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMGetUsageRequest.ProtoReflect.Descriptor instead.
 func (*LLMGetUsageRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{303}
+	return file_rpc_proto_rawDescGZIP(), []int{318}
 }
 
 func (x *LLMGetUsageRequest) GetWindowHours() int64 {
@@ -20342,7 +21441,7 @@ type LLMUsageLine struct {
 
 func (x *LLMUsageLine) Reset() {
 	*x = LLMUsageLine{}
-	mi := &file_rpc_proto_msgTypes[304]
+	mi := &file_rpc_proto_msgTypes[319]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20354,7 +21453,7 @@ func (x *LLMUsageLine) String() string {
 func (*LLMUsageLine) ProtoMessage() {}
 
 func (x *LLMUsageLine) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[304]
+	mi := &file_rpc_proto_msgTypes[319]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20367,7 +21466,7 @@ func (x *LLMUsageLine) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMUsageLine.ProtoReflect.Descriptor instead.
 func (*LLMUsageLine) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{304}
+	return file_rpc_proto_rawDescGZIP(), []int{319}
 }
 
 func (x *LLMUsageLine) GetKind() string {
@@ -20426,7 +21525,7 @@ type LLMGetUsageResponse struct {
 
 func (x *LLMGetUsageResponse) Reset() {
 	*x = LLMGetUsageResponse{}
-	mi := &file_rpc_proto_msgTypes[305]
+	mi := &file_rpc_proto_msgTypes[320]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20438,7 +21537,7 @@ func (x *LLMGetUsageResponse) String() string {
 func (*LLMGetUsageResponse) ProtoMessage() {}
 
 func (x *LLMGetUsageResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[305]
+	mi := &file_rpc_proto_msgTypes[320]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20451,7 +21550,7 @@ func (x *LLMGetUsageResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMGetUsageResponse.ProtoReflect.Descriptor instead.
 func (*LLMGetUsageResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{305}
+	return file_rpc_proto_rawDescGZIP(), []int{320}
 }
 
 func (x *LLMGetUsageResponse) GetWindowHours() int64 {
@@ -20512,7 +21611,7 @@ type LLMNotifyChannel struct {
 
 func (x *LLMNotifyChannel) Reset() {
 	*x = LLMNotifyChannel{}
-	mi := &file_rpc_proto_msgTypes[306]
+	mi := &file_rpc_proto_msgTypes[321]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20524,7 +21623,7 @@ func (x *LLMNotifyChannel) String() string {
 func (*LLMNotifyChannel) ProtoMessage() {}
 
 func (x *LLMNotifyChannel) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[306]
+	mi := &file_rpc_proto_msgTypes[321]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20537,7 +21636,7 @@ func (x *LLMNotifyChannel) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMNotifyChannel.ProtoReflect.Descriptor instead.
 func (*LLMNotifyChannel) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{306}
+	return file_rpc_proto_rawDescGZIP(), []int{321}
 }
 
 func (x *LLMNotifyChannel) GetName() string {
@@ -20583,7 +21682,7 @@ type LLMGetNotifyStatusRequest struct {
 
 func (x *LLMGetNotifyStatusRequest) Reset() {
 	*x = LLMGetNotifyStatusRequest{}
-	mi := &file_rpc_proto_msgTypes[307]
+	mi := &file_rpc_proto_msgTypes[322]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20595,7 +21694,7 @@ func (x *LLMGetNotifyStatusRequest) String() string {
 func (*LLMGetNotifyStatusRequest) ProtoMessage() {}
 
 func (x *LLMGetNotifyStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[307]
+	mi := &file_rpc_proto_msgTypes[322]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20608,7 +21707,7 @@ func (x *LLMGetNotifyStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMGetNotifyStatusRequest.ProtoReflect.Descriptor instead.
 func (*LLMGetNotifyStatusRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{307}
+	return file_rpc_proto_rawDescGZIP(), []int{322}
 }
 
 type LLMGetNotifyStatusResponse struct {
@@ -20622,7 +21721,7 @@ type LLMGetNotifyStatusResponse struct {
 
 func (x *LLMGetNotifyStatusResponse) Reset() {
 	*x = LLMGetNotifyStatusResponse{}
-	mi := &file_rpc_proto_msgTypes[308]
+	mi := &file_rpc_proto_msgTypes[323]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20634,7 +21733,7 @@ func (x *LLMGetNotifyStatusResponse) String() string {
 func (*LLMGetNotifyStatusResponse) ProtoMessage() {}
 
 func (x *LLMGetNotifyStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[308]
+	mi := &file_rpc_proto_msgTypes[323]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20647,7 +21746,7 @@ func (x *LLMGetNotifyStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMGetNotifyStatusResponse.ProtoReflect.Descriptor instead.
 func (*LLMGetNotifyStatusResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{308}
+	return file_rpc_proto_rawDescGZIP(), []int{323}
 }
 
 func (x *LLMGetNotifyStatusResponse) GetChannels() []*LLMNotifyChannel {
@@ -20680,7 +21779,7 @@ type LLMTestNotifyRequest struct {
 
 func (x *LLMTestNotifyRequest) Reset() {
 	*x = LLMTestNotifyRequest{}
-	mi := &file_rpc_proto_msgTypes[309]
+	mi := &file_rpc_proto_msgTypes[324]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20692,7 +21791,7 @@ func (x *LLMTestNotifyRequest) String() string {
 func (*LLMTestNotifyRequest) ProtoMessage() {}
 
 func (x *LLMTestNotifyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[309]
+	mi := &file_rpc_proto_msgTypes[324]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20705,7 +21804,7 @@ func (x *LLMTestNotifyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMTestNotifyRequest.ProtoReflect.Descriptor instead.
 func (*LLMTestNotifyRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{309}
+	return file_rpc_proto_rawDescGZIP(), []int{324}
 }
 
 func (x *LLMTestNotifyRequest) GetActor() string {
@@ -20725,7 +21824,7 @@ type LLMTestNotifyResponse struct {
 
 func (x *LLMTestNotifyResponse) Reset() {
 	*x = LLMTestNotifyResponse{}
-	mi := &file_rpc_proto_msgTypes[310]
+	mi := &file_rpc_proto_msgTypes[325]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20737,7 +21836,7 @@ func (x *LLMTestNotifyResponse) String() string {
 func (*LLMTestNotifyResponse) ProtoMessage() {}
 
 func (x *LLMTestNotifyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[310]
+	mi := &file_rpc_proto_msgTypes[325]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20750,7 +21849,7 @@ func (x *LLMTestNotifyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMTestNotifyResponse.ProtoReflect.Descriptor instead.
 func (*LLMTestNotifyResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{310}
+	return file_rpc_proto_rawDescGZIP(), []int{325}
 }
 
 func (x *LLMTestNotifyResponse) GetRelayRunning() bool {
@@ -20801,7 +21900,7 @@ type LLMGetStatusResponse struct {
 
 func (x *LLMGetStatusResponse) Reset() {
 	*x = LLMGetStatusResponse{}
-	mi := &file_rpc_proto_msgTypes[311]
+	mi := &file_rpc_proto_msgTypes[326]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20813,7 +21912,7 @@ func (x *LLMGetStatusResponse) String() string {
 func (*LLMGetStatusResponse) ProtoMessage() {}
 
 func (x *LLMGetStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[311]
+	mi := &file_rpc_proto_msgTypes[326]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20826,7 +21925,7 @@ func (x *LLMGetStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMGetStatusResponse.ProtoReflect.Descriptor instead.
 func (*LLMGetStatusResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{311}
+	return file_rpc_proto_rawDescGZIP(), []int{326}
 }
 
 func (x *LLMGetStatusResponse) GetRunMode() string {
@@ -20967,7 +22066,7 @@ type LLMReadinessRequest struct {
 
 func (x *LLMReadinessRequest) Reset() {
 	*x = LLMReadinessRequest{}
-	mi := &file_rpc_proto_msgTypes[312]
+	mi := &file_rpc_proto_msgTypes[327]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20979,7 +22078,7 @@ func (x *LLMReadinessRequest) String() string {
 func (*LLMReadinessRequest) ProtoMessage() {}
 
 func (x *LLMReadinessRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[312]
+	mi := &file_rpc_proto_msgTypes[327]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20992,7 +22091,7 @@ func (x *LLMReadinessRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMReadinessRequest.ProtoReflect.Descriptor instead.
 func (*LLMReadinessRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{312}
+	return file_rpc_proto_rawDescGZIP(), []int{327}
 }
 
 func (x *LLMReadinessRequest) GetNetwork() string {
@@ -21022,7 +22121,7 @@ type LLMReadinessGate struct {
 
 func (x *LLMReadinessGate) Reset() {
 	*x = LLMReadinessGate{}
-	mi := &file_rpc_proto_msgTypes[313]
+	mi := &file_rpc_proto_msgTypes[328]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21034,7 +22133,7 @@ func (x *LLMReadinessGate) String() string {
 func (*LLMReadinessGate) ProtoMessage() {}
 
 func (x *LLMReadinessGate) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[313]
+	mi := &file_rpc_proto_msgTypes[328]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21047,7 +22146,7 @@ func (x *LLMReadinessGate) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMReadinessGate.ProtoReflect.Descriptor instead.
 func (*LLMReadinessGate) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{313}
+	return file_rpc_proto_rawDescGZIP(), []int{328}
 }
 
 func (x *LLMReadinessGate) GetCode() string {
@@ -21085,7 +22184,7 @@ type LLMReadinessResponse struct {
 
 func (x *LLMReadinessResponse) Reset() {
 	*x = LLMReadinessResponse{}
-	mi := &file_rpc_proto_msgTypes[314]
+	mi := &file_rpc_proto_msgTypes[329]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21097,7 +22196,7 @@ func (x *LLMReadinessResponse) String() string {
 func (*LLMReadinessResponse) ProtoMessage() {}
 
 func (x *LLMReadinessResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[314]
+	mi := &file_rpc_proto_msgTypes[329]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21110,7 +22209,7 @@ func (x *LLMReadinessResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMReadinessResponse.ProtoReflect.Descriptor instead.
 func (*LLMReadinessResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{314}
+	return file_rpc_proto_rawDescGZIP(), []int{329}
 }
 
 func (x *LLMReadinessResponse) GetReady() bool {
@@ -21156,9 +22255,7 @@ type LLMProviderRevision struct {
 	Kind       string                 `protobuf:"bytes,4,opt,name=kind,proto3" json:"kind,omitempty"`
 	BaseUrl    string                 `protobuf:"bytes,5,opt,name=base_url,json=baseUrl,proto3" json:"base_url,omitempty"`
 	ModelId    string                 `protobuf:"bytes,6,opt,name=model_id,json=modelId,proto3" json:"model_id,omitempty"`
-	// api_key_ref is the vault reference, never the key itself.
-	ApiKeyRef string `protobuf:"bytes,7,opt,name=api_key_ref,json=apiKeyRef,proto3" json:"api_key_ref,omitempty"`
-	// api_key_fingerprint is the truncated SHA-256 the vault reports (16 hex).
+	// api_key_fingerprint is the server-derived SHA-256 prefix (16 hex).
 	ApiKeyFingerprint string `protobuf:"bytes,8,opt,name=api_key_fingerprint,json=apiKeyFingerprint,proto3" json:"api_key_fingerprint,omitempty"`
 	TimeoutSeconds    int64  `protobuf:"varint,9,opt,name=timeout_seconds,json=timeoutSeconds,proto3" json:"timeout_seconds,omitempty"`
 	// Optional numeric fields use 0 for unset (proto3 scalars).
@@ -21183,7 +22280,7 @@ type LLMProviderRevision struct {
 
 func (x *LLMProviderRevision) Reset() {
 	*x = LLMProviderRevision{}
-	mi := &file_rpc_proto_msgTypes[315]
+	mi := &file_rpc_proto_msgTypes[330]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21195,7 +22292,7 @@ func (x *LLMProviderRevision) String() string {
 func (*LLMProviderRevision) ProtoMessage() {}
 
 func (x *LLMProviderRevision) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[315]
+	mi := &file_rpc_proto_msgTypes[330]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21208,7 +22305,7 @@ func (x *LLMProviderRevision) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMProviderRevision.ProtoReflect.Descriptor instead.
 func (*LLMProviderRevision) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{315}
+	return file_rpc_proto_rawDescGZIP(), []int{330}
 }
 
 func (x *LLMProviderRevision) GetId() string {
@@ -21249,13 +22346,6 @@ func (x *LLMProviderRevision) GetBaseUrl() string {
 func (x *LLMProviderRevision) GetModelId() string {
 	if x != nil {
 		return x.ModelId
-	}
-	return ""
-}
-
-func (x *LLMProviderRevision) GetApiKeyRef() string {
-	if x != nil {
-		return x.ApiKeyRef
 	}
 	return ""
 }
@@ -21383,7 +22473,7 @@ type LLMProviderProfile struct {
 
 func (x *LLMProviderProfile) Reset() {
 	*x = LLMProviderProfile{}
-	mi := &file_rpc_proto_msgTypes[316]
+	mi := &file_rpc_proto_msgTypes[331]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21395,7 +22485,7 @@ func (x *LLMProviderProfile) String() string {
 func (*LLMProviderProfile) ProtoMessage() {}
 
 func (x *LLMProviderProfile) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[316]
+	mi := &file_rpc_proto_msgTypes[331]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21408,7 +22498,7 @@ func (x *LLMProviderProfile) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMProviderProfile.ProtoReflect.Descriptor instead.
 func (*LLMProviderProfile) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{316}
+	return file_rpc_proto_rawDescGZIP(), []int{331}
 }
 
 func (x *LLMProviderProfile) GetId() string {
@@ -21483,7 +22573,7 @@ type LLMListProviderProfilesRequest struct {
 
 func (x *LLMListProviderProfilesRequest) Reset() {
 	*x = LLMListProviderProfilesRequest{}
-	mi := &file_rpc_proto_msgTypes[317]
+	mi := &file_rpc_proto_msgTypes[332]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21495,7 +22585,7 @@ func (x *LLMListProviderProfilesRequest) String() string {
 func (*LLMListProviderProfilesRequest) ProtoMessage() {}
 
 func (x *LLMListProviderProfilesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[317]
+	mi := &file_rpc_proto_msgTypes[332]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21508,7 +22598,7 @@ func (x *LLMListProviderProfilesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMListProviderProfilesRequest.ProtoReflect.Descriptor instead.
 func (*LLMListProviderProfilesRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{317}
+	return file_rpc_proto_rawDescGZIP(), []int{332}
 }
 
 func (x *LLMListProviderProfilesRequest) GetIncludeArchived() bool {
@@ -21527,7 +22617,7 @@ type LLMListProviderProfilesResponse struct {
 
 func (x *LLMListProviderProfilesResponse) Reset() {
 	*x = LLMListProviderProfilesResponse{}
-	mi := &file_rpc_proto_msgTypes[318]
+	mi := &file_rpc_proto_msgTypes[333]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21539,7 +22629,7 @@ func (x *LLMListProviderProfilesResponse) String() string {
 func (*LLMListProviderProfilesResponse) ProtoMessage() {}
 
 func (x *LLMListProviderProfilesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[318]
+	mi := &file_rpc_proto_msgTypes[333]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21552,7 +22642,7 @@ func (x *LLMListProviderProfilesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMListProviderProfilesResponse.ProtoReflect.Descriptor instead.
 func (*LLMListProviderProfilesResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{318}
+	return file_rpc_proto_rawDescGZIP(), []int{333}
 }
 
 func (x *LLMListProviderProfilesResponse) GetProfiles() []*LLMProviderProfile {
@@ -21574,7 +22664,7 @@ type LLMCreateProviderProfileRequest struct {
 
 func (x *LLMCreateProviderProfileRequest) Reset() {
 	*x = LLMCreateProviderProfileRequest{}
-	mi := &file_rpc_proto_msgTypes[319]
+	mi := &file_rpc_proto_msgTypes[334]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21586,7 +22676,7 @@ func (x *LLMCreateProviderProfileRequest) String() string {
 func (*LLMCreateProviderProfileRequest) ProtoMessage() {}
 
 func (x *LLMCreateProviderProfileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[319]
+	mi := &file_rpc_proto_msgTypes[334]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21599,7 +22689,7 @@ func (x *LLMCreateProviderProfileRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMCreateProviderProfileRequest.ProtoReflect.Descriptor instead.
 func (*LLMCreateProviderProfileRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{319}
+	return file_rpc_proto_rawDescGZIP(), []int{334}
 }
 
 func (x *LLMCreateProviderProfileRequest) GetKind() string {
@@ -21632,7 +22722,7 @@ type LLMCreateProviderProfileResponse struct {
 
 func (x *LLMCreateProviderProfileResponse) Reset() {
 	*x = LLMCreateProviderProfileResponse{}
-	mi := &file_rpc_proto_msgTypes[320]
+	mi := &file_rpc_proto_msgTypes[335]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21644,7 +22734,7 @@ func (x *LLMCreateProviderProfileResponse) String() string {
 func (*LLMCreateProviderProfileResponse) ProtoMessage() {}
 
 func (x *LLMCreateProviderProfileResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[320]
+	mi := &file_rpc_proto_msgTypes[335]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21657,7 +22747,7 @@ func (x *LLMCreateProviderProfileResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMCreateProviderProfileResponse.ProtoReflect.Descriptor instead.
 func (*LLMCreateProviderProfileResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{320}
+	return file_rpc_proto_rawDescGZIP(), []int{335}
 }
 
 func (x *LLMCreateProviderProfileResponse) GetProfile() *LLMProviderProfile {
@@ -21670,12 +22760,13 @@ func (x *LLMCreateProviderProfileResponse) GetProfile() *LLMProviderProfile {
 type LLMUpdateProviderProfileRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// id is the profile id; the update appends a new revision to it.
-	Id                      string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Actor                   string `protobuf:"bytes,2,opt,name=actor,proto3" json:"actor,omitempty"`
-	BaseUrl                 string `protobuf:"bytes,3,opt,name=base_url,json=baseUrl,proto3" json:"base_url,omitempty"`
-	ModelId                 string `protobuf:"bytes,4,opt,name=model_id,json=modelId,proto3" json:"model_id,omitempty"`
-	ApiKeyRef               string `protobuf:"bytes,5,opt,name=api_key_ref,json=apiKeyRef,proto3" json:"api_key_ref,omitempty"`
-	ApiKeyFingerprint       string `protobuf:"bytes,6,opt,name=api_key_fingerprint,json=apiKeyFingerprint,proto3" json:"api_key_fingerprint,omitempty"`
+	Id      string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Actor   string `protobuf:"bytes,2,opt,name=actor,proto3" json:"actor,omitempty"`
+	BaseUrl string `protobuf:"bytes,3,opt,name=base_url,json=baseUrl,proto3" json:"base_url,omitempty"`
+	ModelId string `protobuf:"bytes,4,opt,name=model_id,json=modelId,proto3" json:"model_id,omitempty"`
+	// api_key is the plaintext provider key (vault removed 2026-10-15); the
+	// fingerprint column is derived server-side and never typed by an operator.
+	ApiKey                  string `protobuf:"bytes,5,opt,name=api_key,json=apiKey,proto3" json:"api_key,omitempty"`
 	TimeoutSeconds          int64  `protobuf:"varint,7,opt,name=timeout_seconds,json=timeoutSeconds,proto3" json:"timeout_seconds,omitempty"`
 	MaxOutputTokens         int64  `protobuf:"varint,8,opt,name=max_output_tokens,json=maxOutputTokens,proto3" json:"max_output_tokens,omitempty"`
 	MaxToolRounds           int64  `protobuf:"varint,9,opt,name=max_tool_rounds,json=maxToolRounds,proto3" json:"max_tool_rounds,omitempty"`
@@ -21693,7 +22784,7 @@ type LLMUpdateProviderProfileRequest struct {
 
 func (x *LLMUpdateProviderProfileRequest) Reset() {
 	*x = LLMUpdateProviderProfileRequest{}
-	mi := &file_rpc_proto_msgTypes[321]
+	mi := &file_rpc_proto_msgTypes[336]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21705,7 +22796,7 @@ func (x *LLMUpdateProviderProfileRequest) String() string {
 func (*LLMUpdateProviderProfileRequest) ProtoMessage() {}
 
 func (x *LLMUpdateProviderProfileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[321]
+	mi := &file_rpc_proto_msgTypes[336]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21718,7 +22809,7 @@ func (x *LLMUpdateProviderProfileRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMUpdateProviderProfileRequest.ProtoReflect.Descriptor instead.
 func (*LLMUpdateProviderProfileRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{321}
+	return file_rpc_proto_rawDescGZIP(), []int{336}
 }
 
 func (x *LLMUpdateProviderProfileRequest) GetId() string {
@@ -21749,16 +22840,9 @@ func (x *LLMUpdateProviderProfileRequest) GetModelId() string {
 	return ""
 }
 
-func (x *LLMUpdateProviderProfileRequest) GetApiKeyRef() string {
+func (x *LLMUpdateProviderProfileRequest) GetApiKey() string {
 	if x != nil {
-		return x.ApiKeyRef
-	}
-	return ""
-}
-
-func (x *LLMUpdateProviderProfileRequest) GetApiKeyFingerprint() string {
-	if x != nil {
-		return x.ApiKeyFingerprint
+		return x.ApiKey
 	}
 	return ""
 }
@@ -21849,7 +22933,7 @@ type LLMUpdateProviderProfileResponse struct {
 
 func (x *LLMUpdateProviderProfileResponse) Reset() {
 	*x = LLMUpdateProviderProfileResponse{}
-	mi := &file_rpc_proto_msgTypes[322]
+	mi := &file_rpc_proto_msgTypes[337]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21861,7 +22945,7 @@ func (x *LLMUpdateProviderProfileResponse) String() string {
 func (*LLMUpdateProviderProfileResponse) ProtoMessage() {}
 
 func (x *LLMUpdateProviderProfileResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[322]
+	mi := &file_rpc_proto_msgTypes[337]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21874,7 +22958,7 @@ func (x *LLMUpdateProviderProfileResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMUpdateProviderProfileResponse.ProtoReflect.Descriptor instead.
 func (*LLMUpdateProviderProfileResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{322}
+	return file_rpc_proto_rawDescGZIP(), []int{337}
 }
 
 func (x *LLMUpdateProviderProfileResponse) GetRevision() *LLMProviderRevision {
@@ -21894,7 +22978,7 @@ type LLMDeleteProviderProfileRequest struct {
 
 func (x *LLMDeleteProviderProfileRequest) Reset() {
 	*x = LLMDeleteProviderProfileRequest{}
-	mi := &file_rpc_proto_msgTypes[323]
+	mi := &file_rpc_proto_msgTypes[338]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21906,7 +22990,7 @@ func (x *LLMDeleteProviderProfileRequest) String() string {
 func (*LLMDeleteProviderProfileRequest) ProtoMessage() {}
 
 func (x *LLMDeleteProviderProfileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[323]
+	mi := &file_rpc_proto_msgTypes[338]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21919,7 +23003,7 @@ func (x *LLMDeleteProviderProfileRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMDeleteProviderProfileRequest.ProtoReflect.Descriptor instead.
 func (*LLMDeleteProviderProfileRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{323}
+	return file_rpc_proto_rawDescGZIP(), []int{338}
 }
 
 func (x *LLMDeleteProviderProfileRequest) GetId() string {
@@ -21952,7 +23036,7 @@ type LLMProbeLayerResult struct {
 
 func (x *LLMProbeLayerResult) Reset() {
 	*x = LLMProbeLayerResult{}
-	mi := &file_rpc_proto_msgTypes[324]
+	mi := &file_rpc_proto_msgTypes[339]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21964,7 +23048,7 @@ func (x *LLMProbeLayerResult) String() string {
 func (*LLMProbeLayerResult) ProtoMessage() {}
 
 func (x *LLMProbeLayerResult) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[324]
+	mi := &file_rpc_proto_msgTypes[339]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21977,7 +23061,7 @@ func (x *LLMProbeLayerResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMProbeLayerResult.ProtoReflect.Descriptor instead.
 func (*LLMProbeLayerResult) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{324}
+	return file_rpc_proto_rawDescGZIP(), []int{339}
 }
 
 func (x *LLMProbeLayerResult) GetLayer() string {
@@ -22047,7 +23131,7 @@ type LLMTestProviderProfileRequest struct {
 
 func (x *LLMTestProviderProfileRequest) Reset() {
 	*x = LLMTestProviderProfileRequest{}
-	mi := &file_rpc_proto_msgTypes[325]
+	mi := &file_rpc_proto_msgTypes[340]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22059,7 +23143,7 @@ func (x *LLMTestProviderProfileRequest) String() string {
 func (*LLMTestProviderProfileRequest) ProtoMessage() {}
 
 func (x *LLMTestProviderProfileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[325]
+	mi := &file_rpc_proto_msgTypes[340]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22072,7 +23156,7 @@ func (x *LLMTestProviderProfileRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMTestProviderProfileRequest.ProtoReflect.Descriptor instead.
 func (*LLMTestProviderProfileRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{325}
+	return file_rpc_proto_rawDescGZIP(), []int{340}
 }
 
 func (x *LLMTestProviderProfileRequest) GetId() string {
@@ -22100,7 +23184,7 @@ type LLMTestProviderProfileResponse struct {
 
 func (x *LLMTestProviderProfileResponse) Reset() {
 	*x = LLMTestProviderProfileResponse{}
-	mi := &file_rpc_proto_msgTypes[326]
+	mi := &file_rpc_proto_msgTypes[341]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22112,7 +23196,7 @@ func (x *LLMTestProviderProfileResponse) String() string {
 func (*LLMTestProviderProfileResponse) ProtoMessage() {}
 
 func (x *LLMTestProviderProfileResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[326]
+	mi := &file_rpc_proto_msgTypes[341]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22125,7 +23209,7 @@ func (x *LLMTestProviderProfileResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMTestProviderProfileResponse.ProtoReflect.Descriptor instead.
 func (*LLMTestProviderProfileResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{326}
+	return file_rpc_proto_rawDescGZIP(), []int{341}
 }
 
 func (x *LLMTestProviderProfileResponse) GetRevisionId() string {
@@ -22157,7 +23241,7 @@ type LLMGetActiveModelPairRequest struct {
 
 func (x *LLMGetActiveModelPairRequest) Reset() {
 	*x = LLMGetActiveModelPairRequest{}
-	mi := &file_rpc_proto_msgTypes[327]
+	mi := &file_rpc_proto_msgTypes[342]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22169,7 +23253,7 @@ func (x *LLMGetActiveModelPairRequest) String() string {
 func (*LLMGetActiveModelPairRequest) ProtoMessage() {}
 
 func (x *LLMGetActiveModelPairRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[327]
+	mi := &file_rpc_proto_msgTypes[342]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22182,7 +23266,7 @@ func (x *LLMGetActiveModelPairRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMGetActiveModelPairRequest.ProtoReflect.Descriptor instead.
 func (*LLMGetActiveModelPairRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{327}
+	return file_rpc_proto_rawDescGZIP(), []int{342}
 }
 
 type LLMGetActiveModelPairResponse struct {
@@ -22201,7 +23285,7 @@ type LLMGetActiveModelPairResponse struct {
 
 func (x *LLMGetActiveModelPairResponse) Reset() {
 	*x = LLMGetActiveModelPairResponse{}
-	mi := &file_rpc_proto_msgTypes[328]
+	mi := &file_rpc_proto_msgTypes[343]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22213,7 +23297,7 @@ func (x *LLMGetActiveModelPairResponse) String() string {
 func (*LLMGetActiveModelPairResponse) ProtoMessage() {}
 
 func (x *LLMGetActiveModelPairResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[328]
+	mi := &file_rpc_proto_msgTypes[343]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22226,7 +23310,7 @@ func (x *LLMGetActiveModelPairResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMGetActiveModelPairResponse.ProtoReflect.Descriptor instead.
 func (*LLMGetActiveModelPairResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{328}
+	return file_rpc_proto_rawDescGZIP(), []int{343}
 }
 
 func (x *LLMGetActiveModelPairResponse) GetFound() bool {
@@ -22292,7 +23376,7 @@ type LLMSwitchActiveModelPairRequest struct {
 
 func (x *LLMSwitchActiveModelPairRequest) Reset() {
 	*x = LLMSwitchActiveModelPairRequest{}
-	mi := &file_rpc_proto_msgTypes[329]
+	mi := &file_rpc_proto_msgTypes[344]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22304,7 +23388,7 @@ func (x *LLMSwitchActiveModelPairRequest) String() string {
 func (*LLMSwitchActiveModelPairRequest) ProtoMessage() {}
 
 func (x *LLMSwitchActiveModelPairRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[329]
+	mi := &file_rpc_proto_msgTypes[344]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22317,7 +23401,7 @@ func (x *LLMSwitchActiveModelPairRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMSwitchActiveModelPairRequest.ProtoReflect.Descriptor instead.
 func (*LLMSwitchActiveModelPairRequest) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{329}
+	return file_rpc_proto_rawDescGZIP(), []int{344}
 }
 
 func (x *LLMSwitchActiveModelPairRequest) GetLlmProfileRevisionId() string {
@@ -22372,7 +23456,7 @@ type LLMSwitchActiveModelPairResponse struct {
 
 func (x *LLMSwitchActiveModelPairResponse) Reset() {
 	*x = LLMSwitchActiveModelPairResponse{}
-	mi := &file_rpc_proto_msgTypes[330]
+	mi := &file_rpc_proto_msgTypes[345]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22384,7 +23468,7 @@ func (x *LLMSwitchActiveModelPairResponse) String() string {
 func (*LLMSwitchActiveModelPairResponse) ProtoMessage() {}
 
 func (x *LLMSwitchActiveModelPairResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rpc_proto_msgTypes[330]
+	mi := &file_rpc_proto_msgTypes[345]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22397,7 +23481,7 @@ func (x *LLMSwitchActiveModelPairResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMSwitchActiveModelPairResponse.ProtoReflect.Descriptor instead.
 func (*LLMSwitchActiveModelPairResponse) Descriptor() ([]byte, []int) {
-	return file_rpc_proto_rawDescGZIP(), []int{330}
+	return file_rpc_proto_rawDescGZIP(), []int{345}
 }
 
 func (x *LLMSwitchActiveModelPairResponse) GetPairEpoch() int64 {
@@ -23737,7 +24821,7 @@ const file_rpc_proto_rawDesc = "" +
 	" \x01(\tR\x06sha256\"Z\n" +
 	"\x15LLMSendMessageRequest\x12'\n" +
 	"\x0fconversation_id\x18\x01 \x01(\tR\x0econversationId\x12\x18\n" +
-	"\acontent\x18\x02 \x01(\tR\acontent\"\xc8\x02\n" +
+	"\acontent\x18\x02 \x01(\tR\acontent\"\x81\x03\n" +
 	"\x16LLMSendMessageResponse\x12\x1d\n" +
 	"\n" +
 	"message_id\x18\x01 \x01(\tR\tmessageId\x12+\n" +
@@ -23749,14 +24833,33 @@ const file_rpc_proto_rawDesc = "" +
 	"latency_ms\x18\x06 \x01(\x03R\tlatencyMs\x12\x1d\n" +
 	"\n" +
 	"error_code\x18\a \x01(\tR\terrorCode\x123\n" +
-	"\bevidence\x18\b \x03(\v2\x17.gctrpc.LLMEvidenceCardR\bevidence\"Y\n" +
+	"\bevidence\x18\b \x03(\v2\x17.gctrpc.LLMEvidenceCardR\bevidence\x127\n" +
+	"\tproposals\x18\t \x03(\v2\x19.gctrpc.LLMActionProposalR\tproposals\"\x9d\x02\n" +
+	"\x11LLMActionProposal\x12\x16\n" +
+	"\x06action\x18\x01 \x01(\tR\x06action\x12\x18\n" +
+	"\asummary\x18\x02 \x01(\tR\asummary\x12\x1d\n" +
+	"\n" +
+	"market_ids\x18\x03 \x03(\tR\tmarketIds\x12.\n" +
+	"\x13strategy_version_id\x18\x04 \x01(\tR\x11strategyVersionId\x12\x14\n" +
+	"\x05actor\x18\x05 \x01(\tR\x05actor\x12\x1b\n" +
+	"\tmarket_id\x18\x06 \x01(\tR\bmarketId\x12\x18\n" +
+	"\atracked\x18\a \x01(\bR\atracked\x12#\n" +
+	"\rall_positions\x18\b \x01(\bR\fallPositions\x12\x15\n" +
+	"\x06job_id\x18\t \x01(\tR\x05jobId\"Y\n" +
 	"\x14LLMChatStreamRequest\x12'\n" +
 	"\x0fconversation_id\x18\x01 \x01(\tR\x0econversationId\x12\x18\n" +
-	"\acontent\x18\x02 \x01(\tR\acontent\"v\n" +
+	"\acontent\x18\x02 \x01(\tR\acontent\"\xab\x01\n" +
 	"\x12LLMChatStreamEvent\x12\x14\n" +
 	"\x05delta\x18\x01 \x01(\tR\x05delta\x124\n" +
 	"\x05final\x18\x02 \x01(\v2\x1e.gctrpc.LLMSendMessageResponseR\x05final\x12\x14\n" +
-	"\x05error\x18\x03 \x01(\tR\x05error\"\x8b\x01\n" +
+	"\x05error\x18\x03 \x01(\tR\x05error\x123\n" +
+	"\bprogress\x18\x04 \x01(\v2\x17.gctrpc.LLMToolProgressR\bprogress\"\x7f\n" +
+	"\x0fLLMToolProgress\x12\x12\n" +
+	"\x04tool\x18\x01 \x01(\tR\x04tool\x12\x14\n" +
+	"\x05phase\x18\x02 \x01(\tR\x05phase\x12\x12\n" +
+	"\x04done\x18\x03 \x01(\x05R\x04done\x12\x14\n" +
+	"\x05total\x18\x04 \x01(\x05R\x05total\x12\x18\n" +
+	"\amessage\x18\x05 \x01(\tR\amessage\"\x8b\x01\n" +
 	"\vLLMStrategy\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1d\n" +
@@ -23906,7 +25009,13 @@ const file_rpc_proto_rawDesc = "" +
 	"expired_at\x18\x10 \x01(\tR\texpiredAt\"o\n" +
 	"\x1eLLMGetStrategyApprovalResponse\x12\x14\n" +
 	"\x05found\x18\x01 \x01(\bR\x05found\x127\n" +
-	"\bapproval\x18\x02 \x01(\v2\x1b.gctrpc.LLMStrategyApprovalR\bapproval\";\n" +
+	"\bapproval\x18\x02 \x01(\v2\x1b.gctrpc.LLMStrategyApprovalR\bapproval\"X\n" +
+	"\x1dLLMListActiveApprovalsRequest\x12\x1d\n" +
+	"\n" +
+	"account_id\x18\x01 \x01(\tR\taccountId\x12\x18\n" +
+	"\anetwork\x18\x02 \x01(\tR\anetwork\"[\n" +
+	"\x1eLLMListActiveApprovalsResponse\x129\n" +
+	"\tapprovals\x18\x01 \x03(\v2\x1b.gctrpc.LLMStrategyApprovalR\tapprovals\";\n" +
 	"\x1aLLMListMarketGrantsRequest\x12\x1d\n" +
 	"\n" +
 	"account_id\x18\x01 \x01(\tR\taccountId\"\xb8\x02\n" +
@@ -23987,7 +25096,82 @@ const file_rpc_proto_rawDesc = "" +
 	"\x19LLMPreviewDecisionRequest\x12.\n" +
 	"\x13strategy_version_id\x18\x01 \x01(\tR\x11strategyVersionId\x12\x1b\n" +
 	"\tmarket_id\x18\x02 \x01(\tR\bmarketId\x12\x14\n" +
-	"\x05actor\x18\x03 \x01(\tR\x05actor\".\n" +
+	"\x05actor\x18\x03 \x01(\tR\x05actor\"\xbc\x01\n" +
+	"\x13LLMBatchDecisionRow\x12\x1b\n" +
+	"\tmarket_id\x18\x01 \x01(\tR\bmarketId\x12\x16\n" +
+	"\x06status\x18\x02 \x01(\tR\x06status\x12\x1a\n" +
+	"\bdecision\x18\x03 \x01(\tR\bdecision\x12\x16\n" +
+	"\x06reason\x18\x04 \x01(\tR\x06reason\x12&\n" +
+	"\x0fdecision_run_id\x18\x05 \x01(\tR\rdecisionRunId\x12\x14\n" +
+	"\x05error\x18\x06 \x01(\tR\x05error\"\x97\x01\n" +
+	"\x1cLLMStartBatchDecisionRequest\x12.\n" +
+	"\x13strategy_version_id\x18\x01 \x01(\tR\x11strategyVersionId\x12\x1d\n" +
+	"\n" +
+	"market_ids\x18\x02 \x03(\tR\tmarketIds\x12\x12\n" +
+	"\x04kind\x18\x03 \x01(\tR\x04kind\x12\x14\n" +
+	"\x05actor\x18\x04 \x01(\tR\x05actor\"6\n" +
+	"\x1dLLMStartBatchDecisionResponse\x12\x15\n" +
+	"\x06job_id\x18\x01 \x01(\tR\x05jobId\"3\n" +
+	"\x1aLLMGetBatchDecisionRequest\x12\x15\n" +
+	"\x06job_id\x18\x01 \x01(\tR\x05jobId\"\xa4\x02\n" +
+	"\x1bLLMGetBatchDecisionResponse\x12\x15\n" +
+	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x12\n" +
+	"\x04kind\x18\x02 \x01(\tR\x04kind\x12.\n" +
+	"\x13strategy_version_id\x18\x03 \x01(\tR\x11strategyVersionId\x12\x14\n" +
+	"\x05actor\x18\x04 \x01(\tR\x05actor\x12\x1d\n" +
+	"\n" +
+	"created_at\x18\x05 \x01(\tR\tcreatedAt\x12\x12\n" +
+	"\x04done\x18\x06 \x01(\bR\x04done\x12\x14\n" +
+	"\x05total\x18\a \x01(\x05R\x05total\x12\x1a\n" +
+	"\bfinished\x18\b \x01(\x05R\bfinished\x12/\n" +
+	"\x04rows\x18\t \x03(\v2\x1b.gctrpc.LLMBatchDecisionRowR\x04rows\"L\n" +
+	"\x1dLLMCancelBatchDecisionRequest\x12\x15\n" +
+	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x14\n" +
+	"\x05actor\x18\x02 \x01(\tR\x05actor\"i\n" +
+	"\x1eLLMCancelBatchDecisionResponse\x12\x15\n" +
+	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x12\n" +
+	"\x04done\x18\x02 \x01(\bR\x04done\x12\x1c\n" +
+	"\tcancelled\x18\x03 \x01(\x05R\tcancelled\"\xa5\x01\n" +
+	"\x11LLMScreenerMetric\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
+	"\x04kind\x18\x02 \x01(\tR\x04kind\x12\x12\n" +
+	"\x04tier\x18\x03 \x01(\tR\x04tier\x12\x12\n" +
+	"\x04unit\x18\x04 \x01(\tR\x04unit\x12 \n" +
+	"\vdescription\x18\x05 \x01(\tR\vdescription\x12\x1e\n" +
+	"\n" +
+	"categories\x18\x06 \x03(\tR\n" +
+	"categories\"\x1e\n" +
+	"\x1cLLMGetScreenerMetricsRequest\"\x96\x01\n" +
+	"\x1dLLMGetScreenerMetricsResponse\x123\n" +
+	"\ametrics\x18\x01 \x03(\v2\x19.gctrpc.LLMScreenerMetricR\ametrics\x12\x1b\n" +
+	"\tmax_limit\x18\x02 \x01(\x05R\bmaxLimit\x12#\n" +
+	"\rdefault_limit\x18\x03 \x01(\x05R\fdefaultLimit\"\x7f\n" +
+	"\x11LLMScreenCriteria\x12\x16\n" +
+	"\x06metric\x18\x01 \x01(\tR\x06metric\x12\x0e\n" +
+	"\x02op\x18\x02 \x01(\tR\x02op\x12\x14\n" +
+	"\x05value\x18\x03 \x01(\x01R\x05value\x12\x16\n" +
+	"\x06value2\x18\x04 \x01(\x01R\x06value2\x12\x14\n" +
+	"\x05state\x18\x05 \x01(\tR\x05state\";\n" +
+	"\rLLMScreenSort\x12\x16\n" +
+	"\x06metric\x18\x01 \x01(\tR\x06metric\x12\x12\n" +
+	"\x04desc\x18\x02 \x01(\bR\x04desc\"\xa7\x01\n" +
+	"\x13LLMRunScreenRequest\x125\n" +
+	"\bcriteria\x18\x01 \x03(\v2\x19.gctrpc.LLMScreenCriteriaR\bcriteria\x12)\n" +
+	"\x04sort\x18\x02 \x03(\v2\x15.gctrpc.LLMScreenSortR\x04sort\x12\x14\n" +
+	"\x05limit\x18\x03 \x01(\x05R\x05limit\x12\x18\n" +
+	"\ainclude\x18\x04 \x03(\tR\ainclude\"o\n" +
+	"\fLLMScreenRow\x12\x1b\n" +
+	"\tmarket_id\x18\x01 \x01(\tR\bmarketId\x12!\n" +
+	"\fnumbers_json\x18\x02 \x01(\tR\vnumbersJson\x12\x1f\n" +
+	"\vstates_json\x18\x03 \x01(\tR\n" +
+	"statesJson\"\xea\x01\n" +
+	"\x14LLMRunScreenResponse\x12(\n" +
+	"\x04rows\x18\x01 \x03(\v2\x14.gctrpc.LLMScreenRowR\x04rows\x12#\n" +
+	"\runiverse_size\x18\x02 \x01(\x05R\funiverseSize\x12\x18\n" +
+	"\amatched\x18\x03 \x01(\x05R\amatched\x12!\n" +
+	"\ffiltered_out\x18\x04 \x01(\x05R\vfilteredOut\x120\n" +
+	"\x14excluded_for_missing\x18\x05 \x01(\x05R\x12excludedForMissing\x12\x14\n" +
+	"\x05notes\x18\x06 \x03(\tR\x05notes\".\n" +
 	"\x1cLLMGetDecisionLineageRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\x90\x03\n" +
 	"\x0fLLMRiskEvidence\x12,\n" +
@@ -24044,25 +25228,7 @@ const file_rpc_proto_rawDesc = "" +
 	"\x19LLMGetRiskSwitchesRequest\"O\n" +
 	"\x1aLLMGetRiskSwitchesResponse\x121\n" +
 	"\bswitches\x18\x01 \x03(\v2\x15.gctrpc.LLMRiskSwitchR\bswitches\"\x15\n" +
-	"\x13LLMGetStatusRequest\"v\n" +
-	"\rLLMVaultEntry\x12\x10\n" +
-	"\x03ref\x18\x01 \x01(\tR\x03ref\x12\x12\n" +
-	"\x04kind\x18\x02 \x01(\tR\x04kind\x12 \n" +
-	"\vfingerprint\x18\x03 \x01(\tR\vfingerprint\x12\x1d\n" +
-	"\n" +
-	"created_at\x18\x04 \x01(\tR\tcreatedAt\"\x17\n" +
-	"\x15LLMVaultStatusRequest\"\x89\x01\n" +
-	"\x16LLMVaultStatusResponse\x12 \n" +
-	"\vinitialized\x18\x01 \x01(\bR\vinitialized\x12\x1c\n" +
-	"\tdirectory\x18\x02 \x01(\tR\tdirectory\x12/\n" +
-	"\aentries\x18\x03 \x03(\v2\x15.gctrpc.LLMVaultEntryR\aentries\"\x15\n" +
-	"\x13LLMVaultInitRequest\"F\n" +
-	"\x18LLMVaultAddSecretRequest\x12\x12\n" +
-	"\x04kind\x18\x01 \x01(\tR\x04kind\x12\x16\n" +
-	"\x06secret\x18\x02 \x01(\tR\x06secret\"O\n" +
-	"\x19LLMVaultAddSecretResponse\x12\x10\n" +
-	"\x03ref\x18\x01 \x01(\tR\x03ref\x12 \n" +
-	"\vfingerprint\x18\x02 \x01(\tR\vfingerprint\"\x1d\n" +
+	"\x13LLMGetStatusRequest\"\x1d\n" +
 	"\x1bLLMGetCoverageStatusRequest\"\xad\x06\n" +
 	"\x1cLLMGetCoverageStatusResponse\x12\x18\n" +
 	"\aenabled\x18\x01 \x01(\bR\aenabled\x12\x14\n" +
@@ -24085,7 +25251,15 @@ const file_rpc_proto_rawDesc = "" +
 	"lastReload\x120\n" +
 	"\x14increment_spacing_ms\x18\x11 \x01(\x03R\x12incrementSpacingMs\x12\x1d\n" +
 	"\n" +
-	"checked_at\x18\x12 \x01(\tR\tcheckedAt\"\xef\x01\n" +
+	"checked_at\x18\x12 \x01(\tR\tcheckedAt\"i\n" +
+	"\x1aLLMSetMarketTrackedRequest\x12\x1b\n" +
+	"\tmarket_id\x18\x01 \x01(\tR\bmarketId\x12\x18\n" +
+	"\atracked\x18\x02 \x01(\bR\atracked\x12\x14\n" +
+	"\x05actor\x18\x03 \x01(\tR\x05actor\"l\n" +
+	"\x1bLLMSetMarketTrackedResponse\x12\x1b\n" +
+	"\tmarket_id\x18\x01 \x01(\tR\bmarketId\x12\x18\n" +
+	"\atracked\x18\x02 \x01(\bR\atracked\x12\x16\n" +
+	"\x06status\x18\x03 \x01(\tR\x06status\"\xef\x01\n" +
 	"\n" +
 	"LLMHaltRow\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
@@ -24206,7 +25380,7 @@ const file_rpc_proto_rawDesc = "" +
 	"\x04mode\x18\x03 \x01(\tR\x04mode\x12.\n" +
 	"\x05gates\x18\x04 \x03(\v2\x18.gctrpc.LLMReadinessGateR\x05gates\x12\x1d\n" +
 	"\n" +
-	"checked_at\x18\x05 \x01(\tR\tcheckedAt\"\xd5\x06\n" +
+	"checked_at\x18\x05 \x01(\tR\tcheckedAt\"\xc8\x06\n" +
 	"\x13LLMProviderRevision\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
 	"\n" +
@@ -24215,8 +25389,7 @@ const file_rpc_proto_rawDesc = "" +
 	"revisionNo\x12\x12\n" +
 	"\x04kind\x18\x04 \x01(\tR\x04kind\x12\x19\n" +
 	"\bbase_url\x18\x05 \x01(\tR\abaseUrl\x12\x19\n" +
-	"\bmodel_id\x18\x06 \x01(\tR\amodelId\x12\x1e\n" +
-	"\vapi_key_ref\x18\a \x01(\tR\tapiKeyRef\x12.\n" +
+	"\bmodel_id\x18\x06 \x01(\tR\amodelId\x12.\n" +
 	"\x13api_key_fingerprint\x18\b \x01(\tR\x11apiKeyFingerprint\x12'\n" +
 	"\x0ftimeout_seconds\x18\t \x01(\x03R\x0etimeoutSeconds\x12*\n" +
 	"\x11max_output_tokens\x18\n" +
@@ -24234,7 +25407,7 @@ const file_rpc_proto_rawDesc = "" +
 	"created_at\x18\x14 \x01(\tR\tcreatedAt\x12\x1d\n" +
 	"\n" +
 	"created_by\x18\x15 \x01(\tR\tcreatedBy\x12#\n" +
-	"\rsuperseded_at\x18\x16 \x01(\tR\fsupersededAt\"\xb4\x02\n" +
+	"\rsuperseded_at\x18\x16 \x01(\tR\fsupersededAtJ\x04\b\a\x10\bR\vapi_key_ref\"\xb4\x02\n" +
 	"\x12LLMProviderProfile\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04kind\x18\x02 \x01(\tR\x04kind\x12!\n" +
@@ -24257,14 +25430,13 @@ const file_rpc_proto_rawDesc = "" +
 	"\fdisplay_name\x18\x02 \x01(\tR\vdisplayName\x12\x14\n" +
 	"\x05actor\x18\x03 \x01(\tR\x05actor\"X\n" +
 	" LLMCreateProviderProfileResponse\x124\n" +
-	"\aprofile\x18\x01 \x01(\v2\x1a.gctrpc.LLMProviderProfileR\aprofile\"\xc0\x05\n" +
+	"\aprofile\x18\x01 \x01(\v2\x1a.gctrpc.LLMProviderProfileR\aprofile\"\xa4\x05\n" +
 	"\x1fLLMUpdateProviderProfileRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05actor\x18\x02 \x01(\tR\x05actor\x12\x19\n" +
 	"\bbase_url\x18\x03 \x01(\tR\abaseUrl\x12\x19\n" +
-	"\bmodel_id\x18\x04 \x01(\tR\amodelId\x12\x1e\n" +
-	"\vapi_key_ref\x18\x05 \x01(\tR\tapiKeyRef\x12.\n" +
-	"\x13api_key_fingerprint\x18\x06 \x01(\tR\x11apiKeyFingerprint\x12'\n" +
+	"\bmodel_id\x18\x04 \x01(\tR\amodelId\x12\x17\n" +
+	"\aapi_key\x18\x05 \x01(\tR\x06apiKey\x12'\n" +
 	"\x0ftimeout_seconds\x18\a \x01(\x03R\x0etimeoutSeconds\x12*\n" +
 	"\x11max_output_tokens\x18\b \x01(\x03R\x0fmaxOutputTokens\x12&\n" +
 	"\x0fmax_tool_rounds\x18\t \x01(\x03R\rmaxToolRounds\x12$\n" +
@@ -24276,7 +25448,7 @@ const file_rpc_proto_rawDesc = "" +
 	"\x10daily_budget_usd\x18\x0e \x01(\tR\x0edailyBudgetUsd\x12.\n" +
 	"\x13reservation_cap_24h\x18\x0f \x01(\x03R\x11reservationCap24h\x128\n" +
 	"\x18allow_insecure_localhost\x18\x10 \x01(\bR\x16allowInsecureLocalhost\x12#\n" +
-	"\rproxy_address\x18\x11 \x01(\tR\fproxyAddress\"[\n" +
+	"\rproxy_address\x18\x11 \x01(\tR\fproxyAddressJ\x04\b\x06\x10\aR\x13api_key_fingerprint\"[\n" +
 	" LLMUpdateProviderProfileResponse\x127\n" +
 	"\brevision\x18\x01 \x01(\v2\x1b.gctrpc.LLMProviderRevisionR\brevision\"G\n" +
 	"\x1fLLMDeleteProviderProfileRequest\x12\x0e\n" +
@@ -24324,7 +25496,7 @@ const file_rpc_proto_rawDesc = "" +
 	" LLMSwitchActiveModelPairResponse\x12\x1d\n" +
 	"\n" +
 	"pair_epoch\x18\x01 \x01(\x03R\tpairEpoch\x12\x1c\n" +
-	"\treadiness\x18\x02 \x01(\tR\treadiness2\xb7\x9a\x01\n" +
+	"\treadiness\x18\x02 \x01(\tR\treadiness2\xa6\x9f\x01\n" +
 	"\x15GoCryptoTraderService\x12O\n" +
 	"\aGetInfo\x12\x16.gctrpc.GetInfoRequest\x1a\x17.gctrpc.GetInfoResponse\"\x13\x82\xd3\xe4\x93\x02\r\x12\v/v1/getinfo\x12g\n" +
 	"\rGetSubsystems\x12\x1c.gctrpc.GetSubsystemsRequest\x1a\x1d.gctrpc.GetSubsystemsResponse\"\x19\x82\xd3\xe4\x93\x02\x13\x12\x11/v1/getsubsystems\x12h\n" +
@@ -24452,21 +25624,28 @@ const file_rpc_proto_rawDesc = "" +
 	"\x11LLMCreateStrategy\x12 .gctrpc.LLMCreateStrategyRequest\x1a!.gctrpc.LLMCreateStrategyResponse\"\x1d\x82\xd3\xe4\x93\x02\x17:\x01*\"\x12/v1/llm/strategies\x12\x9d\x01\n" +
 	"\x17LLMListStrategyVersions\x12&.gctrpc.LLMListStrategyVersionsRequest\x1a'.gctrpc.LLMListStrategyVersionsResponse\"1\x82\xd3\xe4\x93\x02+\x12)/v1/llm/strategies/{strategy_id}/versions\x12\x95\x01\n" +
 	"\x14LLMSaveStrategyDraft\x12#.gctrpc.LLMSaveStrategyDraftRequest\x1a$.gctrpc.LLMSaveStrategyDraftResponse\"2\x82\xd3\xe4\x93\x02,:\x01*\"'/v1/llm/strategies/{strategy_id}/drafts\x12\xa8\x01\n" +
-	"\x16LLMGetStrategyApproval\x12%.gctrpc.LLMGetStrategyApprovalRequest\x1a&.gctrpc.LLMGetStrategyApprovalResponse\"?\x82\xd3\xe4\x93\x029\x127/v1/llm/strategyversions/{strategy_version_id}/approval\x12|\n" +
+	"\x16LLMGetStrategyApproval\x12%.gctrpc.LLMGetStrategyApprovalRequest\x1a&.gctrpc.LLMGetStrategyApprovalResponse\"?\x82\xd3\xe4\x93\x029\x127/v1/llm/strategyversions/{strategy_version_id}/approval\x12\x89\x01\n" +
+	"\x16LLMListActiveApprovals\x12%.gctrpc.LLMListActiveApprovalsRequest\x1a&.gctrpc.LLMListActiveApprovalsResponse\" \x82\xd3\xe4\x93\x02\x1a\x12\x18/v1/llm/approvals/active\x12|\n" +
 	"\x13LLMListMarketGrants\x12\".gctrpc.LLMListMarketGrantsRequest\x1a#.gctrpc.LLMListMarketGrantsResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/v1/llm/marketgrants\x12p\n" +
 	"\x0eLLMGrantMarket\x12\x1d.gctrpc.LLMGrantMarketRequest\x1a\x1e.gctrpc.LLMGrantMarketResponse\"\x1f\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/v1/llm/marketgrants\x12\x8e\x01\n" +
 	"\x14LLMRevokeMarketGrant\x12#.gctrpc.LLMRevokeMarketGrantRequest\x1a$.gctrpc.LLMRevokeMarketGrantResponse\"+\x82\xd3\xe4\x93\x02%:\x01*\" /v1/llm/marketgrants/{id}/revoke\x12y\n" +
 	"\x13LLMListDecisionRuns\x12\".gctrpc.LLMListDecisionRunsRequest\x1a#.gctrpc.LLMListDecisionRunsResponse\"\x19\x82\xd3\xe4\x93\x02\x13\x12\x11/v1/llm/decisions\x12x\n" +
 	"\x11LLMGetDecisionRun\x12 .gctrpc.LLMGetDecisionRunRequest\x1a!.gctrpc.LLMGetDecisionRunResponse\"\x1e\x82\xd3\xe4\x93\x02\x18\x12\x16/v1/llm/decisions/{id}\x12u\n" +
 	"\x12LLMTriggerAnalysis\x12!.gctrpc.LLMTriggerAnalysisRequest\x1a\x16.gctrpc.LLMDecisionRun\"$\x82\xd3\xe4\x93\x02\x1e:\x01*\"\x19/v1/llm/decisions/trigger\x12u\n" +
-	"\x12LLMPreviewDecision\x12!.gctrpc.LLMPreviewDecisionRequest\x1a\x16.gctrpc.LLMDecisionRun\"$\x82\xd3\xe4\x93\x02\x1e:\x01*\"\x19/v1/llm/decisions/preview\x12\x8c\x01\n" +
+	"\x12LLMPreviewDecision\x12!.gctrpc.LLMPreviewDecisionRequest\x1a\x16.gctrpc.LLMDecisionRun\"$\x82\xd3\xe4\x93\x02\x1e:\x01*\"\x19/v1/llm/decisions/preview\x12\x87\x01\n" +
+	"\x15LLMStartBatchDecision\x12$.gctrpc.LLMStartBatchDecisionRequest\x1a%.gctrpc.LLMStartBatchDecisionResponse\"!\x82\xd3\xe4\x93\x02\x1b:\x01*\"\x16/v1/llm/batchdecisions\x12\x87\x01\n" +
+	"\x13LLMGetBatchDecision\x12\".gctrpc.LLMGetBatchDecisionRequest\x1a#.gctrpc.LLMGetBatchDecisionResponse\"'\x82\xd3\xe4\x93\x02!\x12\x1f/v1/llm/batchdecisions/{job_id}\x12\x9a\x01\n" +
+	"\x16LLMCancelBatchDecision\x12%.gctrpc.LLMCancelBatchDecisionRequest\x1a&.gctrpc.LLMCancelBatchDecisionResponse\"1\x82\xd3\xe4\x93\x02+:\x01*\"&/v1/llm/batchdecisions/{job_id}/cancel\x12\x86\x01\n" +
+	"\x15LLMGetScreenerMetrics\x12$.gctrpc.LLMGetScreenerMetricsRequest\x1a%.gctrpc.LLMGetScreenerMetricsResponse\" \x82\xd3\xe4\x93\x02\x1a\x12\x18/v1/llm/screener/metrics\x12j\n" +
+	"\fLLMRunScreen\x12\x1b.gctrpc.LLMRunScreenRequest\x1a\x1c.gctrpc.LLMRunScreenResponse\"\x1f\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/v1/llm/screener/run\x12\x8c\x01\n" +
 	"\x15LLMGetDecisionLineage\x12$.gctrpc.LLMGetDecisionLineageRequest\x1a%.gctrpc.LLMGetDecisionLineageResponse\"&\x82\xd3\xe4\x93\x02 \x12\x1e/v1/llm/decisions/{id}/lineage\x12\x95\x01\n" +
 	"\x12LLMGetRiskEvidence\x12!.gctrpc.LLMGetRiskEvidenceRequest\x1a\".gctrpc.LLMGetRiskEvidenceResponse\"8\x82\xd3\xe4\x93\x022\x120/v1/llm/decisions/{decision_run_id}/riskevidence\x12r\n" +
 	"\x12LLMListAuditEvents\x12!.gctrpc.LLMListAuditEventsRequest\x1a\".gctrpc.LLMListAuditEventsResponse\"\x15\x82\xd3\xe4\x93\x02\x0f\x12\r/v1/llm/audit\x12e\n" +
 	"\rLLMGetMetrics\x12\x1c.gctrpc.LLMGetMetricsRequest\x1a\x1d.gctrpc.LLMGetMetricsResponse\"\x17\x82\xd3\xe4\x93\x02\x11\x12\x0f/v1/llm/metrics\x12k\n" +
 	"\x10LLMSetRiskSwitch\x12\x1f.gctrpc.LLMSetRiskSwitchRequest\x1a\x17.gctrpc.GenericResponse\"\x1d\x82\xd3\xe4\x93\x02\x17:\x01*\"\x12/v1/llm/riskswitch\x12y\n" +
 	"\x12LLMGetRiskSwitches\x12!.gctrpc.LLMGetRiskSwitchesRequest\x1a\".gctrpc.LLMGetRiskSwitchesResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/v1/llm/riskswitches\x12{\n" +
-	"\x14LLMGetCoverageStatus\x12#.gctrpc.LLMGetCoverageStatusRequest\x1a$.gctrpc.LLMGetCoverageStatusResponse\"\x18\x82\xd3\xe4\x93\x02\x12\x12\x10/v1/llm/coverage\x12`\n" +
+	"\x14LLMGetCoverageStatus\x12#.gctrpc.LLMGetCoverageStatusRequest\x1a$.gctrpc.LLMGetCoverageStatusResponse\"\x18\x82\xd3\xe4\x93\x02\x12\x12\x10/v1/llm/coverage\x12\x80\x01\n" +
+	"\x13LLMSetMarketTracked\x12\".gctrpc.LLMSetMarketTrackedRequest\x1a#.gctrpc.LLMSetMarketTrackedResponse\" \x82\xd3\xe4\x93\x02\x1a:\x01*\"\x15/v1/llm/markettracked\x12`\n" +
 	"\fLLMListHalts\x12\x1b.gctrpc.LLMListHaltsRequest\x1a\x1c.gctrpc.LLMListHaltsResponse\"\x15\x82\xd3\xe4\x93\x02\x0f\x12\r/v1/llm/halts\x12\\\n" +
 	"\n" +
 	"LLMSetHalt\x12\x19.gctrpc.LLMSetHaltRequest\x1a\x1a.gctrpc.LLMSetHaltResponse\"\x17\x82\xd3\xe4\x93\x02\x11:\x01*\"\f/v1/llm/halt\x12h\n" +
@@ -24476,10 +25655,7 @@ const file_rpc_proto_rawDesc = "" +
 	"\vLLMGetUsage\x12\x1a.gctrpc.LLMGetUsageRequest\x1a\x1b.gctrpc.LLMGetUsageResponse\"\x15\x82\xd3\xe4\x93\x02\x0f\x12\r/v1/llm/usage\x12s\n" +
 	"\x12LLMGetNotifyStatus\x12!.gctrpc.LLMGetNotifyStatusRequest\x1a\".gctrpc.LLMGetNotifyStatusResponse\"\x16\x82\xd3\xe4\x93\x02\x10\x12\x0e/v1/llm/notify\x12l\n" +
 	"\rLLMTestNotify\x12\x1c.gctrpc.LLMTestNotifyRequest\x1a\x1d.gctrpc.LLMTestNotifyResponse\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/v1/llm/notify/test\x12a\n" +
-	"\fLLMGetStatus\x12\x1b.gctrpc.LLMGetStatusRequest\x1a\x1c.gctrpc.LLMGetStatusResponse\"\x16\x82\xd3\xe4\x93\x02\x10\x12\x0e/v1/llm/status\x12f\n" +
-	"\x0eLLMVaultStatus\x12\x1d.gctrpc.LLMVaultStatusRequest\x1a\x1e.gctrpc.LLMVaultStatusResponse\"\x15\x82\xd3\xe4\x93\x02\x0f\x12\r/v1/llm/vault\x12`\n" +
-	"\fLLMVaultInit\x12\x1b.gctrpc.LLMVaultInitRequest\x1a\x17.gctrpc.GenericResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\"\x12/v1/llm/vault/init\x12z\n" +
-	"\x11LLMVaultAddSecret\x12 .gctrpc.LLMVaultAddSecretRequest\x1a!.gctrpc.LLMVaultAddSecretResponse\" \x82\xd3\xe4\x93\x02\x1a:\x01*\"\x15/v1/llm/vault/secrets\x12g\n" +
+	"\fLLMGetStatus\x12\x1b.gctrpc.LLMGetStatusRequest\x1a\x1c.gctrpc.LLMGetStatusResponse\"\x16\x82\xd3\xe4\x93\x02\x10\x12\x0e/v1/llm/status\x12g\n" +
 	"\x0fLLMGetReadiness\x12\x1b.gctrpc.LLMReadinessRequest\x1a\x1c.gctrpc.LLMReadinessResponse\"\x19\x82\xd3\xe4\x93\x02\x13\x12\x11/v1/llm/readiness\x12\x85\x01\n" +
 	"\x17LLMListProviderProfiles\x12&.gctrpc.LLMListProviderProfilesRequest\x1a'.gctrpc.LLMListProviderProfilesResponse\"\x19\x82\xd3\xe4\x93\x02\x13\x12\x11/v1/llm/providers\x12\x8b\x01\n" +
 	"\x18LLMCreateProviderProfile\x12'.gctrpc.LLMCreateProviderProfileRequest\x1a(.gctrpc.LLMCreateProviderProfileResponse\"\x1c\x82\xd3\xe4\x93\x02\x16:\x01*\"\x11/v1/llm/providers\x12\x90\x01\n" +
@@ -24501,7 +25677,7 @@ func file_rpc_proto_rawDescGZIP() []byte {
 	return file_rpc_proto_rawDescData
 }
 
-var file_rpc_proto_msgTypes = make([]protoimpl.MessageInfo, 345)
+var file_rpc_proto_msgTypes = make([]protoimpl.MessageInfo, 360)
 var file_rpc_proto_goTypes = []any{
 	(*GetInfoRequest)(nil),                            // 0: gctrpc.GetInfoRequest
 	(*GetInfoResponse)(nil),                           // 1: gctrpc.GetInfoResponse
@@ -24730,134 +25906,149 @@ var file_rpc_proto_goTypes = []any{
 	(*LLMEvidenceCard)(nil),                           // 224: gctrpc.LLMEvidenceCard
 	(*LLMSendMessageRequest)(nil),                     // 225: gctrpc.LLMSendMessageRequest
 	(*LLMSendMessageResponse)(nil),                    // 226: gctrpc.LLMSendMessageResponse
-	(*LLMChatStreamRequest)(nil),                      // 227: gctrpc.LLMChatStreamRequest
-	(*LLMChatStreamEvent)(nil),                        // 228: gctrpc.LLMChatStreamEvent
-	(*LLMStrategy)(nil),                               // 229: gctrpc.LLMStrategy
-	(*LLMListStrategiesRequest)(nil),                  // 230: gctrpc.LLMListStrategiesRequest
-	(*LLMListStrategiesResponse)(nil),                 // 231: gctrpc.LLMListStrategiesResponse
-	(*LLMStrategyVersion)(nil),                        // 232: gctrpc.LLMStrategyVersion
-	(*LLMGetStrategyVersionRequest)(nil),              // 233: gctrpc.LLMGetStrategyVersionRequest
-	(*LLMGetStrategyVersionResponse)(nil),             // 234: gctrpc.LLMGetStrategyVersionResponse
-	(*LLMExtractPolicyRequest)(nil),                   // 235: gctrpc.LLMExtractPolicyRequest
-	(*LLMExtractPolicyResponse)(nil),                  // 236: gctrpc.LLMExtractPolicyResponse
-	(*LLMFreezeStrategyVersionRequest)(nil),           // 237: gctrpc.LLMFreezeStrategyVersionRequest
-	(*LLMFreezeStrategyVersionResponse)(nil),          // 238: gctrpc.LLMFreezeStrategyVersionResponse
-	(*LLMApproveStrategyVersionRequest)(nil),          // 239: gctrpc.LLMApproveStrategyVersionRequest
-	(*LLMApproveStrategyVersionResponse)(nil),         // 240: gctrpc.LLMApproveStrategyVersionResponse
-	(*LLMRevokeApprovalRequest)(nil),                  // 241: gctrpc.LLMRevokeApprovalRequest
-	(*LLMPauseStrategyRequest)(nil),                   // 242: gctrpc.LLMPauseStrategyRequest
-	(*LLMResumeStrategyRequest)(nil),                  // 243: gctrpc.LLMResumeStrategyRequest
-	(*LLMDiffStrategyVersionsRequest)(nil),            // 244: gctrpc.LLMDiffStrategyVersionsRequest
-	(*LLMPolicyChange)(nil),                           // 245: gctrpc.LLMPolicyChange
-	(*LLMDiffStrategyVersionsResponse)(nil),           // 246: gctrpc.LLMDiffStrategyVersionsResponse
-	(*LLMCreateStrategyRequest)(nil),                  // 247: gctrpc.LLMCreateStrategyRequest
-	(*LLMCreateStrategyResponse)(nil),                 // 248: gctrpc.LLMCreateStrategyResponse
-	(*LLMListStrategyVersionsRequest)(nil),            // 249: gctrpc.LLMListStrategyVersionsRequest
-	(*LLMListStrategyVersionsResponse)(nil),           // 250: gctrpc.LLMListStrategyVersionsResponse
-	(*LLMSaveStrategyDraftRequest)(nil),               // 251: gctrpc.LLMSaveStrategyDraftRequest
-	(*LLMSaveStrategyDraftResponse)(nil),              // 252: gctrpc.LLMSaveStrategyDraftResponse
-	(*LLMGetStrategyApprovalRequest)(nil),             // 253: gctrpc.LLMGetStrategyApprovalRequest
-	(*LLMStrategyApproval)(nil),                       // 254: gctrpc.LLMStrategyApproval
-	(*LLMGetStrategyApprovalResponse)(nil),            // 255: gctrpc.LLMGetStrategyApprovalResponse
-	(*LLMListMarketGrantsRequest)(nil),                // 256: gctrpc.LLMListMarketGrantsRequest
-	(*LLMMarketGrant)(nil),                            // 257: gctrpc.LLMMarketGrant
-	(*LLMListMarketGrantsResponse)(nil),               // 258: gctrpc.LLMListMarketGrantsResponse
-	(*LLMGrantMarketRequest)(nil),                     // 259: gctrpc.LLMGrantMarketRequest
-	(*LLMGrantMarketResponse)(nil),                    // 260: gctrpc.LLMGrantMarketResponse
-	(*LLMRevokeMarketGrantRequest)(nil),               // 261: gctrpc.LLMRevokeMarketGrantRequest
-	(*LLMRevokeMarketGrantResponse)(nil),              // 262: gctrpc.LLMRevokeMarketGrantResponse
-	(*LLMDecisionRun)(nil),                            // 263: gctrpc.LLMDecisionRun
-	(*LLMListDecisionRunsRequest)(nil),                // 264: gctrpc.LLMListDecisionRunsRequest
-	(*LLMListDecisionRunsResponse)(nil),               // 265: gctrpc.LLMListDecisionRunsResponse
-	(*LLMGetDecisionRunRequest)(nil),                  // 266: gctrpc.LLMGetDecisionRunRequest
-	(*LLMGetDecisionRunResponse)(nil),                 // 267: gctrpc.LLMGetDecisionRunResponse
-	(*LLMTriggerAnalysisRequest)(nil),                 // 268: gctrpc.LLMTriggerAnalysisRequest
-	(*LLMPreviewDecisionRequest)(nil),                 // 269: gctrpc.LLMPreviewDecisionRequest
-	(*LLMGetDecisionLineageRequest)(nil),              // 270: gctrpc.LLMGetDecisionLineageRequest
-	(*LLMRiskEvidence)(nil),                           // 271: gctrpc.LLMRiskEvidence
-	(*LLMGetDecisionLineageResponse)(nil),             // 272: gctrpc.LLMGetDecisionLineageResponse
-	(*LLMAuditEvent)(nil),                             // 273: gctrpc.LLMAuditEvent
-	(*LLMListAuditEventsRequest)(nil),                 // 274: gctrpc.LLMListAuditEventsRequest
-	(*LLMListAuditEventsResponse)(nil),                // 275: gctrpc.LLMListAuditEventsResponse
-	(*LLMGetRiskEvidenceRequest)(nil),                 // 276: gctrpc.LLMGetRiskEvidenceRequest
-	(*LLMGetRiskEvidenceResponse)(nil),                // 277: gctrpc.LLMGetRiskEvidenceResponse
-	(*LLMGetMetricsRequest)(nil),                      // 278: gctrpc.LLMGetMetricsRequest
-	(*LLMGetMetricsResponse)(nil),                     // 279: gctrpc.LLMGetMetricsResponse
-	(*LLMSetRiskSwitchRequest)(nil),                   // 280: gctrpc.LLMSetRiskSwitchRequest
-	(*LLMRiskSwitch)(nil),                             // 281: gctrpc.LLMRiskSwitch
-	(*LLMGetRiskSwitchesRequest)(nil),                 // 282: gctrpc.LLMGetRiskSwitchesRequest
-	(*LLMGetRiskSwitchesResponse)(nil),                // 283: gctrpc.LLMGetRiskSwitchesResponse
-	(*LLMGetStatusRequest)(nil),                       // 284: gctrpc.LLMGetStatusRequest
-	(*LLMVaultEntry)(nil),                             // 285: gctrpc.LLMVaultEntry
-	(*LLMVaultStatusRequest)(nil),                     // 286: gctrpc.LLMVaultStatusRequest
-	(*LLMVaultStatusResponse)(nil),                    // 287: gctrpc.LLMVaultStatusResponse
-	(*LLMVaultInitRequest)(nil),                       // 288: gctrpc.LLMVaultInitRequest
-	(*LLMVaultAddSecretRequest)(nil),                  // 289: gctrpc.LLMVaultAddSecretRequest
-	(*LLMVaultAddSecretResponse)(nil),                 // 290: gctrpc.LLMVaultAddSecretResponse
-	(*LLMGetCoverageStatusRequest)(nil),               // 291: gctrpc.LLMGetCoverageStatusRequest
-	(*LLMGetCoverageStatusResponse)(nil),              // 292: gctrpc.LLMGetCoverageStatusResponse
-	(*LLMHaltRow)(nil),                                // 293: gctrpc.LLMHaltRow
-	(*LLMListHaltsRequest)(nil),                       // 294: gctrpc.LLMListHaltsRequest
-	(*LLMListHaltsResponse)(nil),                      // 295: gctrpc.LLMListHaltsResponse
-	(*LLMSetHaltRequest)(nil),                         // 296: gctrpc.LLMSetHaltRequest
-	(*LLMSetHaltResponse)(nil),                        // 297: gctrpc.LLMSetHaltResponse
-	(*LLMClearHaltRequest)(nil),                       // 298: gctrpc.LLMClearHaltRequest
-	(*LLMSetRunModeRequest)(nil),                      // 299: gctrpc.LLMSetRunModeRequest
-	(*LLMPositionDelta)(nil),                          // 300: gctrpc.LLMPositionDelta
-	(*LLMReconcileRequest)(nil),                       // 301: gctrpc.LLMReconcileRequest
-	(*LLMReconcileResponse)(nil),                      // 302: gctrpc.LLMReconcileResponse
-	(*LLMGetUsageRequest)(nil),                        // 303: gctrpc.LLMGetUsageRequest
-	(*LLMUsageLine)(nil),                              // 304: gctrpc.LLMUsageLine
-	(*LLMGetUsageResponse)(nil),                       // 305: gctrpc.LLMGetUsageResponse
-	(*LLMNotifyChannel)(nil),                          // 306: gctrpc.LLMNotifyChannel
-	(*LLMGetNotifyStatusRequest)(nil),                 // 307: gctrpc.LLMGetNotifyStatusRequest
-	(*LLMGetNotifyStatusResponse)(nil),                // 308: gctrpc.LLMGetNotifyStatusResponse
-	(*LLMTestNotifyRequest)(nil),                      // 309: gctrpc.LLMTestNotifyRequest
-	(*LLMTestNotifyResponse)(nil),                     // 310: gctrpc.LLMTestNotifyResponse
-	(*LLMGetStatusResponse)(nil),                      // 311: gctrpc.LLMGetStatusResponse
-	(*LLMReadinessRequest)(nil),                       // 312: gctrpc.LLMReadinessRequest
-	(*LLMReadinessGate)(nil),                          // 313: gctrpc.LLMReadinessGate
-	(*LLMReadinessResponse)(nil),                      // 314: gctrpc.LLMReadinessResponse
-	(*LLMProviderRevision)(nil),                       // 315: gctrpc.LLMProviderRevision
-	(*LLMProviderProfile)(nil),                        // 316: gctrpc.LLMProviderProfile
-	(*LLMListProviderProfilesRequest)(nil),            // 317: gctrpc.LLMListProviderProfilesRequest
-	(*LLMListProviderProfilesResponse)(nil),           // 318: gctrpc.LLMListProviderProfilesResponse
-	(*LLMCreateProviderProfileRequest)(nil),           // 319: gctrpc.LLMCreateProviderProfileRequest
-	(*LLMCreateProviderProfileResponse)(nil),          // 320: gctrpc.LLMCreateProviderProfileResponse
-	(*LLMUpdateProviderProfileRequest)(nil),           // 321: gctrpc.LLMUpdateProviderProfileRequest
-	(*LLMUpdateProviderProfileResponse)(nil),          // 322: gctrpc.LLMUpdateProviderProfileResponse
-	(*LLMDeleteProviderProfileRequest)(nil),           // 323: gctrpc.LLMDeleteProviderProfileRequest
-	(*LLMProbeLayerResult)(nil),                       // 324: gctrpc.LLMProbeLayerResult
-	(*LLMTestProviderProfileRequest)(nil),             // 325: gctrpc.LLMTestProviderProfileRequest
-	(*LLMTestProviderProfileResponse)(nil),            // 326: gctrpc.LLMTestProviderProfileResponse
-	(*LLMGetActiveModelPairRequest)(nil),              // 327: gctrpc.LLMGetActiveModelPairRequest
-	(*LLMGetActiveModelPairResponse)(nil),             // 328: gctrpc.LLMGetActiveModelPairResponse
-	(*LLMSwitchActiveModelPairRequest)(nil),           // 329: gctrpc.LLMSwitchActiveModelPairRequest
-	(*LLMSwitchActiveModelPairResponse)(nil),          // 330: gctrpc.LLMSwitchActiveModelPairResponse
-	nil,                                               // 331: gctrpc.GetInfoResponse.SubsystemStatusEntry
-	nil,                                               // 332: gctrpc.GetInfoResponse.RpcEndpointsEntry
-	nil,                                               // 333: gctrpc.GetCommunicationRelayersResponse.CommunicationRelayersEntry
-	nil,                                               // 334: gctrpc.GetSubsystemsResponse.SubsystemsStatusEntry
-	nil,                                               // 335: gctrpc.GetRPCEndpointsResponse.EndpointsEntry
-	nil,                                               // 336: gctrpc.GetExchangeOTPsResponse.OtpCodesEntry
-	nil,                                               // 337: gctrpc.GetExchangeInfoResponse.SupportedAssetsEntry
-	nil,                                               // 338: gctrpc.OnlineCoins.CoinsEntry
-	nil,                                               // 339: gctrpc.GetPortfolioSummaryResponse.CoinsOfflineSummaryEntry
-	nil,                                               // 340: gctrpc.GetPortfolioSummaryResponse.CoinsOnlineSummaryEntry
-	nil,                                               // 341: gctrpc.Orders.OrderStatusEntry
-	nil,                                               // 342: gctrpc.GetCryptocurrencyDepositAddressesResponse.AddressesEntry
-	nil,                                               // 343: gctrpc.GetExchangePairsResponse.SupportedAssetsEntry
-	nil,                                               // 344: gctrpc.GetTechnicalAnalysisResponse.SignalsEntry
-	(*timestamppb.Timestamp)(nil),                     // 345: google.protobuf.Timestamp
+	(*LLMActionProposal)(nil),                         // 227: gctrpc.LLMActionProposal
+	(*LLMChatStreamRequest)(nil),                      // 228: gctrpc.LLMChatStreamRequest
+	(*LLMChatStreamEvent)(nil),                        // 229: gctrpc.LLMChatStreamEvent
+	(*LLMToolProgress)(nil),                           // 230: gctrpc.LLMToolProgress
+	(*LLMStrategy)(nil),                               // 231: gctrpc.LLMStrategy
+	(*LLMListStrategiesRequest)(nil),                  // 232: gctrpc.LLMListStrategiesRequest
+	(*LLMListStrategiesResponse)(nil),                 // 233: gctrpc.LLMListStrategiesResponse
+	(*LLMStrategyVersion)(nil),                        // 234: gctrpc.LLMStrategyVersion
+	(*LLMGetStrategyVersionRequest)(nil),              // 235: gctrpc.LLMGetStrategyVersionRequest
+	(*LLMGetStrategyVersionResponse)(nil),             // 236: gctrpc.LLMGetStrategyVersionResponse
+	(*LLMExtractPolicyRequest)(nil),                   // 237: gctrpc.LLMExtractPolicyRequest
+	(*LLMExtractPolicyResponse)(nil),                  // 238: gctrpc.LLMExtractPolicyResponse
+	(*LLMFreezeStrategyVersionRequest)(nil),           // 239: gctrpc.LLMFreezeStrategyVersionRequest
+	(*LLMFreezeStrategyVersionResponse)(nil),          // 240: gctrpc.LLMFreezeStrategyVersionResponse
+	(*LLMApproveStrategyVersionRequest)(nil),          // 241: gctrpc.LLMApproveStrategyVersionRequest
+	(*LLMApproveStrategyVersionResponse)(nil),         // 242: gctrpc.LLMApproveStrategyVersionResponse
+	(*LLMRevokeApprovalRequest)(nil),                  // 243: gctrpc.LLMRevokeApprovalRequest
+	(*LLMPauseStrategyRequest)(nil),                   // 244: gctrpc.LLMPauseStrategyRequest
+	(*LLMResumeStrategyRequest)(nil),                  // 245: gctrpc.LLMResumeStrategyRequest
+	(*LLMDiffStrategyVersionsRequest)(nil),            // 246: gctrpc.LLMDiffStrategyVersionsRequest
+	(*LLMPolicyChange)(nil),                           // 247: gctrpc.LLMPolicyChange
+	(*LLMDiffStrategyVersionsResponse)(nil),           // 248: gctrpc.LLMDiffStrategyVersionsResponse
+	(*LLMCreateStrategyRequest)(nil),                  // 249: gctrpc.LLMCreateStrategyRequest
+	(*LLMCreateStrategyResponse)(nil),                 // 250: gctrpc.LLMCreateStrategyResponse
+	(*LLMListStrategyVersionsRequest)(nil),            // 251: gctrpc.LLMListStrategyVersionsRequest
+	(*LLMListStrategyVersionsResponse)(nil),           // 252: gctrpc.LLMListStrategyVersionsResponse
+	(*LLMSaveStrategyDraftRequest)(nil),               // 253: gctrpc.LLMSaveStrategyDraftRequest
+	(*LLMSaveStrategyDraftResponse)(nil),              // 254: gctrpc.LLMSaveStrategyDraftResponse
+	(*LLMGetStrategyApprovalRequest)(nil),             // 255: gctrpc.LLMGetStrategyApprovalRequest
+	(*LLMStrategyApproval)(nil),                       // 256: gctrpc.LLMStrategyApproval
+	(*LLMGetStrategyApprovalResponse)(nil),            // 257: gctrpc.LLMGetStrategyApprovalResponse
+	(*LLMListActiveApprovalsRequest)(nil),             // 258: gctrpc.LLMListActiveApprovalsRequest
+	(*LLMListActiveApprovalsResponse)(nil),            // 259: gctrpc.LLMListActiveApprovalsResponse
+	(*LLMListMarketGrantsRequest)(nil),                // 260: gctrpc.LLMListMarketGrantsRequest
+	(*LLMMarketGrant)(nil),                            // 261: gctrpc.LLMMarketGrant
+	(*LLMListMarketGrantsResponse)(nil),               // 262: gctrpc.LLMListMarketGrantsResponse
+	(*LLMGrantMarketRequest)(nil),                     // 263: gctrpc.LLMGrantMarketRequest
+	(*LLMGrantMarketResponse)(nil),                    // 264: gctrpc.LLMGrantMarketResponse
+	(*LLMRevokeMarketGrantRequest)(nil),               // 265: gctrpc.LLMRevokeMarketGrantRequest
+	(*LLMRevokeMarketGrantResponse)(nil),              // 266: gctrpc.LLMRevokeMarketGrantResponse
+	(*LLMDecisionRun)(nil),                            // 267: gctrpc.LLMDecisionRun
+	(*LLMListDecisionRunsRequest)(nil),                // 268: gctrpc.LLMListDecisionRunsRequest
+	(*LLMListDecisionRunsResponse)(nil),               // 269: gctrpc.LLMListDecisionRunsResponse
+	(*LLMGetDecisionRunRequest)(nil),                  // 270: gctrpc.LLMGetDecisionRunRequest
+	(*LLMGetDecisionRunResponse)(nil),                 // 271: gctrpc.LLMGetDecisionRunResponse
+	(*LLMTriggerAnalysisRequest)(nil),                 // 272: gctrpc.LLMTriggerAnalysisRequest
+	(*LLMPreviewDecisionRequest)(nil),                 // 273: gctrpc.LLMPreviewDecisionRequest
+	(*LLMBatchDecisionRow)(nil),                       // 274: gctrpc.LLMBatchDecisionRow
+	(*LLMStartBatchDecisionRequest)(nil),              // 275: gctrpc.LLMStartBatchDecisionRequest
+	(*LLMStartBatchDecisionResponse)(nil),             // 276: gctrpc.LLMStartBatchDecisionResponse
+	(*LLMGetBatchDecisionRequest)(nil),                // 277: gctrpc.LLMGetBatchDecisionRequest
+	(*LLMGetBatchDecisionResponse)(nil),               // 278: gctrpc.LLMGetBatchDecisionResponse
+	(*LLMCancelBatchDecisionRequest)(nil),             // 279: gctrpc.LLMCancelBatchDecisionRequest
+	(*LLMCancelBatchDecisionResponse)(nil),            // 280: gctrpc.LLMCancelBatchDecisionResponse
+	(*LLMScreenerMetric)(nil),                         // 281: gctrpc.LLMScreenerMetric
+	(*LLMGetScreenerMetricsRequest)(nil),              // 282: gctrpc.LLMGetScreenerMetricsRequest
+	(*LLMGetScreenerMetricsResponse)(nil),             // 283: gctrpc.LLMGetScreenerMetricsResponse
+	(*LLMScreenCriteria)(nil),                         // 284: gctrpc.LLMScreenCriteria
+	(*LLMScreenSort)(nil),                             // 285: gctrpc.LLMScreenSort
+	(*LLMRunScreenRequest)(nil),                       // 286: gctrpc.LLMRunScreenRequest
+	(*LLMScreenRow)(nil),                              // 287: gctrpc.LLMScreenRow
+	(*LLMRunScreenResponse)(nil),                      // 288: gctrpc.LLMRunScreenResponse
+	(*LLMGetDecisionLineageRequest)(nil),              // 289: gctrpc.LLMGetDecisionLineageRequest
+	(*LLMRiskEvidence)(nil),                           // 290: gctrpc.LLMRiskEvidence
+	(*LLMGetDecisionLineageResponse)(nil),             // 291: gctrpc.LLMGetDecisionLineageResponse
+	(*LLMAuditEvent)(nil),                             // 292: gctrpc.LLMAuditEvent
+	(*LLMListAuditEventsRequest)(nil),                 // 293: gctrpc.LLMListAuditEventsRequest
+	(*LLMListAuditEventsResponse)(nil),                // 294: gctrpc.LLMListAuditEventsResponse
+	(*LLMGetRiskEvidenceRequest)(nil),                 // 295: gctrpc.LLMGetRiskEvidenceRequest
+	(*LLMGetRiskEvidenceResponse)(nil),                // 296: gctrpc.LLMGetRiskEvidenceResponse
+	(*LLMGetMetricsRequest)(nil),                      // 297: gctrpc.LLMGetMetricsRequest
+	(*LLMGetMetricsResponse)(nil),                     // 298: gctrpc.LLMGetMetricsResponse
+	(*LLMSetRiskSwitchRequest)(nil),                   // 299: gctrpc.LLMSetRiskSwitchRequest
+	(*LLMRiskSwitch)(nil),                             // 300: gctrpc.LLMRiskSwitch
+	(*LLMGetRiskSwitchesRequest)(nil),                 // 301: gctrpc.LLMGetRiskSwitchesRequest
+	(*LLMGetRiskSwitchesResponse)(nil),                // 302: gctrpc.LLMGetRiskSwitchesResponse
+	(*LLMGetStatusRequest)(nil),                       // 303: gctrpc.LLMGetStatusRequest
+	(*LLMGetCoverageStatusRequest)(nil),               // 304: gctrpc.LLMGetCoverageStatusRequest
+	(*LLMGetCoverageStatusResponse)(nil),              // 305: gctrpc.LLMGetCoverageStatusResponse
+	(*LLMSetMarketTrackedRequest)(nil),                // 306: gctrpc.LLMSetMarketTrackedRequest
+	(*LLMSetMarketTrackedResponse)(nil),               // 307: gctrpc.LLMSetMarketTrackedResponse
+	(*LLMHaltRow)(nil),                                // 308: gctrpc.LLMHaltRow
+	(*LLMListHaltsRequest)(nil),                       // 309: gctrpc.LLMListHaltsRequest
+	(*LLMListHaltsResponse)(nil),                      // 310: gctrpc.LLMListHaltsResponse
+	(*LLMSetHaltRequest)(nil),                         // 311: gctrpc.LLMSetHaltRequest
+	(*LLMSetHaltResponse)(nil),                        // 312: gctrpc.LLMSetHaltResponse
+	(*LLMClearHaltRequest)(nil),                       // 313: gctrpc.LLMClearHaltRequest
+	(*LLMSetRunModeRequest)(nil),                      // 314: gctrpc.LLMSetRunModeRequest
+	(*LLMPositionDelta)(nil),                          // 315: gctrpc.LLMPositionDelta
+	(*LLMReconcileRequest)(nil),                       // 316: gctrpc.LLMReconcileRequest
+	(*LLMReconcileResponse)(nil),                      // 317: gctrpc.LLMReconcileResponse
+	(*LLMGetUsageRequest)(nil),                        // 318: gctrpc.LLMGetUsageRequest
+	(*LLMUsageLine)(nil),                              // 319: gctrpc.LLMUsageLine
+	(*LLMGetUsageResponse)(nil),                       // 320: gctrpc.LLMGetUsageResponse
+	(*LLMNotifyChannel)(nil),                          // 321: gctrpc.LLMNotifyChannel
+	(*LLMGetNotifyStatusRequest)(nil),                 // 322: gctrpc.LLMGetNotifyStatusRequest
+	(*LLMGetNotifyStatusResponse)(nil),                // 323: gctrpc.LLMGetNotifyStatusResponse
+	(*LLMTestNotifyRequest)(nil),                      // 324: gctrpc.LLMTestNotifyRequest
+	(*LLMTestNotifyResponse)(nil),                     // 325: gctrpc.LLMTestNotifyResponse
+	(*LLMGetStatusResponse)(nil),                      // 326: gctrpc.LLMGetStatusResponse
+	(*LLMReadinessRequest)(nil),                       // 327: gctrpc.LLMReadinessRequest
+	(*LLMReadinessGate)(nil),                          // 328: gctrpc.LLMReadinessGate
+	(*LLMReadinessResponse)(nil),                      // 329: gctrpc.LLMReadinessResponse
+	(*LLMProviderRevision)(nil),                       // 330: gctrpc.LLMProviderRevision
+	(*LLMProviderProfile)(nil),                        // 331: gctrpc.LLMProviderProfile
+	(*LLMListProviderProfilesRequest)(nil),            // 332: gctrpc.LLMListProviderProfilesRequest
+	(*LLMListProviderProfilesResponse)(nil),           // 333: gctrpc.LLMListProviderProfilesResponse
+	(*LLMCreateProviderProfileRequest)(nil),           // 334: gctrpc.LLMCreateProviderProfileRequest
+	(*LLMCreateProviderProfileResponse)(nil),          // 335: gctrpc.LLMCreateProviderProfileResponse
+	(*LLMUpdateProviderProfileRequest)(nil),           // 336: gctrpc.LLMUpdateProviderProfileRequest
+	(*LLMUpdateProviderProfileResponse)(nil),          // 337: gctrpc.LLMUpdateProviderProfileResponse
+	(*LLMDeleteProviderProfileRequest)(nil),           // 338: gctrpc.LLMDeleteProviderProfileRequest
+	(*LLMProbeLayerResult)(nil),                       // 339: gctrpc.LLMProbeLayerResult
+	(*LLMTestProviderProfileRequest)(nil),             // 340: gctrpc.LLMTestProviderProfileRequest
+	(*LLMTestProviderProfileResponse)(nil),            // 341: gctrpc.LLMTestProviderProfileResponse
+	(*LLMGetActiveModelPairRequest)(nil),              // 342: gctrpc.LLMGetActiveModelPairRequest
+	(*LLMGetActiveModelPairResponse)(nil),             // 343: gctrpc.LLMGetActiveModelPairResponse
+	(*LLMSwitchActiveModelPairRequest)(nil),           // 344: gctrpc.LLMSwitchActiveModelPairRequest
+	(*LLMSwitchActiveModelPairResponse)(nil),          // 345: gctrpc.LLMSwitchActiveModelPairResponse
+	nil,                                               // 346: gctrpc.GetInfoResponse.SubsystemStatusEntry
+	nil,                                               // 347: gctrpc.GetInfoResponse.RpcEndpointsEntry
+	nil,                                               // 348: gctrpc.GetCommunicationRelayersResponse.CommunicationRelayersEntry
+	nil,                                               // 349: gctrpc.GetSubsystemsResponse.SubsystemsStatusEntry
+	nil,                                               // 350: gctrpc.GetRPCEndpointsResponse.EndpointsEntry
+	nil,                                               // 351: gctrpc.GetExchangeOTPsResponse.OtpCodesEntry
+	nil,                                               // 352: gctrpc.GetExchangeInfoResponse.SupportedAssetsEntry
+	nil,                                               // 353: gctrpc.OnlineCoins.CoinsEntry
+	nil,                                               // 354: gctrpc.GetPortfolioSummaryResponse.CoinsOfflineSummaryEntry
+	nil,                                               // 355: gctrpc.GetPortfolioSummaryResponse.CoinsOnlineSummaryEntry
+	nil,                                               // 356: gctrpc.Orders.OrderStatusEntry
+	nil,                                               // 357: gctrpc.GetCryptocurrencyDepositAddressesResponse.AddressesEntry
+	nil,                                               // 358: gctrpc.GetExchangePairsResponse.SupportedAssetsEntry
+	nil,                                               // 359: gctrpc.GetTechnicalAnalysisResponse.SignalsEntry
+	(*timestamppb.Timestamp)(nil),                     // 360: google.protobuf.Timestamp
 }
 var file_rpc_proto_depIdxs = []int32{
-	331, // 0: gctrpc.GetInfoResponse.subsystem_status:type_name -> gctrpc.GetInfoResponse.SubsystemStatusEntry
-	332, // 1: gctrpc.GetInfoResponse.rpc_endpoints:type_name -> gctrpc.GetInfoResponse.RpcEndpointsEntry
-	333, // 2: gctrpc.GetCommunicationRelayersResponse.communication_relayers:type_name -> gctrpc.GetCommunicationRelayersResponse.CommunicationRelayersEntry
-	334, // 3: gctrpc.GetSubsystemsResponse.subsystems_status:type_name -> gctrpc.GetSubsystemsResponse.SubsystemsStatusEntry
-	335, // 4: gctrpc.GetRPCEndpointsResponse.endpoints:type_name -> gctrpc.GetRPCEndpointsResponse.EndpointsEntry
-	336, // 5: gctrpc.GetExchangeOTPsResponse.otp_codes:type_name -> gctrpc.GetExchangeOTPsResponse.OtpCodesEntry
-	337, // 6: gctrpc.GetExchangeInfoResponse.supported_assets:type_name -> gctrpc.GetExchangeInfoResponse.SupportedAssetsEntry
+	346, // 0: gctrpc.GetInfoResponse.subsystem_status:type_name -> gctrpc.GetInfoResponse.SubsystemStatusEntry
+	347, // 1: gctrpc.GetInfoResponse.rpc_endpoints:type_name -> gctrpc.GetInfoResponse.RpcEndpointsEntry
+	348, // 2: gctrpc.GetCommunicationRelayersResponse.communication_relayers:type_name -> gctrpc.GetCommunicationRelayersResponse.CommunicationRelayersEntry
+	349, // 3: gctrpc.GetSubsystemsResponse.subsystems_status:type_name -> gctrpc.GetSubsystemsResponse.SubsystemsStatusEntry
+	350, // 4: gctrpc.GetRPCEndpointsResponse.endpoints:type_name -> gctrpc.GetRPCEndpointsResponse.EndpointsEntry
+	351, // 5: gctrpc.GetExchangeOTPsResponse.otp_codes:type_name -> gctrpc.GetExchangeOTPsResponse.OtpCodesEntry
+	352, // 6: gctrpc.GetExchangeInfoResponse.supported_assets:type_name -> gctrpc.GetExchangeInfoResponse.SupportedAssetsEntry
 	21,  // 7: gctrpc.GetTickerRequest.pair:type_name -> gctrpc.CurrencyPair
 	21,  // 8: gctrpc.TickerResponse.pair:type_name -> gctrpc.CurrencyPair
 	22,  // 9: gctrpc.Tickers.tickers:type_name -> gctrpc.TickerResponse
@@ -24869,16 +26060,16 @@ var file_rpc_proto_depIdxs = []int32{
 	28,  // 15: gctrpc.Orderbooks.orderbooks:type_name -> gctrpc.OrderbookResponse
 	30,  // 16: gctrpc.GetOrderbooksResponse.orderbooks:type_name -> gctrpc.Orderbooks
 	34,  // 17: gctrpc.Account.currencies:type_name -> gctrpc.AccountCurrencyInfo
-	345, // 18: gctrpc.AccountCurrencyInfo.updated_at:type_name -> google.protobuf.Timestamp
+	360, // 18: gctrpc.AccountCurrencyInfo.updated_at:type_name -> google.protobuf.Timestamp
 	33,  // 19: gctrpc.GetAccountBalancesResponse.accounts:type_name -> gctrpc.Account
 	38,  // 20: gctrpc.GetPortfolioResponse.portfolio:type_name -> gctrpc.PortfolioAddress
 	43,  // 21: gctrpc.OfflineCoins.addresses:type_name -> gctrpc.OfflineCoinSummary
-	338, // 22: gctrpc.OnlineCoins.coins:type_name -> gctrpc.OnlineCoins.CoinsEntry
+	353, // 22: gctrpc.OnlineCoins.coins:type_name -> gctrpc.OnlineCoins.CoinsEntry
 	42,  // 23: gctrpc.GetPortfolioSummaryResponse.coin_totals:type_name -> gctrpc.Coin
 	42,  // 24: gctrpc.GetPortfolioSummaryResponse.coins_offline:type_name -> gctrpc.Coin
-	339, // 25: gctrpc.GetPortfolioSummaryResponse.coins_offline_summary:type_name -> gctrpc.GetPortfolioSummaryResponse.CoinsOfflineSummaryEntry
+	354, // 25: gctrpc.GetPortfolioSummaryResponse.coins_offline_summary:type_name -> gctrpc.GetPortfolioSummaryResponse.CoinsOfflineSummaryEntry
 	42,  // 26: gctrpc.GetPortfolioSummaryResponse.coins_online:type_name -> gctrpc.Coin
-	340, // 27: gctrpc.GetPortfolioSummaryResponse.coins_online_summary:type_name -> gctrpc.GetPortfolioSummaryResponse.CoinsOnlineSummaryEntry
+	355, // 27: gctrpc.GetPortfolioSummaryResponse.coins_online_summary:type_name -> gctrpc.GetPortfolioSummaryResponse.CoinsOnlineSummaryEntry
 	51,  // 28: gctrpc.GetForexProvidersResponse.forex_providers:type_name -> gctrpc.ForexProvider
 	54,  // 29: gctrpc.GetForexRatesResponse.forex_rates:type_name -> gctrpc.ForexRatesConversion
 	57,  // 30: gctrpc.OrderDetails.trades:type_name -> gctrpc.TradeHistory
@@ -24892,7 +26083,7 @@ var file_rpc_proto_depIdxs = []int32{
 	21,  // 38: gctrpc.WhaleBombRequest.pair:type_name -> gctrpc.CurrencyPair
 	21,  // 39: gctrpc.CancelOrderRequest.pair:type_name -> gctrpc.CurrencyPair
 	21,  // 40: gctrpc.CancelBatchOrdersRequest.pair:type_name -> gctrpc.CurrencyPair
-	341, // 41: gctrpc.Orders.order_status:type_name -> gctrpc.Orders.OrderStatusEntry
+	356, // 41: gctrpc.Orders.order_status:type_name -> gctrpc.Orders.OrderStatusEntry
 	69,  // 42: gctrpc.CancelBatchOrdersResponse.orders:type_name -> gctrpc.Orders
 	69,  // 43: gctrpc.CancelAllOrdersResponse.orders:type_name -> gctrpc.Orders
 	74,  // 44: gctrpc.GetEventsResponse.condition_params:type_name -> gctrpc.ConditionParams
@@ -24900,16 +26091,16 @@ var file_rpc_proto_depIdxs = []int32{
 	74,  // 46: gctrpc.AddEventRequest.condition_params:type_name -> gctrpc.ConditionParams
 	21,  // 47: gctrpc.AddEventRequest.pair:type_name -> gctrpc.CurrencyPair
 	80,  // 48: gctrpc.DepositAddresses.addresses:type_name -> gctrpc.DepositAddress
-	342, // 49: gctrpc.GetCryptocurrencyDepositAddressesResponse.addresses:type_name -> gctrpc.GetCryptocurrencyDepositAddressesResponse.AddressesEntry
+	357, // 49: gctrpc.GetCryptocurrencyDepositAddressesResponse.addresses:type_name -> gctrpc.GetCryptocurrencyDepositAddressesResponse.AddressesEntry
 	95,  // 50: gctrpc.WithdrawalEventByIDResponse.event:type_name -> gctrpc.WithdrawalEventResponse
 	95,  // 51: gctrpc.WithdrawalEventsByExchangeResponse.event:type_name -> gctrpc.WithdrawalEventResponse
 	96,  // 52: gctrpc.WithdrawalEventResponse.exchange:type_name -> gctrpc.WithdrawalExchangeEvent
 	97,  // 53: gctrpc.WithdrawalEventResponse.request:type_name -> gctrpc.WithdrawalRequestEvent
-	345, // 54: gctrpc.WithdrawalEventResponse.created_at:type_name -> google.protobuf.Timestamp
-	345, // 55: gctrpc.WithdrawalEventResponse.updated_at:type_name -> google.protobuf.Timestamp
+	360, // 54: gctrpc.WithdrawalEventResponse.created_at:type_name -> google.protobuf.Timestamp
+	360, // 55: gctrpc.WithdrawalEventResponse.updated_at:type_name -> google.protobuf.Timestamp
 	98,  // 56: gctrpc.WithdrawalRequestEvent.fiat:type_name -> gctrpc.FiatWithdrawalEvent
 	99,  // 57: gctrpc.WithdrawalRequestEvent.crypto:type_name -> gctrpc.CryptoWithdrawalEvent
-	343, // 58: gctrpc.GetExchangePairsResponse.supported_assets:type_name -> gctrpc.GetExchangePairsResponse.SupportedAssetsEntry
+	358, // 58: gctrpc.GetExchangePairsResponse.supported_assets:type_name -> gctrpc.GetExchangePairsResponse.SupportedAssetsEntry
 	21,  // 59: gctrpc.SetExchangePairRequest.pairs:type_name -> gctrpc.CurrencyPair
 	21,  // 60: gctrpc.GetOrderbookStreamRequest.pair:type_name -> gctrpc.CurrencyPair
 	21,  // 61: gctrpc.GetTickerStreamRequest.pair:type_name -> gctrpc.CurrencyPair
@@ -24973,10 +26164,10 @@ var file_rpc_proto_depIdxs = []int32{
 	21,  // 119: gctrpc.GetLatestFundingRateRequest.pair:type_name -> gctrpc.CurrencyPair
 	159, // 120: gctrpc.GetLatestFundingRateResponse.rate:type_name -> gctrpc.FundingData
 	21,  // 121: gctrpc.GetTechnicalAnalysisRequest.pair:type_name -> gctrpc.CurrencyPair
-	345, // 122: gctrpc.GetTechnicalAnalysisRequest.start:type_name -> google.protobuf.Timestamp
-	345, // 123: gctrpc.GetTechnicalAnalysisRequest.end:type_name -> google.protobuf.Timestamp
+	360, // 122: gctrpc.GetTechnicalAnalysisRequest.start:type_name -> google.protobuf.Timestamp
+	360, // 123: gctrpc.GetTechnicalAnalysisRequest.end:type_name -> google.protobuf.Timestamp
 	21,  // 124: gctrpc.GetTechnicalAnalysisRequest.other_pair:type_name -> gctrpc.CurrencyPair
-	344, // 125: gctrpc.GetTechnicalAnalysisResponse.signals:type_name -> gctrpc.GetTechnicalAnalysisResponse.SignalsEntry
+	359, // 125: gctrpc.GetTechnicalAnalysisResponse.signals:type_name -> gctrpc.GetTechnicalAnalysisResponse.SignalsEntry
 	200, // 126: gctrpc.GetMarginRatesHistoryRequest.rates:type_name -> gctrpc.MarginRate
 	198, // 127: gctrpc.MarginRate.lending_payment:type_name -> gctrpc.LendingPayment
 	199, // 128: gctrpc.MarginRate.borrow_cost:type_name -> gctrpc.BorrowCost
@@ -24996,372 +26187,387 @@ var file_rpc_proto_depIdxs = []int32{
 	219, // 142: gctrpc.LLMConversationDetail.messages:type_name -> gctrpc.LLMChatMessage
 	219, // 143: gctrpc.LLMListMessagesResponse.messages:type_name -> gctrpc.LLMChatMessage
 	224, // 144: gctrpc.LLMSendMessageResponse.evidence:type_name -> gctrpc.LLMEvidenceCard
-	226, // 145: gctrpc.LLMChatStreamEvent.final:type_name -> gctrpc.LLMSendMessageResponse
-	229, // 146: gctrpc.LLMListStrategiesResponse.strategies:type_name -> gctrpc.LLMStrategy
-	232, // 147: gctrpc.LLMGetStrategyVersionResponse.version:type_name -> gctrpc.LLMStrategyVersion
-	232, // 148: gctrpc.LLMGetStrategyVersionResponse.tree:type_name -> gctrpc.LLMStrategyVersion
-	245, // 149: gctrpc.LLMDiffStrategyVersionsResponse.changes:type_name -> gctrpc.LLMPolicyChange
-	229, // 150: gctrpc.LLMCreateStrategyResponse.strategy:type_name -> gctrpc.LLMStrategy
-	232, // 151: gctrpc.LLMListStrategyVersionsResponse.versions:type_name -> gctrpc.LLMStrategyVersion
-	232, // 152: gctrpc.LLMSaveStrategyDraftResponse.version:type_name -> gctrpc.LLMStrategyVersion
-	254, // 153: gctrpc.LLMGetStrategyApprovalResponse.approval:type_name -> gctrpc.LLMStrategyApproval
-	257, // 154: gctrpc.LLMListMarketGrantsResponse.grants:type_name -> gctrpc.LLMMarketGrant
-	257, // 155: gctrpc.LLMGrantMarketResponse.grant:type_name -> gctrpc.LLMMarketGrant
-	263, // 156: gctrpc.LLMListDecisionRunsResponse.runs:type_name -> gctrpc.LLMDecisionRun
-	263, // 157: gctrpc.LLMGetDecisionRunResponse.run:type_name -> gctrpc.LLMDecisionRun
-	263, // 158: gctrpc.LLMGetDecisionLineageResponse.run:type_name -> gctrpc.LLMDecisionRun
-	271, // 159: gctrpc.LLMGetDecisionLineageResponse.risk_evaluations:type_name -> gctrpc.LLMRiskEvidence
-	273, // 160: gctrpc.LLMGetDecisionLineageResponse.audit_events:type_name -> gctrpc.LLMAuditEvent
-	273, // 161: gctrpc.LLMListAuditEventsResponse.events:type_name -> gctrpc.LLMAuditEvent
-	271, // 162: gctrpc.LLMGetRiskEvidenceResponse.risk_evaluations:type_name -> gctrpc.LLMRiskEvidence
-	281, // 163: gctrpc.LLMGetRiskSwitchesResponse.switches:type_name -> gctrpc.LLMRiskSwitch
-	285, // 164: gctrpc.LLMVaultStatusResponse.entries:type_name -> gctrpc.LLMVaultEntry
-	293, // 165: gctrpc.LLMListHaltsResponse.halts:type_name -> gctrpc.LLMHaltRow
-	293, // 166: gctrpc.LLMSetHaltResponse.halt:type_name -> gctrpc.LLMHaltRow
-	300, // 167: gctrpc.LLMReconcileResponse.deltas:type_name -> gctrpc.LLMPositionDelta
-	304, // 168: gctrpc.LLMGetUsageResponse.lines:type_name -> gctrpc.LLMUsageLine
-	306, // 169: gctrpc.LLMGetNotifyStatusResponse.channels:type_name -> gctrpc.LLMNotifyChannel
-	313, // 170: gctrpc.LLMReadinessResponse.gates:type_name -> gctrpc.LLMReadinessGate
-	315, // 171: gctrpc.LLMProviderProfile.revision:type_name -> gctrpc.LLMProviderRevision
-	316, // 172: gctrpc.LLMListProviderProfilesResponse.profiles:type_name -> gctrpc.LLMProviderProfile
-	316, // 173: gctrpc.LLMCreateProviderProfileResponse.profile:type_name -> gctrpc.LLMProviderProfile
-	315, // 174: gctrpc.LLMUpdateProviderProfileResponse.revision:type_name -> gctrpc.LLMProviderRevision
-	324, // 175: gctrpc.LLMTestProviderProfileResponse.results:type_name -> gctrpc.LLMProbeLayerResult
-	9,   // 176: gctrpc.GetInfoResponse.RpcEndpointsEntry.value:type_name -> gctrpc.RPCEndpoint
-	3,   // 177: gctrpc.GetCommunicationRelayersResponse.CommunicationRelayersEntry.value:type_name -> gctrpc.CommunicationRelayer
-	9,   // 178: gctrpc.GetRPCEndpointsResponse.EndpointsEntry.value:type_name -> gctrpc.RPCEndpoint
-	18,  // 179: gctrpc.GetExchangeInfoResponse.SupportedAssetsEntry.value:type_name -> gctrpc.PairsSupported
-	44,  // 180: gctrpc.OnlineCoins.CoinsEntry.value:type_name -> gctrpc.OnlineCoinSummary
-	45,  // 181: gctrpc.GetPortfolioSummaryResponse.CoinsOfflineSummaryEntry.value:type_name -> gctrpc.OfflineCoins
-	46,  // 182: gctrpc.GetPortfolioSummaryResponse.CoinsOnlineSummaryEntry.value:type_name -> gctrpc.OnlineCoins
-	81,  // 183: gctrpc.GetCryptocurrencyDepositAddressesResponse.AddressesEntry.value:type_name -> gctrpc.DepositAddresses
-	18,  // 184: gctrpc.GetExchangePairsResponse.SupportedAssetsEntry.value:type_name -> gctrpc.PairsSupported
-	195, // 185: gctrpc.GetTechnicalAnalysisResponse.SignalsEntry.value:type_name -> gctrpc.ListOfSignals
-	0,   // 186: gctrpc.GoCryptoTraderService.GetInfo:input_type -> gctrpc.GetInfoRequest
-	6,   // 187: gctrpc.GoCryptoTraderService.GetSubsystems:input_type -> gctrpc.GetSubsystemsRequest
-	5,   // 188: gctrpc.GoCryptoTraderService.EnableSubsystem:input_type -> gctrpc.GenericSubsystemRequest
-	5,   // 189: gctrpc.GoCryptoTraderService.DisableSubsystem:input_type -> gctrpc.GenericSubsystemRequest
-	8,   // 190: gctrpc.GoCryptoTraderService.GetRPCEndpoints:input_type -> gctrpc.GetRPCEndpointsRequest
-	2,   // 191: gctrpc.GoCryptoTraderService.GetCommunicationRelayers:input_type -> gctrpc.GetCommunicationRelayersRequest
-	12,  // 192: gctrpc.GoCryptoTraderService.GetExchanges:input_type -> gctrpc.GetExchangesRequest
-	11,  // 193: gctrpc.GoCryptoTraderService.DisableExchange:input_type -> gctrpc.GenericExchangeNameRequest
-	11,  // 194: gctrpc.GoCryptoTraderService.GetExchangeInfo:input_type -> gctrpc.GenericExchangeNameRequest
-	11,  // 195: gctrpc.GoCryptoTraderService.GetExchangeOTPCode:input_type -> gctrpc.GenericExchangeNameRequest
-	15,  // 196: gctrpc.GoCryptoTraderService.GetExchangeOTPCodes:input_type -> gctrpc.GetExchangeOTPsRequest
-	11,  // 197: gctrpc.GoCryptoTraderService.EnableExchange:input_type -> gctrpc.GenericExchangeNameRequest
-	20,  // 198: gctrpc.GoCryptoTraderService.GetTicker:input_type -> gctrpc.GetTickerRequest
-	23,  // 199: gctrpc.GoCryptoTraderService.GetTickers:input_type -> gctrpc.GetTickersRequest
-	26,  // 200: gctrpc.GoCryptoTraderService.GetOrderbook:input_type -> gctrpc.GetOrderbookRequest
-	29,  // 201: gctrpc.GoCryptoTraderService.GetOrderbooks:input_type -> gctrpc.GetOrderbooksRequest
-	32,  // 202: gctrpc.GoCryptoTraderService.GetAccountBalances:input_type -> gctrpc.GetAccountBalancesRequest
-	32,  // 203: gctrpc.GoCryptoTraderService.UpdateAccountBalances:input_type -> gctrpc.GetAccountBalancesRequest
-	32,  // 204: gctrpc.GoCryptoTraderService.GetAccountBalancesStream:input_type -> gctrpc.GetAccountBalancesRequest
-	36,  // 205: gctrpc.GoCryptoTraderService.GetConfig:input_type -> gctrpc.GetConfigRequest
-	39,  // 206: gctrpc.GoCryptoTraderService.GetPortfolio:input_type -> gctrpc.GetPortfolioRequest
-	41,  // 207: gctrpc.GoCryptoTraderService.GetPortfolioSummary:input_type -> gctrpc.GetPortfolioSummaryRequest
-	48,  // 208: gctrpc.GoCryptoTraderService.AddPortfolioAddress:input_type -> gctrpc.AddPortfolioAddressRequest
-	49,  // 209: gctrpc.GoCryptoTraderService.RemovePortfolioAddress:input_type -> gctrpc.RemovePortfolioAddressRequest
-	50,  // 210: gctrpc.GoCryptoTraderService.GetForexProviders:input_type -> gctrpc.GetForexProvidersRequest
-	53,  // 211: gctrpc.GoCryptoTraderService.GetForexRates:input_type -> gctrpc.GetForexRatesRequest
-	58,  // 212: gctrpc.GoCryptoTraderService.GetOrders:input_type -> gctrpc.GetOrdersRequest
-	60,  // 213: gctrpc.GoCryptoTraderService.GetOrder:input_type -> gctrpc.GetOrderRequest
-	61,  // 214: gctrpc.GoCryptoTraderService.SubmitOrder:input_type -> gctrpc.SubmitOrderRequest
-	64,  // 215: gctrpc.GoCryptoTraderService.SimulateOrder:input_type -> gctrpc.SimulateOrderRequest
-	66,  // 216: gctrpc.GoCryptoTraderService.WhaleBomb:input_type -> gctrpc.WhaleBombRequest
-	67,  // 217: gctrpc.GoCryptoTraderService.CancelOrder:input_type -> gctrpc.CancelOrderRequest
-	68,  // 218: gctrpc.GoCryptoTraderService.CancelBatchOrders:input_type -> gctrpc.CancelBatchOrdersRequest
-	71,  // 219: gctrpc.GoCryptoTraderService.CancelAllOrders:input_type -> gctrpc.CancelAllOrdersRequest
-	73,  // 220: gctrpc.GoCryptoTraderService.GetEvents:input_type -> gctrpc.GetEventsRequest
-	76,  // 221: gctrpc.GoCryptoTraderService.AddEvent:input_type -> gctrpc.AddEventRequest
-	78,  // 222: gctrpc.GoCryptoTraderService.RemoveEvent:input_type -> gctrpc.RemoveEventRequest
-	79,  // 223: gctrpc.GoCryptoTraderService.GetCryptocurrencyDepositAddresses:input_type -> gctrpc.GetCryptocurrencyDepositAddressesRequest
-	83,  // 224: gctrpc.GoCryptoTraderService.GetCryptocurrencyDepositAddress:input_type -> gctrpc.GetCryptocurrencyDepositAddressRequest
-	85,  // 225: gctrpc.GoCryptoTraderService.GetAvailableTransferChains:input_type -> gctrpc.GetAvailableTransferChainsRequest
-	87,  // 226: gctrpc.GoCryptoTraderService.WithdrawFiatFunds:input_type -> gctrpc.WithdrawFiatRequest
-	88,  // 227: gctrpc.GoCryptoTraderService.WithdrawCryptocurrencyFunds:input_type -> gctrpc.WithdrawCryptoRequest
-	90,  // 228: gctrpc.GoCryptoTraderService.WithdrawalEventByID:input_type -> gctrpc.WithdrawalEventByIDRequest
-	92,  // 229: gctrpc.GoCryptoTraderService.WithdrawalEventsByExchange:input_type -> gctrpc.WithdrawalEventsByExchangeRequest
-	93,  // 230: gctrpc.GoCryptoTraderService.WithdrawalEventsByDate:input_type -> gctrpc.WithdrawalEventsByDateRequest
-	100, // 231: gctrpc.GoCryptoTraderService.GetLoggerDetails:input_type -> gctrpc.GetLoggerDetailsRequest
-	102, // 232: gctrpc.GoCryptoTraderService.SetLoggerDetails:input_type -> gctrpc.SetLoggerDetailsRequest
-	103, // 233: gctrpc.GoCryptoTraderService.GetExchangePairs:input_type -> gctrpc.GetExchangePairsRequest
-	105, // 234: gctrpc.GoCryptoTraderService.SetExchangePair:input_type -> gctrpc.SetExchangePairRequest
-	106, // 235: gctrpc.GoCryptoTraderService.GetOrderbookStream:input_type -> gctrpc.GetOrderbookStreamRequest
-	107, // 236: gctrpc.GoCryptoTraderService.GetExchangeOrderbookStream:input_type -> gctrpc.GetExchangeOrderbookStreamRequest
-	108, // 237: gctrpc.GoCryptoTraderService.GetTickerStream:input_type -> gctrpc.GetTickerStreamRequest
-	109, // 238: gctrpc.GoCryptoTraderService.GetExchangeTickerStream:input_type -> gctrpc.GetExchangeTickerStreamRequest
-	110, // 239: gctrpc.GoCryptoTraderService.GetAuditEvent:input_type -> gctrpc.GetAuditEventRequest
-	116, // 240: gctrpc.GoCryptoTraderService.GetHistoricCandles:input_type -> gctrpc.GetHistoricCandlesRequest
-	121, // 241: gctrpc.GoCryptoTraderService.SetExchangeAsset:input_type -> gctrpc.SetExchangeAssetRequest
-	122, // 242: gctrpc.GoCryptoTraderService.SetAllExchangePairs:input_type -> gctrpc.SetExchangeAllPairsRequest
-	123, // 243: gctrpc.GoCryptoTraderService.UpdateExchangeSupportedPairs:input_type -> gctrpc.UpdateExchangeSupportedPairsRequest
-	124, // 244: gctrpc.GoCryptoTraderService.GetExchangeAssets:input_type -> gctrpc.GetExchangeAssetsRequest
-	126, // 245: gctrpc.GoCryptoTraderService.WebsocketGetInfo:input_type -> gctrpc.WebsocketGetInfoRequest
-	128, // 246: gctrpc.GoCryptoTraderService.WebsocketSetEnabled:input_type -> gctrpc.WebsocketSetEnabledRequest
-	129, // 247: gctrpc.GoCryptoTraderService.WebsocketGetSubscriptions:input_type -> gctrpc.WebsocketGetSubscriptionsRequest
-	132, // 248: gctrpc.GoCryptoTraderService.WebsocketSetProxy:input_type -> gctrpc.WebsocketSetProxyRequest
-	133, // 249: gctrpc.GoCryptoTraderService.WebsocketSetURL:input_type -> gctrpc.WebsocketSetURLRequest
-	112, // 250: gctrpc.GoCryptoTraderService.GetRecentTrades:input_type -> gctrpc.GetSavedTradesRequest
-	112, // 251: gctrpc.GoCryptoTraderService.GetHistoricTrades:input_type -> gctrpc.GetSavedTradesRequest
-	112, // 252: gctrpc.GoCryptoTraderService.GetSavedTrades:input_type -> gctrpc.GetSavedTradesRequest
-	115, // 253: gctrpc.GoCryptoTraderService.ConvertTradesToCandles:input_type -> gctrpc.ConvertTradesToCandlesRequest
-	134, // 254: gctrpc.GoCryptoTraderService.FindMissingSavedCandleIntervals:input_type -> gctrpc.FindMissingCandlePeriodsRequest
-	135, // 255: gctrpc.GoCryptoTraderService.FindMissingSavedTradeIntervals:input_type -> gctrpc.FindMissingTradePeriodsRequest
-	137, // 256: gctrpc.GoCryptoTraderService.SetExchangeTradeProcessing:input_type -> gctrpc.SetExchangeTradeProcessingRequest
-	138, // 257: gctrpc.GoCryptoTraderService.UpsertDataHistoryJob:input_type -> gctrpc.UpsertDataHistoryJobRequest
-	142, // 258: gctrpc.GoCryptoTraderService.GetDataHistoryJobDetails:input_type -> gctrpc.GetDataHistoryJobDetailsRequest
-	0,   // 259: gctrpc.GoCryptoTraderService.GetActiveDataHistoryJobs:input_type -> gctrpc.GetInfoRequest
-	146, // 260: gctrpc.GoCryptoTraderService.GetDataHistoryJobsBetween:input_type -> gctrpc.GetDataHistoryJobsBetweenRequest
-	142, // 261: gctrpc.GoCryptoTraderService.GetDataHistoryJobSummary:input_type -> gctrpc.GetDataHistoryJobDetailsRequest
-	147, // 262: gctrpc.GoCryptoTraderService.SetDataHistoryJobStatus:input_type -> gctrpc.SetDataHistoryJobStatusRequest
-	148, // 263: gctrpc.GoCryptoTraderService.UpdateDataHistoryJobPrerequisite:input_type -> gctrpc.UpdateDataHistoryJobPrerequisiteRequest
-	58,  // 264: gctrpc.GoCryptoTraderService.GetManagedOrders:input_type -> gctrpc.GetOrdersRequest
-	149, // 265: gctrpc.GoCryptoTraderService.ModifyOrder:input_type -> gctrpc.ModifyOrderRequest
-	151, // 266: gctrpc.GoCryptoTraderService.CurrencyStateGetAll:input_type -> gctrpc.CurrencyStateGetAllRequest
-	152, // 267: gctrpc.GoCryptoTraderService.CurrencyStateTrading:input_type -> gctrpc.CurrencyStateTradingRequest
-	155, // 268: gctrpc.GoCryptoTraderService.CurrencyStateDeposit:input_type -> gctrpc.CurrencyStateDepositRequest
-	154, // 269: gctrpc.GoCryptoTraderService.CurrencyStateWithdraw:input_type -> gctrpc.CurrencyStateWithdrawRequest
-	153, // 270: gctrpc.GoCryptoTraderService.CurrencyStateTradingPair:input_type -> gctrpc.CurrencyStateTradingPairRequest
-	165, // 271: gctrpc.GoCryptoTraderService.GetFuturesPositionsSummary:input_type -> gctrpc.GetFuturesPositionsSummaryRequest
-	167, // 272: gctrpc.GoCryptoTraderService.GetFuturesPositionsOrders:input_type -> gctrpc.GetFuturesPositionsOrdersRequest
-	183, // 273: gctrpc.GoCryptoTraderService.GetCollateral:input_type -> gctrpc.GetCollateralRequest
-	192, // 274: gctrpc.GoCryptoTraderService.Shutdown:input_type -> gctrpc.ShutdownRequest
-	194, // 275: gctrpc.GoCryptoTraderService.GetTechnicalAnalysis:input_type -> gctrpc.GetTechnicalAnalysisRequest
-	197, // 276: gctrpc.GoCryptoTraderService.GetMarginRatesHistory:input_type -> gctrpc.GetMarginRatesHistoryRequest
-	162, // 277: gctrpc.GoCryptoTraderService.GetManagedPosition:input_type -> gctrpc.GetManagedPositionRequest
-	163, // 278: gctrpc.GoCryptoTraderService.GetAllManagedPositions:input_type -> gctrpc.GetAllManagedPositionsRequest
-	188, // 279: gctrpc.GoCryptoTraderService.GetFundingRates:input_type -> gctrpc.GetFundingRatesRequest
-	190, // 280: gctrpc.GoCryptoTraderService.GetLatestFundingRate:input_type -> gctrpc.GetLatestFundingRateRequest
-	202, // 281: gctrpc.GoCryptoTraderService.GetOrderbookMovement:input_type -> gctrpc.GetOrderbookMovementRequest
-	204, // 282: gctrpc.GoCryptoTraderService.GetOrderbookAmountByNominal:input_type -> gctrpc.GetOrderbookAmountByNominalRequest
-	206, // 283: gctrpc.GoCryptoTraderService.GetOrderbookAmountByImpact:input_type -> gctrpc.GetOrderbookAmountByImpactRequest
-	169, // 284: gctrpc.GoCryptoTraderService.GetCollateralMode:input_type -> gctrpc.GetCollateralModeRequest
-	179, // 285: gctrpc.GoCryptoTraderService.GetLeverage:input_type -> gctrpc.GetLeverageRequest
-	171, // 286: gctrpc.GoCryptoTraderService.SetCollateralMode:input_type -> gctrpc.SetCollateralModeRequest
-	177, // 287: gctrpc.GoCryptoTraderService.SetMarginType:input_type -> gctrpc.SetMarginTypeRequest
-	181, // 288: gctrpc.GoCryptoTraderService.SetLeverage:input_type -> gctrpc.SetLeverageRequest
-	175, // 289: gctrpc.GoCryptoTraderService.ChangePositionMargin:input_type -> gctrpc.ChangePositionMarginRequest
-	208, // 290: gctrpc.GoCryptoTraderService.GetOpenInterest:input_type -> gctrpc.GetOpenInterestRequest
-	212, // 291: gctrpc.GoCryptoTraderService.GetCurrencyTradeURL:input_type -> gctrpc.GetCurrencyTradeURLRequest
-	215, // 292: gctrpc.GoCryptoTraderService.LLMListConversations:input_type -> gctrpc.LLMListConversationsRequest
-	217, // 293: gctrpc.GoCryptoTraderService.LLMCreateConversation:input_type -> gctrpc.LLMCreateConversationRequest
-	218, // 294: gctrpc.GoCryptoTraderService.LLMGetConversation:input_type -> gctrpc.LLMGetConversationRequest
-	221, // 295: gctrpc.GoCryptoTraderService.LLMArchiveConversation:input_type -> gctrpc.LLMArchiveConversationRequest
-	222, // 296: gctrpc.GoCryptoTraderService.LLMListMessages:input_type -> gctrpc.LLMListMessagesRequest
-	225, // 297: gctrpc.GoCryptoTraderService.LLMSendMessage:input_type -> gctrpc.LLMSendMessageRequest
-	227, // 298: gctrpc.GoCryptoTraderService.LLMChatStream:input_type -> gctrpc.LLMChatStreamRequest
-	230, // 299: gctrpc.GoCryptoTraderService.LLMListStrategies:input_type -> gctrpc.LLMListStrategiesRequest
-	233, // 300: gctrpc.GoCryptoTraderService.LLMGetStrategyVersion:input_type -> gctrpc.LLMGetStrategyVersionRequest
-	235, // 301: gctrpc.GoCryptoTraderService.LLMExtractPolicy:input_type -> gctrpc.LLMExtractPolicyRequest
-	237, // 302: gctrpc.GoCryptoTraderService.LLMFreezeStrategyVersion:input_type -> gctrpc.LLMFreezeStrategyVersionRequest
-	239, // 303: gctrpc.GoCryptoTraderService.LLMApproveStrategyVersion:input_type -> gctrpc.LLMApproveStrategyVersionRequest
-	241, // 304: gctrpc.GoCryptoTraderService.LLMRevokeApproval:input_type -> gctrpc.LLMRevokeApprovalRequest
-	242, // 305: gctrpc.GoCryptoTraderService.LLMPauseStrategy:input_type -> gctrpc.LLMPauseStrategyRequest
-	243, // 306: gctrpc.GoCryptoTraderService.LLMResumeStrategy:input_type -> gctrpc.LLMResumeStrategyRequest
-	244, // 307: gctrpc.GoCryptoTraderService.LLMDiffStrategyVersions:input_type -> gctrpc.LLMDiffStrategyVersionsRequest
-	247, // 308: gctrpc.GoCryptoTraderService.LLMCreateStrategy:input_type -> gctrpc.LLMCreateStrategyRequest
-	249, // 309: gctrpc.GoCryptoTraderService.LLMListStrategyVersions:input_type -> gctrpc.LLMListStrategyVersionsRequest
-	251, // 310: gctrpc.GoCryptoTraderService.LLMSaveStrategyDraft:input_type -> gctrpc.LLMSaveStrategyDraftRequest
-	253, // 311: gctrpc.GoCryptoTraderService.LLMGetStrategyApproval:input_type -> gctrpc.LLMGetStrategyApprovalRequest
-	256, // 312: gctrpc.GoCryptoTraderService.LLMListMarketGrants:input_type -> gctrpc.LLMListMarketGrantsRequest
-	259, // 313: gctrpc.GoCryptoTraderService.LLMGrantMarket:input_type -> gctrpc.LLMGrantMarketRequest
-	261, // 314: gctrpc.GoCryptoTraderService.LLMRevokeMarketGrant:input_type -> gctrpc.LLMRevokeMarketGrantRequest
-	264, // 315: gctrpc.GoCryptoTraderService.LLMListDecisionRuns:input_type -> gctrpc.LLMListDecisionRunsRequest
-	266, // 316: gctrpc.GoCryptoTraderService.LLMGetDecisionRun:input_type -> gctrpc.LLMGetDecisionRunRequest
-	268, // 317: gctrpc.GoCryptoTraderService.LLMTriggerAnalysis:input_type -> gctrpc.LLMTriggerAnalysisRequest
-	269, // 318: gctrpc.GoCryptoTraderService.LLMPreviewDecision:input_type -> gctrpc.LLMPreviewDecisionRequest
-	270, // 319: gctrpc.GoCryptoTraderService.LLMGetDecisionLineage:input_type -> gctrpc.LLMGetDecisionLineageRequest
-	276, // 320: gctrpc.GoCryptoTraderService.LLMGetRiskEvidence:input_type -> gctrpc.LLMGetRiskEvidenceRequest
-	274, // 321: gctrpc.GoCryptoTraderService.LLMListAuditEvents:input_type -> gctrpc.LLMListAuditEventsRequest
-	278, // 322: gctrpc.GoCryptoTraderService.LLMGetMetrics:input_type -> gctrpc.LLMGetMetricsRequest
-	280, // 323: gctrpc.GoCryptoTraderService.LLMSetRiskSwitch:input_type -> gctrpc.LLMSetRiskSwitchRequest
-	282, // 324: gctrpc.GoCryptoTraderService.LLMGetRiskSwitches:input_type -> gctrpc.LLMGetRiskSwitchesRequest
-	291, // 325: gctrpc.GoCryptoTraderService.LLMGetCoverageStatus:input_type -> gctrpc.LLMGetCoverageStatusRequest
-	294, // 326: gctrpc.GoCryptoTraderService.LLMListHalts:input_type -> gctrpc.LLMListHaltsRequest
-	296, // 327: gctrpc.GoCryptoTraderService.LLMSetHalt:input_type -> gctrpc.LLMSetHaltRequest
-	298, // 328: gctrpc.GoCryptoTraderService.LLMClearHalt:input_type -> gctrpc.LLMClearHaltRequest
-	299, // 329: gctrpc.GoCryptoTraderService.LLMSetRunMode:input_type -> gctrpc.LLMSetRunModeRequest
-	301, // 330: gctrpc.GoCryptoTraderService.LLMReconcile:input_type -> gctrpc.LLMReconcileRequest
-	303, // 331: gctrpc.GoCryptoTraderService.LLMGetUsage:input_type -> gctrpc.LLMGetUsageRequest
-	307, // 332: gctrpc.GoCryptoTraderService.LLMGetNotifyStatus:input_type -> gctrpc.LLMGetNotifyStatusRequest
-	309, // 333: gctrpc.GoCryptoTraderService.LLMTestNotify:input_type -> gctrpc.LLMTestNotifyRequest
-	284, // 334: gctrpc.GoCryptoTraderService.LLMGetStatus:input_type -> gctrpc.LLMGetStatusRequest
-	286, // 335: gctrpc.GoCryptoTraderService.LLMVaultStatus:input_type -> gctrpc.LLMVaultStatusRequest
-	288, // 336: gctrpc.GoCryptoTraderService.LLMVaultInit:input_type -> gctrpc.LLMVaultInitRequest
-	289, // 337: gctrpc.GoCryptoTraderService.LLMVaultAddSecret:input_type -> gctrpc.LLMVaultAddSecretRequest
-	312, // 338: gctrpc.GoCryptoTraderService.LLMGetReadiness:input_type -> gctrpc.LLMReadinessRequest
-	317, // 339: gctrpc.GoCryptoTraderService.LLMListProviderProfiles:input_type -> gctrpc.LLMListProviderProfilesRequest
-	319, // 340: gctrpc.GoCryptoTraderService.LLMCreateProviderProfile:input_type -> gctrpc.LLMCreateProviderProfileRequest
-	321, // 341: gctrpc.GoCryptoTraderService.LLMUpdateProviderProfile:input_type -> gctrpc.LLMUpdateProviderProfileRequest
-	323, // 342: gctrpc.GoCryptoTraderService.LLMDeleteProviderProfile:input_type -> gctrpc.LLMDeleteProviderProfileRequest
-	325, // 343: gctrpc.GoCryptoTraderService.LLMTestProviderProfile:input_type -> gctrpc.LLMTestProviderProfileRequest
-	327, // 344: gctrpc.GoCryptoTraderService.LLMGetActiveModelPair:input_type -> gctrpc.LLMGetActiveModelPairRequest
-	329, // 345: gctrpc.GoCryptoTraderService.LLMSwitchActiveModelPair:input_type -> gctrpc.LLMSwitchActiveModelPairRequest
-	1,   // 346: gctrpc.GoCryptoTraderService.GetInfo:output_type -> gctrpc.GetInfoResponse
-	7,   // 347: gctrpc.GoCryptoTraderService.GetSubsystems:output_type -> gctrpc.GetSubsystemsResponse
-	120, // 348: gctrpc.GoCryptoTraderService.EnableSubsystem:output_type -> gctrpc.GenericResponse
-	120, // 349: gctrpc.GoCryptoTraderService.DisableSubsystem:output_type -> gctrpc.GenericResponse
-	10,  // 350: gctrpc.GoCryptoTraderService.GetRPCEndpoints:output_type -> gctrpc.GetRPCEndpointsResponse
-	4,   // 351: gctrpc.GoCryptoTraderService.GetCommunicationRelayers:output_type -> gctrpc.GetCommunicationRelayersResponse
-	13,  // 352: gctrpc.GoCryptoTraderService.GetExchanges:output_type -> gctrpc.GetExchangesResponse
-	120, // 353: gctrpc.GoCryptoTraderService.DisableExchange:output_type -> gctrpc.GenericResponse
-	19,  // 354: gctrpc.GoCryptoTraderService.GetExchangeInfo:output_type -> gctrpc.GetExchangeInfoResponse
-	14,  // 355: gctrpc.GoCryptoTraderService.GetExchangeOTPCode:output_type -> gctrpc.GetExchangeOTPResponse
-	16,  // 356: gctrpc.GoCryptoTraderService.GetExchangeOTPCodes:output_type -> gctrpc.GetExchangeOTPsResponse
-	120, // 357: gctrpc.GoCryptoTraderService.EnableExchange:output_type -> gctrpc.GenericResponse
-	22,  // 358: gctrpc.GoCryptoTraderService.GetTicker:output_type -> gctrpc.TickerResponse
-	25,  // 359: gctrpc.GoCryptoTraderService.GetTickers:output_type -> gctrpc.GetTickersResponse
-	28,  // 360: gctrpc.GoCryptoTraderService.GetOrderbook:output_type -> gctrpc.OrderbookResponse
-	31,  // 361: gctrpc.GoCryptoTraderService.GetOrderbooks:output_type -> gctrpc.GetOrderbooksResponse
-	35,  // 362: gctrpc.GoCryptoTraderService.GetAccountBalances:output_type -> gctrpc.GetAccountBalancesResponse
-	35,  // 363: gctrpc.GoCryptoTraderService.UpdateAccountBalances:output_type -> gctrpc.GetAccountBalancesResponse
-	35,  // 364: gctrpc.GoCryptoTraderService.GetAccountBalancesStream:output_type -> gctrpc.GetAccountBalancesResponse
-	37,  // 365: gctrpc.GoCryptoTraderService.GetConfig:output_type -> gctrpc.GetConfigResponse
-	40,  // 366: gctrpc.GoCryptoTraderService.GetPortfolio:output_type -> gctrpc.GetPortfolioResponse
-	47,  // 367: gctrpc.GoCryptoTraderService.GetPortfolioSummary:output_type -> gctrpc.GetPortfolioSummaryResponse
-	120, // 368: gctrpc.GoCryptoTraderService.AddPortfolioAddress:output_type -> gctrpc.GenericResponse
-	120, // 369: gctrpc.GoCryptoTraderService.RemovePortfolioAddress:output_type -> gctrpc.GenericResponse
-	52,  // 370: gctrpc.GoCryptoTraderService.GetForexProviders:output_type -> gctrpc.GetForexProvidersResponse
-	55,  // 371: gctrpc.GoCryptoTraderService.GetForexRates:output_type -> gctrpc.GetForexRatesResponse
-	59,  // 372: gctrpc.GoCryptoTraderService.GetOrders:output_type -> gctrpc.GetOrdersResponse
-	56,  // 373: gctrpc.GoCryptoTraderService.GetOrder:output_type -> gctrpc.OrderDetails
-	63,  // 374: gctrpc.GoCryptoTraderService.SubmitOrder:output_type -> gctrpc.SubmitOrderResponse
-	65,  // 375: gctrpc.GoCryptoTraderService.SimulateOrder:output_type -> gctrpc.SimulateOrderResponse
-	65,  // 376: gctrpc.GoCryptoTraderService.WhaleBomb:output_type -> gctrpc.SimulateOrderResponse
-	120, // 377: gctrpc.GoCryptoTraderService.CancelOrder:output_type -> gctrpc.GenericResponse
-	70,  // 378: gctrpc.GoCryptoTraderService.CancelBatchOrders:output_type -> gctrpc.CancelBatchOrdersResponse
-	72,  // 379: gctrpc.GoCryptoTraderService.CancelAllOrders:output_type -> gctrpc.CancelAllOrdersResponse
-	75,  // 380: gctrpc.GoCryptoTraderService.GetEvents:output_type -> gctrpc.GetEventsResponse
-	77,  // 381: gctrpc.GoCryptoTraderService.AddEvent:output_type -> gctrpc.AddEventResponse
-	120, // 382: gctrpc.GoCryptoTraderService.RemoveEvent:output_type -> gctrpc.GenericResponse
-	82,  // 383: gctrpc.GoCryptoTraderService.GetCryptocurrencyDepositAddresses:output_type -> gctrpc.GetCryptocurrencyDepositAddressesResponse
-	84,  // 384: gctrpc.GoCryptoTraderService.GetCryptocurrencyDepositAddress:output_type -> gctrpc.GetCryptocurrencyDepositAddressResponse
-	86,  // 385: gctrpc.GoCryptoTraderService.GetAvailableTransferChains:output_type -> gctrpc.GetAvailableTransferChainsResponse
-	89,  // 386: gctrpc.GoCryptoTraderService.WithdrawFiatFunds:output_type -> gctrpc.WithdrawResponse
-	89,  // 387: gctrpc.GoCryptoTraderService.WithdrawCryptocurrencyFunds:output_type -> gctrpc.WithdrawResponse
-	91,  // 388: gctrpc.GoCryptoTraderService.WithdrawalEventByID:output_type -> gctrpc.WithdrawalEventByIDResponse
-	94,  // 389: gctrpc.GoCryptoTraderService.WithdrawalEventsByExchange:output_type -> gctrpc.WithdrawalEventsByExchangeResponse
-	94,  // 390: gctrpc.GoCryptoTraderService.WithdrawalEventsByDate:output_type -> gctrpc.WithdrawalEventsByExchangeResponse
-	101, // 391: gctrpc.GoCryptoTraderService.GetLoggerDetails:output_type -> gctrpc.GetLoggerDetailsResponse
-	101, // 392: gctrpc.GoCryptoTraderService.SetLoggerDetails:output_type -> gctrpc.GetLoggerDetailsResponse
-	104, // 393: gctrpc.GoCryptoTraderService.GetExchangePairs:output_type -> gctrpc.GetExchangePairsResponse
-	120, // 394: gctrpc.GoCryptoTraderService.SetExchangePair:output_type -> gctrpc.GenericResponse
-	28,  // 395: gctrpc.GoCryptoTraderService.GetOrderbookStream:output_type -> gctrpc.OrderbookResponse
-	28,  // 396: gctrpc.GoCryptoTraderService.GetExchangeOrderbookStream:output_type -> gctrpc.OrderbookResponse
-	22,  // 397: gctrpc.GoCryptoTraderService.GetTickerStream:output_type -> gctrpc.TickerResponse
-	22,  // 398: gctrpc.GoCryptoTraderService.GetExchangeTickerStream:output_type -> gctrpc.TickerResponse
-	111, // 399: gctrpc.GoCryptoTraderService.GetAuditEvent:output_type -> gctrpc.GetAuditEventResponse
-	117, // 400: gctrpc.GoCryptoTraderService.GetHistoricCandles:output_type -> gctrpc.GetHistoricCandlesResponse
-	120, // 401: gctrpc.GoCryptoTraderService.SetExchangeAsset:output_type -> gctrpc.GenericResponse
-	120, // 402: gctrpc.GoCryptoTraderService.SetAllExchangePairs:output_type -> gctrpc.GenericResponse
-	120, // 403: gctrpc.GoCryptoTraderService.UpdateExchangeSupportedPairs:output_type -> gctrpc.GenericResponse
-	125, // 404: gctrpc.GoCryptoTraderService.GetExchangeAssets:output_type -> gctrpc.GetExchangeAssetsResponse
-	127, // 405: gctrpc.GoCryptoTraderService.WebsocketGetInfo:output_type -> gctrpc.WebsocketGetInfoResponse
-	120, // 406: gctrpc.GoCryptoTraderService.WebsocketSetEnabled:output_type -> gctrpc.GenericResponse
-	131, // 407: gctrpc.GoCryptoTraderService.WebsocketGetSubscriptions:output_type -> gctrpc.WebsocketGetSubscriptionsResponse
-	120, // 408: gctrpc.GoCryptoTraderService.WebsocketSetProxy:output_type -> gctrpc.GenericResponse
-	120, // 409: gctrpc.GoCryptoTraderService.WebsocketSetURL:output_type -> gctrpc.GenericResponse
-	114, // 410: gctrpc.GoCryptoTraderService.GetRecentTrades:output_type -> gctrpc.SavedTradesResponse
-	114, // 411: gctrpc.GoCryptoTraderService.GetHistoricTrades:output_type -> gctrpc.SavedTradesResponse
-	114, // 412: gctrpc.GoCryptoTraderService.GetSavedTrades:output_type -> gctrpc.SavedTradesResponse
-	117, // 413: gctrpc.GoCryptoTraderService.ConvertTradesToCandles:output_type -> gctrpc.GetHistoricCandlesResponse
-	136, // 414: gctrpc.GoCryptoTraderService.FindMissingSavedCandleIntervals:output_type -> gctrpc.FindMissingIntervalsResponse
-	136, // 415: gctrpc.GoCryptoTraderService.FindMissingSavedTradeIntervals:output_type -> gctrpc.FindMissingIntervalsResponse
-	120, // 416: gctrpc.GoCryptoTraderService.SetExchangeTradeProcessing:output_type -> gctrpc.GenericResponse
-	141, // 417: gctrpc.GoCryptoTraderService.UpsertDataHistoryJob:output_type -> gctrpc.UpsertDataHistoryJobResponse
-	143, // 418: gctrpc.GoCryptoTraderService.GetDataHistoryJobDetails:output_type -> gctrpc.DataHistoryJob
-	145, // 419: gctrpc.GoCryptoTraderService.GetActiveDataHistoryJobs:output_type -> gctrpc.DataHistoryJobs
-	145, // 420: gctrpc.GoCryptoTraderService.GetDataHistoryJobsBetween:output_type -> gctrpc.DataHistoryJobs
-	143, // 421: gctrpc.GoCryptoTraderService.GetDataHistoryJobSummary:output_type -> gctrpc.DataHistoryJob
-	120, // 422: gctrpc.GoCryptoTraderService.SetDataHistoryJobStatus:output_type -> gctrpc.GenericResponse
-	120, // 423: gctrpc.GoCryptoTraderService.UpdateDataHistoryJobPrerequisite:output_type -> gctrpc.GenericResponse
-	59,  // 424: gctrpc.GoCryptoTraderService.GetManagedOrders:output_type -> gctrpc.GetOrdersResponse
-	150, // 425: gctrpc.GoCryptoTraderService.ModifyOrder:output_type -> gctrpc.ModifyOrderResponse
-	156, // 426: gctrpc.GoCryptoTraderService.CurrencyStateGetAll:output_type -> gctrpc.CurrencyStateResponse
-	120, // 427: gctrpc.GoCryptoTraderService.CurrencyStateTrading:output_type -> gctrpc.GenericResponse
-	120, // 428: gctrpc.GoCryptoTraderService.CurrencyStateDeposit:output_type -> gctrpc.GenericResponse
-	120, // 429: gctrpc.GoCryptoTraderService.CurrencyStateWithdraw:output_type -> gctrpc.GenericResponse
-	120, // 430: gctrpc.GoCryptoTraderService.CurrencyStateTradingPair:output_type -> gctrpc.GenericResponse
-	166, // 431: gctrpc.GoCryptoTraderService.GetFuturesPositionsSummary:output_type -> gctrpc.GetFuturesPositionsSummaryResponse
-	168, // 432: gctrpc.GoCryptoTraderService.GetFuturesPositionsOrders:output_type -> gctrpc.GetFuturesPositionsOrdersResponse
-	184, // 433: gctrpc.GoCryptoTraderService.GetCollateral:output_type -> gctrpc.GetCollateralResponse
-	193, // 434: gctrpc.GoCryptoTraderService.Shutdown:output_type -> gctrpc.ShutdownResponse
-	196, // 435: gctrpc.GoCryptoTraderService.GetTechnicalAnalysis:output_type -> gctrpc.GetTechnicalAnalysisResponse
-	201, // 436: gctrpc.GoCryptoTraderService.GetMarginRatesHistory:output_type -> gctrpc.GetMarginRatesHistoryResponse
-	164, // 437: gctrpc.GoCryptoTraderService.GetManagedPosition:output_type -> gctrpc.GetManagedPositionsResponse
-	164, // 438: gctrpc.GoCryptoTraderService.GetAllManagedPositions:output_type -> gctrpc.GetManagedPositionsResponse
-	189, // 439: gctrpc.GoCryptoTraderService.GetFundingRates:output_type -> gctrpc.GetFundingRatesResponse
-	191, // 440: gctrpc.GoCryptoTraderService.GetLatestFundingRate:output_type -> gctrpc.GetLatestFundingRateResponse
-	203, // 441: gctrpc.GoCryptoTraderService.GetOrderbookMovement:output_type -> gctrpc.GetOrderbookMovementResponse
-	205, // 442: gctrpc.GoCryptoTraderService.GetOrderbookAmountByNominal:output_type -> gctrpc.GetOrderbookAmountByNominalResponse
-	207, // 443: gctrpc.GoCryptoTraderService.GetOrderbookAmountByImpact:output_type -> gctrpc.GetOrderbookAmountByImpactResponse
-	170, // 444: gctrpc.GoCryptoTraderService.GetCollateralMode:output_type -> gctrpc.GetCollateralModeResponse
-	180, // 445: gctrpc.GoCryptoTraderService.GetLeverage:output_type -> gctrpc.GetLeverageResponse
-	172, // 446: gctrpc.GoCryptoTraderService.SetCollateralMode:output_type -> gctrpc.SetCollateralModeResponse
-	178, // 447: gctrpc.GoCryptoTraderService.SetMarginType:output_type -> gctrpc.SetMarginTypeResponse
-	182, // 448: gctrpc.GoCryptoTraderService.SetLeverage:output_type -> gctrpc.SetLeverageResponse
-	176, // 449: gctrpc.GoCryptoTraderService.ChangePositionMargin:output_type -> gctrpc.ChangePositionMarginResponse
-	210, // 450: gctrpc.GoCryptoTraderService.GetOpenInterest:output_type -> gctrpc.GetOpenInterestResponse
-	213, // 451: gctrpc.GoCryptoTraderService.GetCurrencyTradeURL:output_type -> gctrpc.GetCurrencyTradeURLResponse
-	216, // 452: gctrpc.GoCryptoTraderService.LLMListConversations:output_type -> gctrpc.LLMListConversationsResponse
-	214, // 453: gctrpc.GoCryptoTraderService.LLMCreateConversation:output_type -> gctrpc.LLMConversation
-	220, // 454: gctrpc.GoCryptoTraderService.LLMGetConversation:output_type -> gctrpc.LLMConversationDetail
-	120, // 455: gctrpc.GoCryptoTraderService.LLMArchiveConversation:output_type -> gctrpc.GenericResponse
-	223, // 456: gctrpc.GoCryptoTraderService.LLMListMessages:output_type -> gctrpc.LLMListMessagesResponse
-	226, // 457: gctrpc.GoCryptoTraderService.LLMSendMessage:output_type -> gctrpc.LLMSendMessageResponse
-	228, // 458: gctrpc.GoCryptoTraderService.LLMChatStream:output_type -> gctrpc.LLMChatStreamEvent
-	231, // 459: gctrpc.GoCryptoTraderService.LLMListStrategies:output_type -> gctrpc.LLMListStrategiesResponse
-	234, // 460: gctrpc.GoCryptoTraderService.LLMGetStrategyVersion:output_type -> gctrpc.LLMGetStrategyVersionResponse
-	236, // 461: gctrpc.GoCryptoTraderService.LLMExtractPolicy:output_type -> gctrpc.LLMExtractPolicyResponse
-	238, // 462: gctrpc.GoCryptoTraderService.LLMFreezeStrategyVersion:output_type -> gctrpc.LLMFreezeStrategyVersionResponse
-	240, // 463: gctrpc.GoCryptoTraderService.LLMApproveStrategyVersion:output_type -> gctrpc.LLMApproveStrategyVersionResponse
-	120, // 464: gctrpc.GoCryptoTraderService.LLMRevokeApproval:output_type -> gctrpc.GenericResponse
-	120, // 465: gctrpc.GoCryptoTraderService.LLMPauseStrategy:output_type -> gctrpc.GenericResponse
-	120, // 466: gctrpc.GoCryptoTraderService.LLMResumeStrategy:output_type -> gctrpc.GenericResponse
-	246, // 467: gctrpc.GoCryptoTraderService.LLMDiffStrategyVersions:output_type -> gctrpc.LLMDiffStrategyVersionsResponse
-	248, // 468: gctrpc.GoCryptoTraderService.LLMCreateStrategy:output_type -> gctrpc.LLMCreateStrategyResponse
-	250, // 469: gctrpc.GoCryptoTraderService.LLMListStrategyVersions:output_type -> gctrpc.LLMListStrategyVersionsResponse
-	252, // 470: gctrpc.GoCryptoTraderService.LLMSaveStrategyDraft:output_type -> gctrpc.LLMSaveStrategyDraftResponse
-	255, // 471: gctrpc.GoCryptoTraderService.LLMGetStrategyApproval:output_type -> gctrpc.LLMGetStrategyApprovalResponse
-	258, // 472: gctrpc.GoCryptoTraderService.LLMListMarketGrants:output_type -> gctrpc.LLMListMarketGrantsResponse
-	260, // 473: gctrpc.GoCryptoTraderService.LLMGrantMarket:output_type -> gctrpc.LLMGrantMarketResponse
-	262, // 474: gctrpc.GoCryptoTraderService.LLMRevokeMarketGrant:output_type -> gctrpc.LLMRevokeMarketGrantResponse
-	265, // 475: gctrpc.GoCryptoTraderService.LLMListDecisionRuns:output_type -> gctrpc.LLMListDecisionRunsResponse
-	267, // 476: gctrpc.GoCryptoTraderService.LLMGetDecisionRun:output_type -> gctrpc.LLMGetDecisionRunResponse
-	263, // 477: gctrpc.GoCryptoTraderService.LLMTriggerAnalysis:output_type -> gctrpc.LLMDecisionRun
-	263, // 478: gctrpc.GoCryptoTraderService.LLMPreviewDecision:output_type -> gctrpc.LLMDecisionRun
-	272, // 479: gctrpc.GoCryptoTraderService.LLMGetDecisionLineage:output_type -> gctrpc.LLMGetDecisionLineageResponse
-	277, // 480: gctrpc.GoCryptoTraderService.LLMGetRiskEvidence:output_type -> gctrpc.LLMGetRiskEvidenceResponse
-	275, // 481: gctrpc.GoCryptoTraderService.LLMListAuditEvents:output_type -> gctrpc.LLMListAuditEventsResponse
-	279, // 482: gctrpc.GoCryptoTraderService.LLMGetMetrics:output_type -> gctrpc.LLMGetMetricsResponse
-	120, // 483: gctrpc.GoCryptoTraderService.LLMSetRiskSwitch:output_type -> gctrpc.GenericResponse
-	283, // 484: gctrpc.GoCryptoTraderService.LLMGetRiskSwitches:output_type -> gctrpc.LLMGetRiskSwitchesResponse
-	292, // 485: gctrpc.GoCryptoTraderService.LLMGetCoverageStatus:output_type -> gctrpc.LLMGetCoverageStatusResponse
-	295, // 486: gctrpc.GoCryptoTraderService.LLMListHalts:output_type -> gctrpc.LLMListHaltsResponse
-	297, // 487: gctrpc.GoCryptoTraderService.LLMSetHalt:output_type -> gctrpc.LLMSetHaltResponse
-	120, // 488: gctrpc.GoCryptoTraderService.LLMClearHalt:output_type -> gctrpc.GenericResponse
-	120, // 489: gctrpc.GoCryptoTraderService.LLMSetRunMode:output_type -> gctrpc.GenericResponse
-	302, // 490: gctrpc.GoCryptoTraderService.LLMReconcile:output_type -> gctrpc.LLMReconcileResponse
-	305, // 491: gctrpc.GoCryptoTraderService.LLMGetUsage:output_type -> gctrpc.LLMGetUsageResponse
-	308, // 492: gctrpc.GoCryptoTraderService.LLMGetNotifyStatus:output_type -> gctrpc.LLMGetNotifyStatusResponse
-	310, // 493: gctrpc.GoCryptoTraderService.LLMTestNotify:output_type -> gctrpc.LLMTestNotifyResponse
-	311, // 494: gctrpc.GoCryptoTraderService.LLMGetStatus:output_type -> gctrpc.LLMGetStatusResponse
-	287, // 495: gctrpc.GoCryptoTraderService.LLMVaultStatus:output_type -> gctrpc.LLMVaultStatusResponse
-	120, // 496: gctrpc.GoCryptoTraderService.LLMVaultInit:output_type -> gctrpc.GenericResponse
-	290, // 497: gctrpc.GoCryptoTraderService.LLMVaultAddSecret:output_type -> gctrpc.LLMVaultAddSecretResponse
-	314, // 498: gctrpc.GoCryptoTraderService.LLMGetReadiness:output_type -> gctrpc.LLMReadinessResponse
-	318, // 499: gctrpc.GoCryptoTraderService.LLMListProviderProfiles:output_type -> gctrpc.LLMListProviderProfilesResponse
-	320, // 500: gctrpc.GoCryptoTraderService.LLMCreateProviderProfile:output_type -> gctrpc.LLMCreateProviderProfileResponse
-	322, // 501: gctrpc.GoCryptoTraderService.LLMUpdateProviderProfile:output_type -> gctrpc.LLMUpdateProviderProfileResponse
-	120, // 502: gctrpc.GoCryptoTraderService.LLMDeleteProviderProfile:output_type -> gctrpc.GenericResponse
-	326, // 503: gctrpc.GoCryptoTraderService.LLMTestProviderProfile:output_type -> gctrpc.LLMTestProviderProfileResponse
-	328, // 504: gctrpc.GoCryptoTraderService.LLMGetActiveModelPair:output_type -> gctrpc.LLMGetActiveModelPairResponse
-	330, // 505: gctrpc.GoCryptoTraderService.LLMSwitchActiveModelPair:output_type -> gctrpc.LLMSwitchActiveModelPairResponse
-	346, // [346:506] is the sub-list for method output_type
-	186, // [186:346] is the sub-list for method input_type
-	186, // [186:186] is the sub-list for extension type_name
-	186, // [186:186] is the sub-list for extension extendee
-	0,   // [0:186] is the sub-list for field type_name
+	227, // 145: gctrpc.LLMSendMessageResponse.proposals:type_name -> gctrpc.LLMActionProposal
+	226, // 146: gctrpc.LLMChatStreamEvent.final:type_name -> gctrpc.LLMSendMessageResponse
+	230, // 147: gctrpc.LLMChatStreamEvent.progress:type_name -> gctrpc.LLMToolProgress
+	231, // 148: gctrpc.LLMListStrategiesResponse.strategies:type_name -> gctrpc.LLMStrategy
+	234, // 149: gctrpc.LLMGetStrategyVersionResponse.version:type_name -> gctrpc.LLMStrategyVersion
+	234, // 150: gctrpc.LLMGetStrategyVersionResponse.tree:type_name -> gctrpc.LLMStrategyVersion
+	247, // 151: gctrpc.LLMDiffStrategyVersionsResponse.changes:type_name -> gctrpc.LLMPolicyChange
+	231, // 152: gctrpc.LLMCreateStrategyResponse.strategy:type_name -> gctrpc.LLMStrategy
+	234, // 153: gctrpc.LLMListStrategyVersionsResponse.versions:type_name -> gctrpc.LLMStrategyVersion
+	234, // 154: gctrpc.LLMSaveStrategyDraftResponse.version:type_name -> gctrpc.LLMStrategyVersion
+	256, // 155: gctrpc.LLMGetStrategyApprovalResponse.approval:type_name -> gctrpc.LLMStrategyApproval
+	256, // 156: gctrpc.LLMListActiveApprovalsResponse.approvals:type_name -> gctrpc.LLMStrategyApproval
+	261, // 157: gctrpc.LLMListMarketGrantsResponse.grants:type_name -> gctrpc.LLMMarketGrant
+	261, // 158: gctrpc.LLMGrantMarketResponse.grant:type_name -> gctrpc.LLMMarketGrant
+	267, // 159: gctrpc.LLMListDecisionRunsResponse.runs:type_name -> gctrpc.LLMDecisionRun
+	267, // 160: gctrpc.LLMGetDecisionRunResponse.run:type_name -> gctrpc.LLMDecisionRun
+	274, // 161: gctrpc.LLMGetBatchDecisionResponse.rows:type_name -> gctrpc.LLMBatchDecisionRow
+	281, // 162: gctrpc.LLMGetScreenerMetricsResponse.metrics:type_name -> gctrpc.LLMScreenerMetric
+	284, // 163: gctrpc.LLMRunScreenRequest.criteria:type_name -> gctrpc.LLMScreenCriteria
+	285, // 164: gctrpc.LLMRunScreenRequest.sort:type_name -> gctrpc.LLMScreenSort
+	287, // 165: gctrpc.LLMRunScreenResponse.rows:type_name -> gctrpc.LLMScreenRow
+	267, // 166: gctrpc.LLMGetDecisionLineageResponse.run:type_name -> gctrpc.LLMDecisionRun
+	290, // 167: gctrpc.LLMGetDecisionLineageResponse.risk_evaluations:type_name -> gctrpc.LLMRiskEvidence
+	292, // 168: gctrpc.LLMGetDecisionLineageResponse.audit_events:type_name -> gctrpc.LLMAuditEvent
+	292, // 169: gctrpc.LLMListAuditEventsResponse.events:type_name -> gctrpc.LLMAuditEvent
+	290, // 170: gctrpc.LLMGetRiskEvidenceResponse.risk_evaluations:type_name -> gctrpc.LLMRiskEvidence
+	300, // 171: gctrpc.LLMGetRiskSwitchesResponse.switches:type_name -> gctrpc.LLMRiskSwitch
+	308, // 172: gctrpc.LLMListHaltsResponse.halts:type_name -> gctrpc.LLMHaltRow
+	308, // 173: gctrpc.LLMSetHaltResponse.halt:type_name -> gctrpc.LLMHaltRow
+	315, // 174: gctrpc.LLMReconcileResponse.deltas:type_name -> gctrpc.LLMPositionDelta
+	319, // 175: gctrpc.LLMGetUsageResponse.lines:type_name -> gctrpc.LLMUsageLine
+	321, // 176: gctrpc.LLMGetNotifyStatusResponse.channels:type_name -> gctrpc.LLMNotifyChannel
+	328, // 177: gctrpc.LLMReadinessResponse.gates:type_name -> gctrpc.LLMReadinessGate
+	330, // 178: gctrpc.LLMProviderProfile.revision:type_name -> gctrpc.LLMProviderRevision
+	331, // 179: gctrpc.LLMListProviderProfilesResponse.profiles:type_name -> gctrpc.LLMProviderProfile
+	331, // 180: gctrpc.LLMCreateProviderProfileResponse.profile:type_name -> gctrpc.LLMProviderProfile
+	330, // 181: gctrpc.LLMUpdateProviderProfileResponse.revision:type_name -> gctrpc.LLMProviderRevision
+	339, // 182: gctrpc.LLMTestProviderProfileResponse.results:type_name -> gctrpc.LLMProbeLayerResult
+	9,   // 183: gctrpc.GetInfoResponse.RpcEndpointsEntry.value:type_name -> gctrpc.RPCEndpoint
+	3,   // 184: gctrpc.GetCommunicationRelayersResponse.CommunicationRelayersEntry.value:type_name -> gctrpc.CommunicationRelayer
+	9,   // 185: gctrpc.GetRPCEndpointsResponse.EndpointsEntry.value:type_name -> gctrpc.RPCEndpoint
+	18,  // 186: gctrpc.GetExchangeInfoResponse.SupportedAssetsEntry.value:type_name -> gctrpc.PairsSupported
+	44,  // 187: gctrpc.OnlineCoins.CoinsEntry.value:type_name -> gctrpc.OnlineCoinSummary
+	45,  // 188: gctrpc.GetPortfolioSummaryResponse.CoinsOfflineSummaryEntry.value:type_name -> gctrpc.OfflineCoins
+	46,  // 189: gctrpc.GetPortfolioSummaryResponse.CoinsOnlineSummaryEntry.value:type_name -> gctrpc.OnlineCoins
+	81,  // 190: gctrpc.GetCryptocurrencyDepositAddressesResponse.AddressesEntry.value:type_name -> gctrpc.DepositAddresses
+	18,  // 191: gctrpc.GetExchangePairsResponse.SupportedAssetsEntry.value:type_name -> gctrpc.PairsSupported
+	195, // 192: gctrpc.GetTechnicalAnalysisResponse.SignalsEntry.value:type_name -> gctrpc.ListOfSignals
+	0,   // 193: gctrpc.GoCryptoTraderService.GetInfo:input_type -> gctrpc.GetInfoRequest
+	6,   // 194: gctrpc.GoCryptoTraderService.GetSubsystems:input_type -> gctrpc.GetSubsystemsRequest
+	5,   // 195: gctrpc.GoCryptoTraderService.EnableSubsystem:input_type -> gctrpc.GenericSubsystemRequest
+	5,   // 196: gctrpc.GoCryptoTraderService.DisableSubsystem:input_type -> gctrpc.GenericSubsystemRequest
+	8,   // 197: gctrpc.GoCryptoTraderService.GetRPCEndpoints:input_type -> gctrpc.GetRPCEndpointsRequest
+	2,   // 198: gctrpc.GoCryptoTraderService.GetCommunicationRelayers:input_type -> gctrpc.GetCommunicationRelayersRequest
+	12,  // 199: gctrpc.GoCryptoTraderService.GetExchanges:input_type -> gctrpc.GetExchangesRequest
+	11,  // 200: gctrpc.GoCryptoTraderService.DisableExchange:input_type -> gctrpc.GenericExchangeNameRequest
+	11,  // 201: gctrpc.GoCryptoTraderService.GetExchangeInfo:input_type -> gctrpc.GenericExchangeNameRequest
+	11,  // 202: gctrpc.GoCryptoTraderService.GetExchangeOTPCode:input_type -> gctrpc.GenericExchangeNameRequest
+	15,  // 203: gctrpc.GoCryptoTraderService.GetExchangeOTPCodes:input_type -> gctrpc.GetExchangeOTPsRequest
+	11,  // 204: gctrpc.GoCryptoTraderService.EnableExchange:input_type -> gctrpc.GenericExchangeNameRequest
+	20,  // 205: gctrpc.GoCryptoTraderService.GetTicker:input_type -> gctrpc.GetTickerRequest
+	23,  // 206: gctrpc.GoCryptoTraderService.GetTickers:input_type -> gctrpc.GetTickersRequest
+	26,  // 207: gctrpc.GoCryptoTraderService.GetOrderbook:input_type -> gctrpc.GetOrderbookRequest
+	29,  // 208: gctrpc.GoCryptoTraderService.GetOrderbooks:input_type -> gctrpc.GetOrderbooksRequest
+	32,  // 209: gctrpc.GoCryptoTraderService.GetAccountBalances:input_type -> gctrpc.GetAccountBalancesRequest
+	32,  // 210: gctrpc.GoCryptoTraderService.UpdateAccountBalances:input_type -> gctrpc.GetAccountBalancesRequest
+	32,  // 211: gctrpc.GoCryptoTraderService.GetAccountBalancesStream:input_type -> gctrpc.GetAccountBalancesRequest
+	36,  // 212: gctrpc.GoCryptoTraderService.GetConfig:input_type -> gctrpc.GetConfigRequest
+	39,  // 213: gctrpc.GoCryptoTraderService.GetPortfolio:input_type -> gctrpc.GetPortfolioRequest
+	41,  // 214: gctrpc.GoCryptoTraderService.GetPortfolioSummary:input_type -> gctrpc.GetPortfolioSummaryRequest
+	48,  // 215: gctrpc.GoCryptoTraderService.AddPortfolioAddress:input_type -> gctrpc.AddPortfolioAddressRequest
+	49,  // 216: gctrpc.GoCryptoTraderService.RemovePortfolioAddress:input_type -> gctrpc.RemovePortfolioAddressRequest
+	50,  // 217: gctrpc.GoCryptoTraderService.GetForexProviders:input_type -> gctrpc.GetForexProvidersRequest
+	53,  // 218: gctrpc.GoCryptoTraderService.GetForexRates:input_type -> gctrpc.GetForexRatesRequest
+	58,  // 219: gctrpc.GoCryptoTraderService.GetOrders:input_type -> gctrpc.GetOrdersRequest
+	60,  // 220: gctrpc.GoCryptoTraderService.GetOrder:input_type -> gctrpc.GetOrderRequest
+	61,  // 221: gctrpc.GoCryptoTraderService.SubmitOrder:input_type -> gctrpc.SubmitOrderRequest
+	64,  // 222: gctrpc.GoCryptoTraderService.SimulateOrder:input_type -> gctrpc.SimulateOrderRequest
+	66,  // 223: gctrpc.GoCryptoTraderService.WhaleBomb:input_type -> gctrpc.WhaleBombRequest
+	67,  // 224: gctrpc.GoCryptoTraderService.CancelOrder:input_type -> gctrpc.CancelOrderRequest
+	68,  // 225: gctrpc.GoCryptoTraderService.CancelBatchOrders:input_type -> gctrpc.CancelBatchOrdersRequest
+	71,  // 226: gctrpc.GoCryptoTraderService.CancelAllOrders:input_type -> gctrpc.CancelAllOrdersRequest
+	73,  // 227: gctrpc.GoCryptoTraderService.GetEvents:input_type -> gctrpc.GetEventsRequest
+	76,  // 228: gctrpc.GoCryptoTraderService.AddEvent:input_type -> gctrpc.AddEventRequest
+	78,  // 229: gctrpc.GoCryptoTraderService.RemoveEvent:input_type -> gctrpc.RemoveEventRequest
+	79,  // 230: gctrpc.GoCryptoTraderService.GetCryptocurrencyDepositAddresses:input_type -> gctrpc.GetCryptocurrencyDepositAddressesRequest
+	83,  // 231: gctrpc.GoCryptoTraderService.GetCryptocurrencyDepositAddress:input_type -> gctrpc.GetCryptocurrencyDepositAddressRequest
+	85,  // 232: gctrpc.GoCryptoTraderService.GetAvailableTransferChains:input_type -> gctrpc.GetAvailableTransferChainsRequest
+	87,  // 233: gctrpc.GoCryptoTraderService.WithdrawFiatFunds:input_type -> gctrpc.WithdrawFiatRequest
+	88,  // 234: gctrpc.GoCryptoTraderService.WithdrawCryptocurrencyFunds:input_type -> gctrpc.WithdrawCryptoRequest
+	90,  // 235: gctrpc.GoCryptoTraderService.WithdrawalEventByID:input_type -> gctrpc.WithdrawalEventByIDRequest
+	92,  // 236: gctrpc.GoCryptoTraderService.WithdrawalEventsByExchange:input_type -> gctrpc.WithdrawalEventsByExchangeRequest
+	93,  // 237: gctrpc.GoCryptoTraderService.WithdrawalEventsByDate:input_type -> gctrpc.WithdrawalEventsByDateRequest
+	100, // 238: gctrpc.GoCryptoTraderService.GetLoggerDetails:input_type -> gctrpc.GetLoggerDetailsRequest
+	102, // 239: gctrpc.GoCryptoTraderService.SetLoggerDetails:input_type -> gctrpc.SetLoggerDetailsRequest
+	103, // 240: gctrpc.GoCryptoTraderService.GetExchangePairs:input_type -> gctrpc.GetExchangePairsRequest
+	105, // 241: gctrpc.GoCryptoTraderService.SetExchangePair:input_type -> gctrpc.SetExchangePairRequest
+	106, // 242: gctrpc.GoCryptoTraderService.GetOrderbookStream:input_type -> gctrpc.GetOrderbookStreamRequest
+	107, // 243: gctrpc.GoCryptoTraderService.GetExchangeOrderbookStream:input_type -> gctrpc.GetExchangeOrderbookStreamRequest
+	108, // 244: gctrpc.GoCryptoTraderService.GetTickerStream:input_type -> gctrpc.GetTickerStreamRequest
+	109, // 245: gctrpc.GoCryptoTraderService.GetExchangeTickerStream:input_type -> gctrpc.GetExchangeTickerStreamRequest
+	110, // 246: gctrpc.GoCryptoTraderService.GetAuditEvent:input_type -> gctrpc.GetAuditEventRequest
+	116, // 247: gctrpc.GoCryptoTraderService.GetHistoricCandles:input_type -> gctrpc.GetHistoricCandlesRequest
+	121, // 248: gctrpc.GoCryptoTraderService.SetExchangeAsset:input_type -> gctrpc.SetExchangeAssetRequest
+	122, // 249: gctrpc.GoCryptoTraderService.SetAllExchangePairs:input_type -> gctrpc.SetExchangeAllPairsRequest
+	123, // 250: gctrpc.GoCryptoTraderService.UpdateExchangeSupportedPairs:input_type -> gctrpc.UpdateExchangeSupportedPairsRequest
+	124, // 251: gctrpc.GoCryptoTraderService.GetExchangeAssets:input_type -> gctrpc.GetExchangeAssetsRequest
+	126, // 252: gctrpc.GoCryptoTraderService.WebsocketGetInfo:input_type -> gctrpc.WebsocketGetInfoRequest
+	128, // 253: gctrpc.GoCryptoTraderService.WebsocketSetEnabled:input_type -> gctrpc.WebsocketSetEnabledRequest
+	129, // 254: gctrpc.GoCryptoTraderService.WebsocketGetSubscriptions:input_type -> gctrpc.WebsocketGetSubscriptionsRequest
+	132, // 255: gctrpc.GoCryptoTraderService.WebsocketSetProxy:input_type -> gctrpc.WebsocketSetProxyRequest
+	133, // 256: gctrpc.GoCryptoTraderService.WebsocketSetURL:input_type -> gctrpc.WebsocketSetURLRequest
+	112, // 257: gctrpc.GoCryptoTraderService.GetRecentTrades:input_type -> gctrpc.GetSavedTradesRequest
+	112, // 258: gctrpc.GoCryptoTraderService.GetHistoricTrades:input_type -> gctrpc.GetSavedTradesRequest
+	112, // 259: gctrpc.GoCryptoTraderService.GetSavedTrades:input_type -> gctrpc.GetSavedTradesRequest
+	115, // 260: gctrpc.GoCryptoTraderService.ConvertTradesToCandles:input_type -> gctrpc.ConvertTradesToCandlesRequest
+	134, // 261: gctrpc.GoCryptoTraderService.FindMissingSavedCandleIntervals:input_type -> gctrpc.FindMissingCandlePeriodsRequest
+	135, // 262: gctrpc.GoCryptoTraderService.FindMissingSavedTradeIntervals:input_type -> gctrpc.FindMissingTradePeriodsRequest
+	137, // 263: gctrpc.GoCryptoTraderService.SetExchangeTradeProcessing:input_type -> gctrpc.SetExchangeTradeProcessingRequest
+	138, // 264: gctrpc.GoCryptoTraderService.UpsertDataHistoryJob:input_type -> gctrpc.UpsertDataHistoryJobRequest
+	142, // 265: gctrpc.GoCryptoTraderService.GetDataHistoryJobDetails:input_type -> gctrpc.GetDataHistoryJobDetailsRequest
+	0,   // 266: gctrpc.GoCryptoTraderService.GetActiveDataHistoryJobs:input_type -> gctrpc.GetInfoRequest
+	146, // 267: gctrpc.GoCryptoTraderService.GetDataHistoryJobsBetween:input_type -> gctrpc.GetDataHistoryJobsBetweenRequest
+	142, // 268: gctrpc.GoCryptoTraderService.GetDataHistoryJobSummary:input_type -> gctrpc.GetDataHistoryJobDetailsRequest
+	147, // 269: gctrpc.GoCryptoTraderService.SetDataHistoryJobStatus:input_type -> gctrpc.SetDataHistoryJobStatusRequest
+	148, // 270: gctrpc.GoCryptoTraderService.UpdateDataHistoryJobPrerequisite:input_type -> gctrpc.UpdateDataHistoryJobPrerequisiteRequest
+	58,  // 271: gctrpc.GoCryptoTraderService.GetManagedOrders:input_type -> gctrpc.GetOrdersRequest
+	149, // 272: gctrpc.GoCryptoTraderService.ModifyOrder:input_type -> gctrpc.ModifyOrderRequest
+	151, // 273: gctrpc.GoCryptoTraderService.CurrencyStateGetAll:input_type -> gctrpc.CurrencyStateGetAllRequest
+	152, // 274: gctrpc.GoCryptoTraderService.CurrencyStateTrading:input_type -> gctrpc.CurrencyStateTradingRequest
+	155, // 275: gctrpc.GoCryptoTraderService.CurrencyStateDeposit:input_type -> gctrpc.CurrencyStateDepositRequest
+	154, // 276: gctrpc.GoCryptoTraderService.CurrencyStateWithdraw:input_type -> gctrpc.CurrencyStateWithdrawRequest
+	153, // 277: gctrpc.GoCryptoTraderService.CurrencyStateTradingPair:input_type -> gctrpc.CurrencyStateTradingPairRequest
+	165, // 278: gctrpc.GoCryptoTraderService.GetFuturesPositionsSummary:input_type -> gctrpc.GetFuturesPositionsSummaryRequest
+	167, // 279: gctrpc.GoCryptoTraderService.GetFuturesPositionsOrders:input_type -> gctrpc.GetFuturesPositionsOrdersRequest
+	183, // 280: gctrpc.GoCryptoTraderService.GetCollateral:input_type -> gctrpc.GetCollateralRequest
+	192, // 281: gctrpc.GoCryptoTraderService.Shutdown:input_type -> gctrpc.ShutdownRequest
+	194, // 282: gctrpc.GoCryptoTraderService.GetTechnicalAnalysis:input_type -> gctrpc.GetTechnicalAnalysisRequest
+	197, // 283: gctrpc.GoCryptoTraderService.GetMarginRatesHistory:input_type -> gctrpc.GetMarginRatesHistoryRequest
+	162, // 284: gctrpc.GoCryptoTraderService.GetManagedPosition:input_type -> gctrpc.GetManagedPositionRequest
+	163, // 285: gctrpc.GoCryptoTraderService.GetAllManagedPositions:input_type -> gctrpc.GetAllManagedPositionsRequest
+	188, // 286: gctrpc.GoCryptoTraderService.GetFundingRates:input_type -> gctrpc.GetFundingRatesRequest
+	190, // 287: gctrpc.GoCryptoTraderService.GetLatestFundingRate:input_type -> gctrpc.GetLatestFundingRateRequest
+	202, // 288: gctrpc.GoCryptoTraderService.GetOrderbookMovement:input_type -> gctrpc.GetOrderbookMovementRequest
+	204, // 289: gctrpc.GoCryptoTraderService.GetOrderbookAmountByNominal:input_type -> gctrpc.GetOrderbookAmountByNominalRequest
+	206, // 290: gctrpc.GoCryptoTraderService.GetOrderbookAmountByImpact:input_type -> gctrpc.GetOrderbookAmountByImpactRequest
+	169, // 291: gctrpc.GoCryptoTraderService.GetCollateralMode:input_type -> gctrpc.GetCollateralModeRequest
+	179, // 292: gctrpc.GoCryptoTraderService.GetLeverage:input_type -> gctrpc.GetLeverageRequest
+	171, // 293: gctrpc.GoCryptoTraderService.SetCollateralMode:input_type -> gctrpc.SetCollateralModeRequest
+	177, // 294: gctrpc.GoCryptoTraderService.SetMarginType:input_type -> gctrpc.SetMarginTypeRequest
+	181, // 295: gctrpc.GoCryptoTraderService.SetLeverage:input_type -> gctrpc.SetLeverageRequest
+	175, // 296: gctrpc.GoCryptoTraderService.ChangePositionMargin:input_type -> gctrpc.ChangePositionMarginRequest
+	208, // 297: gctrpc.GoCryptoTraderService.GetOpenInterest:input_type -> gctrpc.GetOpenInterestRequest
+	212, // 298: gctrpc.GoCryptoTraderService.GetCurrencyTradeURL:input_type -> gctrpc.GetCurrencyTradeURLRequest
+	215, // 299: gctrpc.GoCryptoTraderService.LLMListConversations:input_type -> gctrpc.LLMListConversationsRequest
+	217, // 300: gctrpc.GoCryptoTraderService.LLMCreateConversation:input_type -> gctrpc.LLMCreateConversationRequest
+	218, // 301: gctrpc.GoCryptoTraderService.LLMGetConversation:input_type -> gctrpc.LLMGetConversationRequest
+	221, // 302: gctrpc.GoCryptoTraderService.LLMArchiveConversation:input_type -> gctrpc.LLMArchiveConversationRequest
+	222, // 303: gctrpc.GoCryptoTraderService.LLMListMessages:input_type -> gctrpc.LLMListMessagesRequest
+	225, // 304: gctrpc.GoCryptoTraderService.LLMSendMessage:input_type -> gctrpc.LLMSendMessageRequest
+	228, // 305: gctrpc.GoCryptoTraderService.LLMChatStream:input_type -> gctrpc.LLMChatStreamRequest
+	232, // 306: gctrpc.GoCryptoTraderService.LLMListStrategies:input_type -> gctrpc.LLMListStrategiesRequest
+	235, // 307: gctrpc.GoCryptoTraderService.LLMGetStrategyVersion:input_type -> gctrpc.LLMGetStrategyVersionRequest
+	237, // 308: gctrpc.GoCryptoTraderService.LLMExtractPolicy:input_type -> gctrpc.LLMExtractPolicyRequest
+	239, // 309: gctrpc.GoCryptoTraderService.LLMFreezeStrategyVersion:input_type -> gctrpc.LLMFreezeStrategyVersionRequest
+	241, // 310: gctrpc.GoCryptoTraderService.LLMApproveStrategyVersion:input_type -> gctrpc.LLMApproveStrategyVersionRequest
+	243, // 311: gctrpc.GoCryptoTraderService.LLMRevokeApproval:input_type -> gctrpc.LLMRevokeApprovalRequest
+	244, // 312: gctrpc.GoCryptoTraderService.LLMPauseStrategy:input_type -> gctrpc.LLMPauseStrategyRequest
+	245, // 313: gctrpc.GoCryptoTraderService.LLMResumeStrategy:input_type -> gctrpc.LLMResumeStrategyRequest
+	246, // 314: gctrpc.GoCryptoTraderService.LLMDiffStrategyVersions:input_type -> gctrpc.LLMDiffStrategyVersionsRequest
+	249, // 315: gctrpc.GoCryptoTraderService.LLMCreateStrategy:input_type -> gctrpc.LLMCreateStrategyRequest
+	251, // 316: gctrpc.GoCryptoTraderService.LLMListStrategyVersions:input_type -> gctrpc.LLMListStrategyVersionsRequest
+	253, // 317: gctrpc.GoCryptoTraderService.LLMSaveStrategyDraft:input_type -> gctrpc.LLMSaveStrategyDraftRequest
+	255, // 318: gctrpc.GoCryptoTraderService.LLMGetStrategyApproval:input_type -> gctrpc.LLMGetStrategyApprovalRequest
+	258, // 319: gctrpc.GoCryptoTraderService.LLMListActiveApprovals:input_type -> gctrpc.LLMListActiveApprovalsRequest
+	260, // 320: gctrpc.GoCryptoTraderService.LLMListMarketGrants:input_type -> gctrpc.LLMListMarketGrantsRequest
+	263, // 321: gctrpc.GoCryptoTraderService.LLMGrantMarket:input_type -> gctrpc.LLMGrantMarketRequest
+	265, // 322: gctrpc.GoCryptoTraderService.LLMRevokeMarketGrant:input_type -> gctrpc.LLMRevokeMarketGrantRequest
+	268, // 323: gctrpc.GoCryptoTraderService.LLMListDecisionRuns:input_type -> gctrpc.LLMListDecisionRunsRequest
+	270, // 324: gctrpc.GoCryptoTraderService.LLMGetDecisionRun:input_type -> gctrpc.LLMGetDecisionRunRequest
+	272, // 325: gctrpc.GoCryptoTraderService.LLMTriggerAnalysis:input_type -> gctrpc.LLMTriggerAnalysisRequest
+	273, // 326: gctrpc.GoCryptoTraderService.LLMPreviewDecision:input_type -> gctrpc.LLMPreviewDecisionRequest
+	275, // 327: gctrpc.GoCryptoTraderService.LLMStartBatchDecision:input_type -> gctrpc.LLMStartBatchDecisionRequest
+	277, // 328: gctrpc.GoCryptoTraderService.LLMGetBatchDecision:input_type -> gctrpc.LLMGetBatchDecisionRequest
+	279, // 329: gctrpc.GoCryptoTraderService.LLMCancelBatchDecision:input_type -> gctrpc.LLMCancelBatchDecisionRequest
+	282, // 330: gctrpc.GoCryptoTraderService.LLMGetScreenerMetrics:input_type -> gctrpc.LLMGetScreenerMetricsRequest
+	286, // 331: gctrpc.GoCryptoTraderService.LLMRunScreen:input_type -> gctrpc.LLMRunScreenRequest
+	289, // 332: gctrpc.GoCryptoTraderService.LLMGetDecisionLineage:input_type -> gctrpc.LLMGetDecisionLineageRequest
+	295, // 333: gctrpc.GoCryptoTraderService.LLMGetRiskEvidence:input_type -> gctrpc.LLMGetRiskEvidenceRequest
+	293, // 334: gctrpc.GoCryptoTraderService.LLMListAuditEvents:input_type -> gctrpc.LLMListAuditEventsRequest
+	297, // 335: gctrpc.GoCryptoTraderService.LLMGetMetrics:input_type -> gctrpc.LLMGetMetricsRequest
+	299, // 336: gctrpc.GoCryptoTraderService.LLMSetRiskSwitch:input_type -> gctrpc.LLMSetRiskSwitchRequest
+	301, // 337: gctrpc.GoCryptoTraderService.LLMGetRiskSwitches:input_type -> gctrpc.LLMGetRiskSwitchesRequest
+	304, // 338: gctrpc.GoCryptoTraderService.LLMGetCoverageStatus:input_type -> gctrpc.LLMGetCoverageStatusRequest
+	306, // 339: gctrpc.GoCryptoTraderService.LLMSetMarketTracked:input_type -> gctrpc.LLMSetMarketTrackedRequest
+	309, // 340: gctrpc.GoCryptoTraderService.LLMListHalts:input_type -> gctrpc.LLMListHaltsRequest
+	311, // 341: gctrpc.GoCryptoTraderService.LLMSetHalt:input_type -> gctrpc.LLMSetHaltRequest
+	313, // 342: gctrpc.GoCryptoTraderService.LLMClearHalt:input_type -> gctrpc.LLMClearHaltRequest
+	314, // 343: gctrpc.GoCryptoTraderService.LLMSetRunMode:input_type -> gctrpc.LLMSetRunModeRequest
+	316, // 344: gctrpc.GoCryptoTraderService.LLMReconcile:input_type -> gctrpc.LLMReconcileRequest
+	318, // 345: gctrpc.GoCryptoTraderService.LLMGetUsage:input_type -> gctrpc.LLMGetUsageRequest
+	322, // 346: gctrpc.GoCryptoTraderService.LLMGetNotifyStatus:input_type -> gctrpc.LLMGetNotifyStatusRequest
+	324, // 347: gctrpc.GoCryptoTraderService.LLMTestNotify:input_type -> gctrpc.LLMTestNotifyRequest
+	303, // 348: gctrpc.GoCryptoTraderService.LLMGetStatus:input_type -> gctrpc.LLMGetStatusRequest
+	327, // 349: gctrpc.GoCryptoTraderService.LLMGetReadiness:input_type -> gctrpc.LLMReadinessRequest
+	332, // 350: gctrpc.GoCryptoTraderService.LLMListProviderProfiles:input_type -> gctrpc.LLMListProviderProfilesRequest
+	334, // 351: gctrpc.GoCryptoTraderService.LLMCreateProviderProfile:input_type -> gctrpc.LLMCreateProviderProfileRequest
+	336, // 352: gctrpc.GoCryptoTraderService.LLMUpdateProviderProfile:input_type -> gctrpc.LLMUpdateProviderProfileRequest
+	338, // 353: gctrpc.GoCryptoTraderService.LLMDeleteProviderProfile:input_type -> gctrpc.LLMDeleteProviderProfileRequest
+	340, // 354: gctrpc.GoCryptoTraderService.LLMTestProviderProfile:input_type -> gctrpc.LLMTestProviderProfileRequest
+	342, // 355: gctrpc.GoCryptoTraderService.LLMGetActiveModelPair:input_type -> gctrpc.LLMGetActiveModelPairRequest
+	344, // 356: gctrpc.GoCryptoTraderService.LLMSwitchActiveModelPair:input_type -> gctrpc.LLMSwitchActiveModelPairRequest
+	1,   // 357: gctrpc.GoCryptoTraderService.GetInfo:output_type -> gctrpc.GetInfoResponse
+	7,   // 358: gctrpc.GoCryptoTraderService.GetSubsystems:output_type -> gctrpc.GetSubsystemsResponse
+	120, // 359: gctrpc.GoCryptoTraderService.EnableSubsystem:output_type -> gctrpc.GenericResponse
+	120, // 360: gctrpc.GoCryptoTraderService.DisableSubsystem:output_type -> gctrpc.GenericResponse
+	10,  // 361: gctrpc.GoCryptoTraderService.GetRPCEndpoints:output_type -> gctrpc.GetRPCEndpointsResponse
+	4,   // 362: gctrpc.GoCryptoTraderService.GetCommunicationRelayers:output_type -> gctrpc.GetCommunicationRelayersResponse
+	13,  // 363: gctrpc.GoCryptoTraderService.GetExchanges:output_type -> gctrpc.GetExchangesResponse
+	120, // 364: gctrpc.GoCryptoTraderService.DisableExchange:output_type -> gctrpc.GenericResponse
+	19,  // 365: gctrpc.GoCryptoTraderService.GetExchangeInfo:output_type -> gctrpc.GetExchangeInfoResponse
+	14,  // 366: gctrpc.GoCryptoTraderService.GetExchangeOTPCode:output_type -> gctrpc.GetExchangeOTPResponse
+	16,  // 367: gctrpc.GoCryptoTraderService.GetExchangeOTPCodes:output_type -> gctrpc.GetExchangeOTPsResponse
+	120, // 368: gctrpc.GoCryptoTraderService.EnableExchange:output_type -> gctrpc.GenericResponse
+	22,  // 369: gctrpc.GoCryptoTraderService.GetTicker:output_type -> gctrpc.TickerResponse
+	25,  // 370: gctrpc.GoCryptoTraderService.GetTickers:output_type -> gctrpc.GetTickersResponse
+	28,  // 371: gctrpc.GoCryptoTraderService.GetOrderbook:output_type -> gctrpc.OrderbookResponse
+	31,  // 372: gctrpc.GoCryptoTraderService.GetOrderbooks:output_type -> gctrpc.GetOrderbooksResponse
+	35,  // 373: gctrpc.GoCryptoTraderService.GetAccountBalances:output_type -> gctrpc.GetAccountBalancesResponse
+	35,  // 374: gctrpc.GoCryptoTraderService.UpdateAccountBalances:output_type -> gctrpc.GetAccountBalancesResponse
+	35,  // 375: gctrpc.GoCryptoTraderService.GetAccountBalancesStream:output_type -> gctrpc.GetAccountBalancesResponse
+	37,  // 376: gctrpc.GoCryptoTraderService.GetConfig:output_type -> gctrpc.GetConfigResponse
+	40,  // 377: gctrpc.GoCryptoTraderService.GetPortfolio:output_type -> gctrpc.GetPortfolioResponse
+	47,  // 378: gctrpc.GoCryptoTraderService.GetPortfolioSummary:output_type -> gctrpc.GetPortfolioSummaryResponse
+	120, // 379: gctrpc.GoCryptoTraderService.AddPortfolioAddress:output_type -> gctrpc.GenericResponse
+	120, // 380: gctrpc.GoCryptoTraderService.RemovePortfolioAddress:output_type -> gctrpc.GenericResponse
+	52,  // 381: gctrpc.GoCryptoTraderService.GetForexProviders:output_type -> gctrpc.GetForexProvidersResponse
+	55,  // 382: gctrpc.GoCryptoTraderService.GetForexRates:output_type -> gctrpc.GetForexRatesResponse
+	59,  // 383: gctrpc.GoCryptoTraderService.GetOrders:output_type -> gctrpc.GetOrdersResponse
+	56,  // 384: gctrpc.GoCryptoTraderService.GetOrder:output_type -> gctrpc.OrderDetails
+	63,  // 385: gctrpc.GoCryptoTraderService.SubmitOrder:output_type -> gctrpc.SubmitOrderResponse
+	65,  // 386: gctrpc.GoCryptoTraderService.SimulateOrder:output_type -> gctrpc.SimulateOrderResponse
+	65,  // 387: gctrpc.GoCryptoTraderService.WhaleBomb:output_type -> gctrpc.SimulateOrderResponse
+	120, // 388: gctrpc.GoCryptoTraderService.CancelOrder:output_type -> gctrpc.GenericResponse
+	70,  // 389: gctrpc.GoCryptoTraderService.CancelBatchOrders:output_type -> gctrpc.CancelBatchOrdersResponse
+	72,  // 390: gctrpc.GoCryptoTraderService.CancelAllOrders:output_type -> gctrpc.CancelAllOrdersResponse
+	75,  // 391: gctrpc.GoCryptoTraderService.GetEvents:output_type -> gctrpc.GetEventsResponse
+	77,  // 392: gctrpc.GoCryptoTraderService.AddEvent:output_type -> gctrpc.AddEventResponse
+	120, // 393: gctrpc.GoCryptoTraderService.RemoveEvent:output_type -> gctrpc.GenericResponse
+	82,  // 394: gctrpc.GoCryptoTraderService.GetCryptocurrencyDepositAddresses:output_type -> gctrpc.GetCryptocurrencyDepositAddressesResponse
+	84,  // 395: gctrpc.GoCryptoTraderService.GetCryptocurrencyDepositAddress:output_type -> gctrpc.GetCryptocurrencyDepositAddressResponse
+	86,  // 396: gctrpc.GoCryptoTraderService.GetAvailableTransferChains:output_type -> gctrpc.GetAvailableTransferChainsResponse
+	89,  // 397: gctrpc.GoCryptoTraderService.WithdrawFiatFunds:output_type -> gctrpc.WithdrawResponse
+	89,  // 398: gctrpc.GoCryptoTraderService.WithdrawCryptocurrencyFunds:output_type -> gctrpc.WithdrawResponse
+	91,  // 399: gctrpc.GoCryptoTraderService.WithdrawalEventByID:output_type -> gctrpc.WithdrawalEventByIDResponse
+	94,  // 400: gctrpc.GoCryptoTraderService.WithdrawalEventsByExchange:output_type -> gctrpc.WithdrawalEventsByExchangeResponse
+	94,  // 401: gctrpc.GoCryptoTraderService.WithdrawalEventsByDate:output_type -> gctrpc.WithdrawalEventsByExchangeResponse
+	101, // 402: gctrpc.GoCryptoTraderService.GetLoggerDetails:output_type -> gctrpc.GetLoggerDetailsResponse
+	101, // 403: gctrpc.GoCryptoTraderService.SetLoggerDetails:output_type -> gctrpc.GetLoggerDetailsResponse
+	104, // 404: gctrpc.GoCryptoTraderService.GetExchangePairs:output_type -> gctrpc.GetExchangePairsResponse
+	120, // 405: gctrpc.GoCryptoTraderService.SetExchangePair:output_type -> gctrpc.GenericResponse
+	28,  // 406: gctrpc.GoCryptoTraderService.GetOrderbookStream:output_type -> gctrpc.OrderbookResponse
+	28,  // 407: gctrpc.GoCryptoTraderService.GetExchangeOrderbookStream:output_type -> gctrpc.OrderbookResponse
+	22,  // 408: gctrpc.GoCryptoTraderService.GetTickerStream:output_type -> gctrpc.TickerResponse
+	22,  // 409: gctrpc.GoCryptoTraderService.GetExchangeTickerStream:output_type -> gctrpc.TickerResponse
+	111, // 410: gctrpc.GoCryptoTraderService.GetAuditEvent:output_type -> gctrpc.GetAuditEventResponse
+	117, // 411: gctrpc.GoCryptoTraderService.GetHistoricCandles:output_type -> gctrpc.GetHistoricCandlesResponse
+	120, // 412: gctrpc.GoCryptoTraderService.SetExchangeAsset:output_type -> gctrpc.GenericResponse
+	120, // 413: gctrpc.GoCryptoTraderService.SetAllExchangePairs:output_type -> gctrpc.GenericResponse
+	120, // 414: gctrpc.GoCryptoTraderService.UpdateExchangeSupportedPairs:output_type -> gctrpc.GenericResponse
+	125, // 415: gctrpc.GoCryptoTraderService.GetExchangeAssets:output_type -> gctrpc.GetExchangeAssetsResponse
+	127, // 416: gctrpc.GoCryptoTraderService.WebsocketGetInfo:output_type -> gctrpc.WebsocketGetInfoResponse
+	120, // 417: gctrpc.GoCryptoTraderService.WebsocketSetEnabled:output_type -> gctrpc.GenericResponse
+	131, // 418: gctrpc.GoCryptoTraderService.WebsocketGetSubscriptions:output_type -> gctrpc.WebsocketGetSubscriptionsResponse
+	120, // 419: gctrpc.GoCryptoTraderService.WebsocketSetProxy:output_type -> gctrpc.GenericResponse
+	120, // 420: gctrpc.GoCryptoTraderService.WebsocketSetURL:output_type -> gctrpc.GenericResponse
+	114, // 421: gctrpc.GoCryptoTraderService.GetRecentTrades:output_type -> gctrpc.SavedTradesResponse
+	114, // 422: gctrpc.GoCryptoTraderService.GetHistoricTrades:output_type -> gctrpc.SavedTradesResponse
+	114, // 423: gctrpc.GoCryptoTraderService.GetSavedTrades:output_type -> gctrpc.SavedTradesResponse
+	117, // 424: gctrpc.GoCryptoTraderService.ConvertTradesToCandles:output_type -> gctrpc.GetHistoricCandlesResponse
+	136, // 425: gctrpc.GoCryptoTraderService.FindMissingSavedCandleIntervals:output_type -> gctrpc.FindMissingIntervalsResponse
+	136, // 426: gctrpc.GoCryptoTraderService.FindMissingSavedTradeIntervals:output_type -> gctrpc.FindMissingIntervalsResponse
+	120, // 427: gctrpc.GoCryptoTraderService.SetExchangeTradeProcessing:output_type -> gctrpc.GenericResponse
+	141, // 428: gctrpc.GoCryptoTraderService.UpsertDataHistoryJob:output_type -> gctrpc.UpsertDataHistoryJobResponse
+	143, // 429: gctrpc.GoCryptoTraderService.GetDataHistoryJobDetails:output_type -> gctrpc.DataHistoryJob
+	145, // 430: gctrpc.GoCryptoTraderService.GetActiveDataHistoryJobs:output_type -> gctrpc.DataHistoryJobs
+	145, // 431: gctrpc.GoCryptoTraderService.GetDataHistoryJobsBetween:output_type -> gctrpc.DataHistoryJobs
+	143, // 432: gctrpc.GoCryptoTraderService.GetDataHistoryJobSummary:output_type -> gctrpc.DataHistoryJob
+	120, // 433: gctrpc.GoCryptoTraderService.SetDataHistoryJobStatus:output_type -> gctrpc.GenericResponse
+	120, // 434: gctrpc.GoCryptoTraderService.UpdateDataHistoryJobPrerequisite:output_type -> gctrpc.GenericResponse
+	59,  // 435: gctrpc.GoCryptoTraderService.GetManagedOrders:output_type -> gctrpc.GetOrdersResponse
+	150, // 436: gctrpc.GoCryptoTraderService.ModifyOrder:output_type -> gctrpc.ModifyOrderResponse
+	156, // 437: gctrpc.GoCryptoTraderService.CurrencyStateGetAll:output_type -> gctrpc.CurrencyStateResponse
+	120, // 438: gctrpc.GoCryptoTraderService.CurrencyStateTrading:output_type -> gctrpc.GenericResponse
+	120, // 439: gctrpc.GoCryptoTraderService.CurrencyStateDeposit:output_type -> gctrpc.GenericResponse
+	120, // 440: gctrpc.GoCryptoTraderService.CurrencyStateWithdraw:output_type -> gctrpc.GenericResponse
+	120, // 441: gctrpc.GoCryptoTraderService.CurrencyStateTradingPair:output_type -> gctrpc.GenericResponse
+	166, // 442: gctrpc.GoCryptoTraderService.GetFuturesPositionsSummary:output_type -> gctrpc.GetFuturesPositionsSummaryResponse
+	168, // 443: gctrpc.GoCryptoTraderService.GetFuturesPositionsOrders:output_type -> gctrpc.GetFuturesPositionsOrdersResponse
+	184, // 444: gctrpc.GoCryptoTraderService.GetCollateral:output_type -> gctrpc.GetCollateralResponse
+	193, // 445: gctrpc.GoCryptoTraderService.Shutdown:output_type -> gctrpc.ShutdownResponse
+	196, // 446: gctrpc.GoCryptoTraderService.GetTechnicalAnalysis:output_type -> gctrpc.GetTechnicalAnalysisResponse
+	201, // 447: gctrpc.GoCryptoTraderService.GetMarginRatesHistory:output_type -> gctrpc.GetMarginRatesHistoryResponse
+	164, // 448: gctrpc.GoCryptoTraderService.GetManagedPosition:output_type -> gctrpc.GetManagedPositionsResponse
+	164, // 449: gctrpc.GoCryptoTraderService.GetAllManagedPositions:output_type -> gctrpc.GetManagedPositionsResponse
+	189, // 450: gctrpc.GoCryptoTraderService.GetFundingRates:output_type -> gctrpc.GetFundingRatesResponse
+	191, // 451: gctrpc.GoCryptoTraderService.GetLatestFundingRate:output_type -> gctrpc.GetLatestFundingRateResponse
+	203, // 452: gctrpc.GoCryptoTraderService.GetOrderbookMovement:output_type -> gctrpc.GetOrderbookMovementResponse
+	205, // 453: gctrpc.GoCryptoTraderService.GetOrderbookAmountByNominal:output_type -> gctrpc.GetOrderbookAmountByNominalResponse
+	207, // 454: gctrpc.GoCryptoTraderService.GetOrderbookAmountByImpact:output_type -> gctrpc.GetOrderbookAmountByImpactResponse
+	170, // 455: gctrpc.GoCryptoTraderService.GetCollateralMode:output_type -> gctrpc.GetCollateralModeResponse
+	180, // 456: gctrpc.GoCryptoTraderService.GetLeverage:output_type -> gctrpc.GetLeverageResponse
+	172, // 457: gctrpc.GoCryptoTraderService.SetCollateralMode:output_type -> gctrpc.SetCollateralModeResponse
+	178, // 458: gctrpc.GoCryptoTraderService.SetMarginType:output_type -> gctrpc.SetMarginTypeResponse
+	182, // 459: gctrpc.GoCryptoTraderService.SetLeverage:output_type -> gctrpc.SetLeverageResponse
+	176, // 460: gctrpc.GoCryptoTraderService.ChangePositionMargin:output_type -> gctrpc.ChangePositionMarginResponse
+	210, // 461: gctrpc.GoCryptoTraderService.GetOpenInterest:output_type -> gctrpc.GetOpenInterestResponse
+	213, // 462: gctrpc.GoCryptoTraderService.GetCurrencyTradeURL:output_type -> gctrpc.GetCurrencyTradeURLResponse
+	216, // 463: gctrpc.GoCryptoTraderService.LLMListConversations:output_type -> gctrpc.LLMListConversationsResponse
+	214, // 464: gctrpc.GoCryptoTraderService.LLMCreateConversation:output_type -> gctrpc.LLMConversation
+	220, // 465: gctrpc.GoCryptoTraderService.LLMGetConversation:output_type -> gctrpc.LLMConversationDetail
+	120, // 466: gctrpc.GoCryptoTraderService.LLMArchiveConversation:output_type -> gctrpc.GenericResponse
+	223, // 467: gctrpc.GoCryptoTraderService.LLMListMessages:output_type -> gctrpc.LLMListMessagesResponse
+	226, // 468: gctrpc.GoCryptoTraderService.LLMSendMessage:output_type -> gctrpc.LLMSendMessageResponse
+	229, // 469: gctrpc.GoCryptoTraderService.LLMChatStream:output_type -> gctrpc.LLMChatStreamEvent
+	233, // 470: gctrpc.GoCryptoTraderService.LLMListStrategies:output_type -> gctrpc.LLMListStrategiesResponse
+	236, // 471: gctrpc.GoCryptoTraderService.LLMGetStrategyVersion:output_type -> gctrpc.LLMGetStrategyVersionResponse
+	238, // 472: gctrpc.GoCryptoTraderService.LLMExtractPolicy:output_type -> gctrpc.LLMExtractPolicyResponse
+	240, // 473: gctrpc.GoCryptoTraderService.LLMFreezeStrategyVersion:output_type -> gctrpc.LLMFreezeStrategyVersionResponse
+	242, // 474: gctrpc.GoCryptoTraderService.LLMApproveStrategyVersion:output_type -> gctrpc.LLMApproveStrategyVersionResponse
+	120, // 475: gctrpc.GoCryptoTraderService.LLMRevokeApproval:output_type -> gctrpc.GenericResponse
+	120, // 476: gctrpc.GoCryptoTraderService.LLMPauseStrategy:output_type -> gctrpc.GenericResponse
+	120, // 477: gctrpc.GoCryptoTraderService.LLMResumeStrategy:output_type -> gctrpc.GenericResponse
+	248, // 478: gctrpc.GoCryptoTraderService.LLMDiffStrategyVersions:output_type -> gctrpc.LLMDiffStrategyVersionsResponse
+	250, // 479: gctrpc.GoCryptoTraderService.LLMCreateStrategy:output_type -> gctrpc.LLMCreateStrategyResponse
+	252, // 480: gctrpc.GoCryptoTraderService.LLMListStrategyVersions:output_type -> gctrpc.LLMListStrategyVersionsResponse
+	254, // 481: gctrpc.GoCryptoTraderService.LLMSaveStrategyDraft:output_type -> gctrpc.LLMSaveStrategyDraftResponse
+	257, // 482: gctrpc.GoCryptoTraderService.LLMGetStrategyApproval:output_type -> gctrpc.LLMGetStrategyApprovalResponse
+	259, // 483: gctrpc.GoCryptoTraderService.LLMListActiveApprovals:output_type -> gctrpc.LLMListActiveApprovalsResponse
+	262, // 484: gctrpc.GoCryptoTraderService.LLMListMarketGrants:output_type -> gctrpc.LLMListMarketGrantsResponse
+	264, // 485: gctrpc.GoCryptoTraderService.LLMGrantMarket:output_type -> gctrpc.LLMGrantMarketResponse
+	266, // 486: gctrpc.GoCryptoTraderService.LLMRevokeMarketGrant:output_type -> gctrpc.LLMRevokeMarketGrantResponse
+	269, // 487: gctrpc.GoCryptoTraderService.LLMListDecisionRuns:output_type -> gctrpc.LLMListDecisionRunsResponse
+	271, // 488: gctrpc.GoCryptoTraderService.LLMGetDecisionRun:output_type -> gctrpc.LLMGetDecisionRunResponse
+	267, // 489: gctrpc.GoCryptoTraderService.LLMTriggerAnalysis:output_type -> gctrpc.LLMDecisionRun
+	267, // 490: gctrpc.GoCryptoTraderService.LLMPreviewDecision:output_type -> gctrpc.LLMDecisionRun
+	276, // 491: gctrpc.GoCryptoTraderService.LLMStartBatchDecision:output_type -> gctrpc.LLMStartBatchDecisionResponse
+	278, // 492: gctrpc.GoCryptoTraderService.LLMGetBatchDecision:output_type -> gctrpc.LLMGetBatchDecisionResponse
+	280, // 493: gctrpc.GoCryptoTraderService.LLMCancelBatchDecision:output_type -> gctrpc.LLMCancelBatchDecisionResponse
+	283, // 494: gctrpc.GoCryptoTraderService.LLMGetScreenerMetrics:output_type -> gctrpc.LLMGetScreenerMetricsResponse
+	288, // 495: gctrpc.GoCryptoTraderService.LLMRunScreen:output_type -> gctrpc.LLMRunScreenResponse
+	291, // 496: gctrpc.GoCryptoTraderService.LLMGetDecisionLineage:output_type -> gctrpc.LLMGetDecisionLineageResponse
+	296, // 497: gctrpc.GoCryptoTraderService.LLMGetRiskEvidence:output_type -> gctrpc.LLMGetRiskEvidenceResponse
+	294, // 498: gctrpc.GoCryptoTraderService.LLMListAuditEvents:output_type -> gctrpc.LLMListAuditEventsResponse
+	298, // 499: gctrpc.GoCryptoTraderService.LLMGetMetrics:output_type -> gctrpc.LLMGetMetricsResponse
+	120, // 500: gctrpc.GoCryptoTraderService.LLMSetRiskSwitch:output_type -> gctrpc.GenericResponse
+	302, // 501: gctrpc.GoCryptoTraderService.LLMGetRiskSwitches:output_type -> gctrpc.LLMGetRiskSwitchesResponse
+	305, // 502: gctrpc.GoCryptoTraderService.LLMGetCoverageStatus:output_type -> gctrpc.LLMGetCoverageStatusResponse
+	307, // 503: gctrpc.GoCryptoTraderService.LLMSetMarketTracked:output_type -> gctrpc.LLMSetMarketTrackedResponse
+	310, // 504: gctrpc.GoCryptoTraderService.LLMListHalts:output_type -> gctrpc.LLMListHaltsResponse
+	312, // 505: gctrpc.GoCryptoTraderService.LLMSetHalt:output_type -> gctrpc.LLMSetHaltResponse
+	120, // 506: gctrpc.GoCryptoTraderService.LLMClearHalt:output_type -> gctrpc.GenericResponse
+	120, // 507: gctrpc.GoCryptoTraderService.LLMSetRunMode:output_type -> gctrpc.GenericResponse
+	317, // 508: gctrpc.GoCryptoTraderService.LLMReconcile:output_type -> gctrpc.LLMReconcileResponse
+	320, // 509: gctrpc.GoCryptoTraderService.LLMGetUsage:output_type -> gctrpc.LLMGetUsageResponse
+	323, // 510: gctrpc.GoCryptoTraderService.LLMGetNotifyStatus:output_type -> gctrpc.LLMGetNotifyStatusResponse
+	325, // 511: gctrpc.GoCryptoTraderService.LLMTestNotify:output_type -> gctrpc.LLMTestNotifyResponse
+	326, // 512: gctrpc.GoCryptoTraderService.LLMGetStatus:output_type -> gctrpc.LLMGetStatusResponse
+	329, // 513: gctrpc.GoCryptoTraderService.LLMGetReadiness:output_type -> gctrpc.LLMReadinessResponse
+	333, // 514: gctrpc.GoCryptoTraderService.LLMListProviderProfiles:output_type -> gctrpc.LLMListProviderProfilesResponse
+	335, // 515: gctrpc.GoCryptoTraderService.LLMCreateProviderProfile:output_type -> gctrpc.LLMCreateProviderProfileResponse
+	337, // 516: gctrpc.GoCryptoTraderService.LLMUpdateProviderProfile:output_type -> gctrpc.LLMUpdateProviderProfileResponse
+	120, // 517: gctrpc.GoCryptoTraderService.LLMDeleteProviderProfile:output_type -> gctrpc.GenericResponse
+	341, // 518: gctrpc.GoCryptoTraderService.LLMTestProviderProfile:output_type -> gctrpc.LLMTestProviderProfileResponse
+	343, // 519: gctrpc.GoCryptoTraderService.LLMGetActiveModelPair:output_type -> gctrpc.LLMGetActiveModelPairResponse
+	345, // 520: gctrpc.GoCryptoTraderService.LLMSwitchActiveModelPair:output_type -> gctrpc.LLMSwitchActiveModelPairResponse
+	357, // [357:521] is the sub-list for method output_type
+	193, // [193:357] is the sub-list for method input_type
+	193, // [193:193] is the sub-list for extension type_name
+	193, // [193:193] is the sub-list for extension extendee
+	0,   // [0:193] is the sub-list for field type_name
 }
 
 func init() { file_rpc_proto_init() }
@@ -25375,7 +26581,7 @@ func file_rpc_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_rpc_proto_rawDesc), len(file_rpc_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   345,
+			NumMessages:   360,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

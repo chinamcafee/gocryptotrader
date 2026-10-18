@@ -105,7 +105,7 @@ func BuildInputManifest(
 	if cand == nil {
 		return nil, fmt.Errorf("%w: nil candidate", ErrManifestIncomplete)
 	}
-	if !IsPinnedModel(req.Model) {
+	if !IsAcceptedModel(req.Model) {
 		return nil, fmt.Errorf("%w: %q", ErrModelInvalid, req.Model)
 	}
 	candidateJSON, err := json.Marshal(cand)

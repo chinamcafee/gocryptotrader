@@ -12,6 +12,7 @@ import (
 	"github.com/thrasher-corp/gocryptotrader/database"
 	llmstore "github.com/thrasher-corp/gocryptotrader/database/repository/llm"
 	"github.com/thrasher-corp/gocryptotrader/database/testhelpers"
+	"github.com/thrasher-corp/gocryptotrader/llm/jev"
 	"github.com/thrasher-corp/gocryptotrader/llm/openai"
 )
 
@@ -53,8 +54,7 @@ func validLLMParams(profileID string) *ProviderRevisionParams {
 		Actor:                  "operator@test",
 		BaseURL:                "https://api.example.com/v1",
 		ModelID:                "model-a",
-		APIKeyRef:              "secret://llm/00000000-0000-0000-0000-000000000001",
-		APIKeyFingerprint:      "0123456789abcdef",
+		APIKey:                 "sk-admin-test-0001",
 		TimeoutSeconds:         timeout,
 		MaxOutputTokens:        &maxTokens,
 		PromptVersion:          &promptVersion,
@@ -72,8 +72,7 @@ func validJevParams(profileID string) *ProviderRevisionParams {
 		Actor:                   "operator@test",
 		BaseURL:                 "https://jev.example.com",
 		ModelID:                 "jev-1.2.3",
-		APIKeyRef:               "secret://llm/00000000-0000-0000-0000-000000000002",
-		APIKeyFingerprint:       "fedcba9876543210",
+		APIKey:                  "sk-admin-test-0002",
 		TimeoutSeconds:          timeout,
 		QuestionTemplateVersion: &questionTemplate,
 		ReservationCap24H:       5,
@@ -164,24 +163,16 @@ func TestAddProviderRevisionValidation(t *testing.T) {
 			wantErr: ErrInvalidModelID,
 		},
 		{
-			name:    "api key ref must be a vault ref",
+			name:    "api key must be non-blank",
 			profile: llmProfile.ID,
-			mutate:  func(p *ProviderRevisionParams) { p.APIKeyRef = "sk-live-plaintext" },
+			mutate:  func(p *ProviderRevisionParams) { p.APIKey = "   " },
 			wantErr: ErrInvalidSecretRef,
 		},
 		{
-			name:    "api key ref kind must be llm",
+			name:    "timeout must be positive",
 			profile: llmProfile.ID,
-			mutate: func(p *ProviderRevisionParams) {
-				p.APIKeyRef = "secret://hyperliquid/00000000-0000-0000-0000-000000000009"
-			},
-			wantErr: ErrInvalidSecretRef,
-		},
-		{
-			name:    "fingerprint must be the vault truncation",
-			profile: llmProfile.ID,
-			mutate:  func(p *ProviderRevisionParams) { p.APIKeyFingerprint = "XYZ" },
-			wantErr: ErrInvalidFingerprint,
+			mutate:  func(p *ProviderRevisionParams) { p.TimeoutSeconds = 0 },
+			wantErr: ErrInvalidTimeout,
 		},
 		{
 			name:    "timeout must be positive",
@@ -365,4 +356,20 @@ func TestAddProviderRevisionToArchivedProfileRejected(t *testing.T) {
 
 	_, err = AddProviderRevision(ctx, validLLMParams(profile.ID), providerAdminNow.Add(2*time.Minute))
 	assert.ErrorIs(t, err, ErrProfileArchived)
+}
+
+func TestAddProviderRevisionAcceptsJevLatestAndDefaultsTemplate(t *testing.T) {
+	setupProviderAdminDB(t)
+	ctx := t.Context()
+	profile, err := CreateProviderProfile(ctx, ProviderKindJev, "Jev latest", "op", providerAdminNow)
+	require.NoError(t, err)
+
+	revision, err := AddProviderRevision(ctx, &ProviderRevisionParams{
+		ProfileID: profile.ID, Actor: "op", BaseURL: "https://jev.example.com/v1",
+		ModelID: "jev-latest", APIKey: "jev-token-1", TimeoutSeconds: 30, ReservationCap24H: 1,
+	}, providerAdminNow)
+	require.NoError(t, err, "the jev-latest alias is accepted by operator decision (2026-10-15)")
+	require.NotNil(t, revision.QuestionTemplateVersion)
+	assert.Equal(t, jev.QuestionVersionReviewV2, *revision.QuestionTemplateVersion,
+		"the template version defaults to the system constant; operators never type it")
 }

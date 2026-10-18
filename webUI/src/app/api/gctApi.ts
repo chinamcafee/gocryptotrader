@@ -13,7 +13,8 @@ import { createApi, fetchBaseQuery, type BaseQueryFn, type FetchArgs, type Fetch
 import type {
   AccountBalances, AlgorithmType, AssetType, Candle, CollateralModeInfo, CoverageStatus, CurrencyPair,
   EngineInfo, ExchangeAssets, ExchangePairs, FundingRateSnapshot, KlineItem, LeverageInfo,
-  LlmActivePair, LlmApproveStrategyVersionResponse, LlmAuditEvent, LlmCreateStrategyResponse, LlmDecisionRun, LlmDiffStrategyVersionsResponse, LlmExtractPolicyResponse, LlmFreezeStrategyVersionResponse, LlmGetDecisionLineageResponse, LlmGetDecisionRunResponse, LlmGetRiskSwitchesResponse, LlmGetNotifyStatusResponse, LlmGetStrategyApprovalResponse, LlmGetUsageResponse, LlmGrantMarketResponse, LlmListAuditEventsResponse, LlmListDecisionRunsResponse, LlmListHaltsResponse, LlmListMarketGrantsResponse, LlmListProviderProfilesResponse, LlmListStrategiesResponse, LlmListStrategyVersionsResponse, LlmProbeLayerResult, LlmProviderProfile, LlmProviderRevision, LlmReconcileResponse, LlmRevokeMarketGrantResponse, LlmRiskEvidence, LlmRiskSwitch, LlmSaveStrategyDraftResponse, LlmSetHaltResponse, LlmStatus, LlmStrategyVersion, LlmTestNotifyResponse, LlmTestProviderProfileResponse, LlmVaultEntry, LlmVaultStatusResponse,
+  LlmActivePair, LlmApproveStrategyVersionResponse, LlmAuditEvent, LlmCreateProviderProfileResponse, LlmCreateStrategyResponse, LlmDecisionRun, LlmDiffStrategyVersionsResponse, LlmExtractPolicyResponse, LlmFreezeStrategyVersionResponse, LlmGetDecisionLineageResponse, LlmGetDecisionRunResponse, LlmGetRiskSwitchesResponse, LlmGetNotifyStatusResponse, LlmGetStrategyApprovalResponse, LlmGetUsageResponse, LlmGrantMarketResponse, LlmListAuditEventsResponse, LlmListDecisionRunsResponse, LlmListHaltsResponse, LlmListMarketGrantsResponse, LlmListProviderProfilesResponse, LlmListStrategiesResponse, LlmListStrategyVersionsResponse, LlmProbeLayerResult, LlmProviderProfile, LlmProviderRevision, LlmReconcileResponse, LlmRevokeMarketGrantResponse, LlmRiskEvidence, LlmRiskSwitch, LlmSaveStrategyDraftResponse, LlmSetHaltResponse, LlmStatus, LlmStrategyVersion, LlmTestNotifyResponse, LlmTestProviderProfileResponse,
+  LlmBatchDecisionRow, LlmGetBatchDecisionResponse, LlmGetScreenerMetricsResponse, LlmListActiveApprovalsResponse, LlmRunScreenResponse, LlmScreenCriteria, LlmScreenRow, LlmScreenSort, LlmScreenerMetric, LlmStartBatchDecisionResponse,
   ManagedPosition, Orderbook, PositionStats, PositionSummary, TechnicalAnalysisResponse, Ticker,
 } from './types'
 
@@ -71,12 +72,37 @@ const baseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> =
 export const gctApi = createApi({
   reducerPath: 'gct',
   baseQuery,
-  tagTypes: ['Info', 'Ticker', 'Orderbook', 'Kline', 'TA', 'Funding', 'Account', 'Position', 'Pairs', 'LlmStatus', 'LlmProviders', 'LlmDecisions', 'LlmRiskSwitches', 'LlmVault', 'LlmStrategies', 'LlmGrants'],
+  tagTypes: ['Info', 'Ticker', 'Orderbook', 'Kline', 'TA', 'Funding', 'Account', 'Position', 'Pairs', 'LlmStatus', 'LlmProviders', 'LlmDecisions', 'LlmRiskSwitches', 'LlmStrategies', 'LlmGrants', 'LlmScreener', 'LlmBatch'],
   endpoints: (b) => ({
     // ── 引擎 ──────────────────────────────────────────────────────────────
     getEngineInfo: b.query<EngineInfo, void>({
       query: () => ({ url: 'getinfo', method: 'GET' }),
       providesTags: ['Info'],
+    }),
+
+    // ── 筛选与批量决策工作台（docs/llm-dev/13）──────────────────────────────
+    getLlmScreenerMetrics: b.query<LlmGetScreenerMetricsResponse, void>({
+      query: () => ({ url: 'llm/screener/metrics', method: 'GET' }),
+      providesTags: ['LlmScreener'],
+    }),
+
+    runLlmScreen: b.mutation<LlmRunScreenResponse, { criteria: LlmScreenCriteria[]; sort?: LlmScreenSort[]; limit?: number; include?: string[] }>({
+      query: (body) => ({ url: 'llm/screener/run', method: 'POST', body }),
+    }),
+
+    startLlmBatchDecision: b.mutation<LlmStartBatchDecisionResponse, { strategyVersionId: string; marketIds: string[]; kind: 'OPEN_DECISION' | 'POSITION_REVIEW'; actor: string }>({
+      query: (body) => ({ url: 'llm/batchdecisions', method: 'POST', body }),
+      invalidatesTags: ['LlmBatch'],
+    }),
+
+    getLlmActiveApprovals: b.query<LlmListActiveApprovalsResponse, void>({
+      query: () => ({ url: 'llm/approvals/active', method: 'GET' }),
+      providesTags: ['LlmStrategies'],
+    }),
+
+    getLlmBatchDecision: b.query<LlmGetBatchDecisionResponse, { jobId: string }>({
+      query: ({ jobId }) => ({ url: `llm/batchdecisions/${jobId}`, method: 'GET' }),
+      providesTags: ['LlmBatch'],
     }),
 
     // ── 市场数据 ──────────────────────────────────────────────────────────
@@ -291,23 +317,6 @@ export const gctApi = createApi({
       invalidatesTags: ['LlmStatus'],
     }),
 
-    // vault（W4-06）：状态/初始化/录入。录入的 secret 是 write-only——
-    // 响应只有「引用 + 指纹」，明文永不回显。写操作受代理闸门。
-    getLlmVault: b.query<LlmVaultStatusResponse, void>({
-      query: () => ({ url: 'llm/vault', method: 'GET' }),
-      providesTags: ['LlmVault'],
-    }),
-
-    initLlmVault: b.mutation<{ status: string }, void>({
-      query: () => ({ url: 'llm/vault/init', method: 'POST', body: {} }),
-      invalidatesTags: ['LlmVault'],
-    }),
-
-    addLlmVaultSecret: b.mutation<{ ref: string; fingerprint: string }, { kind: string; secret: string }>({
-      query: (body) => ({ url: 'llm/vault/secrets', method: 'POST', body }),
-      invalidatesTags: ['LlmVault'],
-    }),
-
     // ── 策略工作区（W5；后端策略 RPC 已落地） ──────────────────────────
     // 读路径直连仓储（列表/版本/审批），写路径经内部流水线同一服务。
     getLlmStrategies: b.query<LlmListStrategiesResponse, { includeArchived?: boolean } | void>({
@@ -452,15 +461,21 @@ export const gctApi = createApi({
       query: (body) => ({ url: 'llm/notify/test', method: 'POST', body }),
     }),
 
+    // 新建档案（W4-02 补缺）：kind=LLM_OPENAI_COMPAT|JEV；档案创建后需追加一个
+    // 修订版（updateLlmProviderProfile）才可用于配对。写操作受代理写闸约束。
+    createLlmProviderProfile: b.mutation<LlmCreateProviderProfileResponse, { kind: string; displayName: string; actor: string }>({
+      query: (body) => ({ url: 'llm/providers', method: 'POST', body }),
+      invalidatesTags: ['LlmProviders'],
+    }),
+
     // 追加新修订版（W4-02）：写操作，代理默认以 GCT_ALLOW_WRITES=false 拦截；
-    // 密钥引用 + 指纹随表单提交，明文 key 从不经过这里（vault 录入门在 W4-06）。
+    // API Key 明文随表单提交（vault 已移除，2026-10-15）；响应只回派生指纹。
     updateLlmProviderProfile: b.mutation<{ revision: LlmProviderRevision }, {
       id: string
       actor: string
       baseUrl: string
       modelId: string
-      apiKeyRef: string
-      apiKeyFingerprint: string
+      apiKey: string
       timeoutSeconds: number
       maxOutputTokens?: number
       promptVersion?: string
@@ -471,7 +486,8 @@ export const gctApi = createApi({
       proxyAddress?: string
     }>({
       query: ({ id, ...body }) => ({ url: `llm/providers/${id}`, method: 'POST', body: { id, ...body } }),
-      invalidatesTags: ['LlmProviders'],
+      // 追加修订版可能清空配对指针并降级 readiness（顶部状态卡/横幅读 llm/status）
+      invalidatesTags: ['LlmProviders', 'LlmStatus'],
     }),
 
     // 分层探针（W4-03）：每次判决都会落库并影响 readiness，因此失效 provider 列表。
@@ -481,7 +497,20 @@ export const gctApi = createApi({
         url: `llm/providers/${id}/test`, method: 'POST',
         body: revisionId ? { revisionId } : {},
       }),
-      invalidatesTags: ['LlmProviders'],
+      // 判决改变 readiness：顶部状态卡/横幅同样要刷新
+      invalidatesTags: ['LlmProviders', 'LlmStatus'],
+    }),
+
+    // 合约覆盖启停（N11）：写路径与 gctcli pair enable 同源；成功后交易对缓存与
+    // 覆盖状态卡都要重取。
+    setLlmMarketTracked: b.mutation<{ marketId: string; tracked: boolean; status: string }, { marketId: string; tracked: boolean; actor: string }>({
+      query: (body) => ({ url: 'llm/markettracked', method: 'POST', body }),
+      invalidatesTags: ['Pairs', 'LlmStatus'],
+    }),
+
+    // 取消批量作业（I4）：待跑行立即 CANCELLED，在途市场通过上下文取消。
+    cancelLlmBatchDecision: b.mutation<{ jobId: string; done: boolean; cancelled: number }, { jobId: string; actor: string }>({
+      query: ({ jobId, actor }) => ({ url: `llm/batchdecisions/${jobId}/cancel`, method: 'POST', body: { actor } }),
     }),
 
     // 切换活化配对（W4-05）：三重闸——操作者口令（重认证）+ expectedPairEpoch（CAS）+
@@ -495,7 +524,8 @@ export const gctApi = createApi({
       actor: string
     }>({
       query: (body) => ({ url: 'llm/activepair', method: 'POST', body }),
-      invalidatesTags: ['LlmProviders'],
+      // 配对切换同时改写 llm/status（顶部状态卡/横幅）与配对行（LlmProviders）
+      invalidatesTags: ['LlmProviders', 'LlmStatus'],
     }),
   }),
 })
@@ -520,9 +550,12 @@ export const {
   useGetActiveModelPairQuery,
   useGetLlmDecisionRunsQuery,
   useGetLlmAuditEventsQuery,
+  useCreateLlmProviderProfileMutation,
   useUpdateLlmProviderProfileMutation,
   useTestLlmProviderProfileMutation,
   useSwitchActiveModelPairMutation,
+  useSetLlmMarketTrackedMutation,
+  useCancelLlmBatchDecisionMutation,
   useGetLlmDecisionRunQuery,
   useGetLlmDecisionLineageQuery,
   useTriggerDecisionAnalysisMutation,
@@ -530,9 +563,6 @@ export const {
   useGetLlmRiskSwitchesQuery,
   useSetLlmRiskSwitchMutation,
   useSetLlmRunModeMutation,
-  useGetLlmVaultQuery,
-  useInitLlmVaultMutation,
-  useAddLlmVaultSecretMutation,
   useGetLlmStrategiesQuery,
   useCreateLlmStrategyMutation,
   useListLlmStrategyVersionsQuery,
@@ -556,6 +586,11 @@ export const {
   useGetLlmUsageQuery,
   useGetLlmNotifyStatusQuery,
   useTestLlmNotifyMutation,
+  useGetLlmScreenerMetricsQuery,
+  useRunLlmScreenMutation,
+  useStartLlmBatchDecisionMutation,
+  useGetLlmBatchDecisionQuery,
+  useGetLlmActiveApprovalsQuery,
 } = gctApi
 
-export type { Ticker, Orderbook, Candle, KlineItem, PositionSummary, PositionStats, FundingRateSnapshot, AccountBalances, CurrencyPair, LlmProviderProfile, LlmProviderRevision, LlmActivePair, LlmDecisionRun, LlmAuditEvent, LlmProbeLayerResult, LlmTestProviderProfileResponse, LlmRiskEvidence, LlmGetDecisionRunResponse, LlmGetDecisionLineageResponse, LlmRiskSwitch, LlmGetRiskSwitchesResponse, LlmVaultEntry, LlmVaultStatusResponse }
+export type { Ticker, Orderbook, Candle, KlineItem, PositionSummary, PositionStats, FundingRateSnapshot, AccountBalances, CurrencyPair, LlmProviderProfile, LlmProviderRevision, LlmActivePair, LlmDecisionRun, LlmAuditEvent, LlmProbeLayerResult, LlmTestProviderProfileResponse, LlmRiskEvidence, LlmGetDecisionRunResponse, LlmGetDecisionLineageResponse, LlmRiskSwitch, LlmGetRiskSwitchesResponse, LlmScreenerMetric, LlmGetScreenerMetricsResponse, LlmScreenCriteria, LlmScreenSort, LlmScreenRow, LlmRunScreenResponse, LlmBatchDecisionRow, LlmGetBatchDecisionResponse, LlmStartBatchDecisionResponse, LlmListActiveApprovalsResponse, ManagedPosition }

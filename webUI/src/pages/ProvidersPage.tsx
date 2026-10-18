@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react'
 import { Alert, Button, Card, Col, Descriptions, Drawer, Form, Input, InputNumber, Modal, Row, Select, Space, Spin, Switch, Table, Tag, Typography, message } from 'antd'
 import {
   errorText,
-  useAddLlmVaultSecretMutation, useGetActiveModelPairQuery, useGetLlmProvidersQuery, useGetLlmStatusQuery, useGetLlmVaultQuery,
-  useInitLlmVaultMutation, useSwitchActiveModelPairMutation, useTestLlmProviderProfileMutation, useUpdateLlmProviderProfileMutation,
-  type LlmProviderProfile, type LlmProbeLayerResult, type LlmTestProviderProfileResponse, type LlmVaultEntry,
+  useCreateLlmProviderProfileMutation, useGetActiveModelPairQuery, useGetLlmProvidersQuery, useGetLlmStatusQuery,
+  useSwitchActiveModelPairMutation, useTestLlmProviderProfileMutation, useUpdateLlmProviderProfileMutation,
+  type LlmProviderProfile, type LlmProbeLayerResult, type LlmTestProviderProfileResponse,
 } from '@/app/api/gctApi'
 import { NotImplemented } from '@/components/NotImplemented'
 
@@ -19,8 +19,7 @@ const KIND_LABEL: Record<string, string> = {
 const LLM_FIELDS = [
   ['baseUrl', 'Base URL', '必须 https（本地开发允许 http+127.0.0.1）'],
   ['modelId', '模型 ID', '如 deepseek-chat'],
-  ['apiKeyRef', '密钥引用', 'secret://llm/<uuid>，不存明文'],
-  ['apiKeyFingerprint', '指纹', 'SHA-256 截断，界面只显示指纹'],
+  ['apiKey', 'API Key（明文）', '直接填入；指纹由服务端派生（sha256 前 8 字节）'],
   ['timeoutSeconds', '超时', '1-120s；实时分析钳到 ≤30s'],
   ['maxOutputTokens', '最大输出', '默认 1024（512 会截断）'],
   ['maxToolRounds / maxToolCalls', '工具上限', '默认 4 轮 / 8 次'],
@@ -32,8 +31,8 @@ const LLM_FIELDS = [
 const JEV_FIELDS = [
   ['baseUrl', 'System One URL', '默认 https://api.typesafe.ai'],
   ['modelId', '模型 ID', '必须匹配 ^jev-\\d+\\.\\d+\\.\\d+$，拒绝 jev-latest'],
-  ['apiKeyRef', '密钥引用', 'secret://llm/<uuid>'],
-  ['questionTemplateVersion', '问题模板版本', 'jev-review-v2'],
+  ['apiKey', 'API Key（明文）', '直接填入'],
+  ['（自动）', '问题模板版本', '由系统按当前模板自动记录（jev-review-v2），无需填写'],
   ['reservationCap24h', '24h 预约上限', 'min(配置, 100)'],
 ]
 
@@ -48,58 +47,15 @@ export default function ProvidersPage() {
   const providers = useGetLlmProvidersQuery({ includeArchived }, { pollingInterval: 30_000 })
   const pair = useGetActiveModelPairQuery(undefined, { pollingInterval: 30_000 })
   const [updateProfile] = useUpdateLlmProviderProfileMutation()
+  const [createProfile, createState] = useCreateLlmProviderProfileMutation()
   const [testProfile] = useTestLlmProviderProfileMutation()
-  const { data: vault, error: vaultError } = useGetLlmVaultQuery()
-  const [initVault] = useInitLlmVaultMutation()
-  const [addSecret] = useAddLlmVaultSecretMutation()
-  const [initializing, setInitializing] = useState(false)
-  const [addingSecret, setAddingSecret] = useState(false)
-  const [lastSecret, setLastSecret] = useState<{ ref: string; fingerprint: string }>()
-  const [vaultForm] = Form.useForm()
+  const [creating, setCreating] = useState(false)
+  const [createForm] = Form.useForm()
 
-  const onInitVault = async () => {
-    try {
-      setInitializing(true)
-      await initVault().unwrap()
-      message.success('vault 已就绪（已存在则原样打开——钥匙永不重铸）')
-    } catch (err) {
-      if (err && typeof err === 'object' && 'status' in (err as object)) message.error(errorText(err))
-    } finally {
-      setInitializing(false)
-    }
-  }
-
-  const onAddSecret = async () => {
-    try {
-      const v = await vaultForm.validateFields()
-      setAddingSecret(true)
-      const out = await addSecret({ kind: v.kind, secret: v.secret }).unwrap()
-      setLastSecret(out)
-      vaultForm.setFieldsValue({ secret: '' })
-      message.success('密钥已录入（明文不回显）')
-    } catch (err) {
-      if (err && typeof err === 'object' && 'status' in (err as object)) message.error(errorText(err))
-    } finally {
-      setAddingSecret(false)
-    }
-  }
   const [switchProfile] = useSwitchActiveModelPairMutation()
   const [switching, setSwitching] = useState(false)
   const [savingSwitch, setSavingSwitch] = useState(false)
   const [switchForm] = Form.useForm()
-
-  // 切换配对（W4-05）：口令（重认证）+ 读到的 epoch（CAS）+ 幂等键，缺一不可
-  const openSwitch = () => {
-    switchForm.setFieldsValue({
-      llmRevisionId: pair.data?.llmProfileRevisionId,
-      jevRevisionId: pair.data?.jevProfileRevisionId,
-      expectedEpoch: pair.data?.pairEpoch ?? 0,
-      operatorPassword: '',
-      actor: 'webui-operator',
-      idempotencyKey: globalThis.crypto?.randomUUID?.() ?? `switch-${Date.now()}`,
-    })
-    setSwitching(true)
-  }
 
   const onSwitch = async () => {
     try {
@@ -133,6 +89,20 @@ export default function ProvidersPage() {
     .filter((x) => x.profile.kind === 'JEV')
     .map((x) => ({ value: x.revision.id, label: `${x.profile.displayName} · #${x.revision.revisionNo} · ${x.revision.modelId}` }))
 
+  // 切换/首次激活配对（W4-05）：口令（重认证）+ 读到的 epoch（CAS）+ 幂等键，缺一不可。
+  // found=false（从未激活）同样从这里走：expected_pair_epoch 保持 0，两侧先预填最新 live 修订版。
+  const openSwitch = () => {
+    switchForm.setFieldsValue({
+      llmRevisionId: pair.data?.llmProfileRevisionId || llmOptions[0]?.value,
+      jevRevisionId: pair.data?.jevProfileRevisionId || jevOptions[0]?.value,
+      expectedEpoch: Number(pair.data?.pairEpoch ?? 0),
+      operatorPassword: '',
+      actor: 'webui-operator',
+      idempotencyKey: globalThis.crypto?.randomUUID?.() ?? `switch-${Date.now()}`,
+    })
+    setSwitching(true)
+  }
+
   // 探针 = 真招：判决会落库并影响 readiness（W4-03）
   const onProbe = async (profile: LlmProviderProfile) => {
     setProbe({ profile, loading: true })
@@ -155,18 +125,33 @@ export default function ProvidersPage() {
       actor: 'webui-operator',
       baseUrl: revision?.baseUrl ?? '',
       modelId: revision?.modelId ?? '',
-      apiKeyRef: revision?.apiKeyRef ?? '',
-      apiKeyFingerprint: revision?.apiKeyFingerprint ?? '',
+      // The key is never echoed back: appending a revision requires pasting
+      // it again (the revision is a complete snapshot).
+      apiKey: '',
       timeoutSeconds: revision?.timeoutSeconds ?? 30,
       maxOutputTokens: revision?.maxOutputTokens,
       promptVersion: revision?.promptVersion,
-      questionTemplateVersion: revision?.questionTemplateVersion,
       dailyBudgetUsd: revision?.dailyBudgetUsd,
       reservationCap24h: revision?.reservationCap24h,
       allowInsecureLocalhost: revision?.allowInsecureLocalhost ?? false,
       proxyAddress: revision?.proxyAddress,
     })
   }, [editing, form])
+
+  const onCreate = async () => {
+    try {
+      const values = await createForm.validateFields()
+      const res = await createProfile({ kind: values.kind, displayName: values.displayName, actor: values.actor }).unwrap()
+      message.success('档案已创建——请继续追加第一个修订版（Base URL / 模型 / 密钥引用）')
+      setCreating(false)
+      createForm.resetFields()
+      if (res.profile) setEditing(res.profile)
+    } catch (err) {
+      if (err && typeof err === 'object' && 'status' in err) {
+        message.error(errorText(err))
+      }
+    }
+  }
 
   const onSave = async () => {
     if (!editing) return
@@ -178,12 +163,10 @@ export default function ProvidersPage() {
         actor: values.actor,
         baseUrl: values.baseUrl,
         modelId: values.modelId,
-        apiKeyRef: values.apiKeyRef,
-        apiKeyFingerprint: values.apiKeyFingerprint,
+        apiKey: values.apiKey,
         timeoutSeconds: values.timeoutSeconds,
         maxOutputTokens: values.maxOutputTokens ?? undefined,
         promptVersion: values.promptVersion || undefined,
-        questionTemplateVersion: values.questionTemplateVersion || undefined,
         dailyBudgetUsd: values.dailyBudgetUsd || undefined,
         reservationCap24h: values.reservationCap24h ?? undefined,
         allowInsecureLocalhost: values.allowInsecureLocalhost ?? false,
@@ -238,7 +221,7 @@ export default function ProvidersPage() {
           title={<span className="gct-panel-title">活化配对（llm/activepair · CAS 单行）</span>}
           extra={(
             <Space size={8}>
-              <Button size="small" disabled={!pair.data?.found} onClick={openSwitch}>切换配对</Button>
+              <Button size="small" disabled={!pair.data} onClick={openSwitch}>切换配对</Button>
               <Switch
               size="small"
               checkedChildren="含归档"
@@ -264,7 +247,7 @@ export default function ProvidersPage() {
                 <Descriptions.Item label="更新者">{pair.data.updatedBy ?? '—'}</Descriptions.Item>
               </Descriptions>
             ) : (
-              <Text type="secondary">尚未激活过任何配对（found=false 是状态，不是错误）。</Text>
+              <Text type="secondary">尚未激活过任何配对（found=false 是状态，不是错误）。点右上角「切换配对」完成首次激活：expected_pair_epoch 保持 0，两侧选最新 live 修订版（探针已通过即可得到 READY）。</Text>
             )
           ) : (
             <Text type="secondary">读取中…</Text>
@@ -273,7 +256,8 @@ export default function ProvidersPage() {
       </Col>
 
       <Col span={24}>
-        <Card size="small" title={<span className="gct-panel-title">Provider 档案（llm/providers · M1-14）</span>}>
+        <Card size="small" title={<span className="gct-panel-title">Provider 档案（llm/providers · M1-14）</span>}
+          extra={<Button size="small" type="primary" onClick={() => setCreating(true)}>新建档案</Button>}>
           {providers.error ? (
             <NotImplemented title="Provider 档案与探针" error={providers.error} />
           ) : (
@@ -289,8 +273,7 @@ export default function ProvidersPage() {
                     <Descriptions.Item label="修订版">#{profile.revision.revisionNo}（{profile.revisionCount} 版历史）</Descriptions.Item>
                     <Descriptions.Item label="Base URL"><Text className="gct-mono" style={{ fontSize: 12 }}>{profile.revision.baseUrl}</Text></Descriptions.Item>
                     <Descriptions.Item label="模型"><Text className="gct-mono" style={{ fontSize: 12 }}>{profile.revision.modelId}</Text></Descriptions.Item>
-                    <Descriptions.Item label="密钥引用"><Text className="gct-mono" style={{ fontSize: 12 }}>{profile.revision.apiKeyRef}</Text></Descriptions.Item>
-                    <Descriptions.Item label="指纹"><Text className="gct-mono" style={{ fontSize: 12 }}>{profile.revision.apiKeyFingerprint}</Text></Descriptions.Item>
+                    <Descriptions.Item label="密钥指纹（服务端派生）"><Text className="gct-mono" style={{ fontSize: 12 }}>{profile.revision.apiKeyFingerprint}</Text></Descriptions.Item>
                     <Descriptions.Item label="超时">{profile.revision.timeoutSeconds}s</Descriptions.Item>
                     <Descriptions.Item label="最大输出">{profile.revision.maxOutputTokens ?? '默认'}</Descriptions.Item>
                     <Descriptions.Item label="提示词版本">{profile.revision.promptVersion ?? '—'}</Descriptions.Item>
@@ -363,71 +346,12 @@ export default function ProvidersPage() {
             />
           )}
           <Paragraph className="gct-dim" style={{ fontSize: 11, marginTop: 8, marginBottom: 0 }}>
-            删除永远是归档——修订版是不可变历史，行从不移除；密钥只以引用 + 指纹出现，明文从不经过前端。
+            删除永远是归档——修订版是不可变历史，行从不移除；API Key 明文只上送、从不回传，界面只见服务端派生的指纹。
             探针与编辑表单见 W4-02/W4-03（后端 `llm providers test` / `update` 已活，写操作受代理 <code>GCT_ALLOW_WRITES</code> 闸门约束）。
           </Paragraph>
         </Card>
       </Col>
 
-      <Col span={24}>
-        <Card
-          size="small"
-          title={<span className="gct-panel-title">密钥保管（vault · 09 §5，W4-06）</span>}
-          extra={vault && !vault.initialized ? (
-            <Button size="small" type="primary" loading={initializing} onClick={() => void onInitVault()}>初始化 vault</Button>
-          ) : null}
-        >
-          {vaultError ? <NotImplemented title="密钥保管" error={vaultError} /> : vault ? (
-            <>
-              <Descriptions size="small" column={2}>
-                <Descriptions.Item label="状态">
-                  {vault.initialized ? <Tag color="green">已初始化</Tag> : <Tag color="orange">未初始化</Tag>}
-                </Descriptions.Item>
-                <Descriptions.Item label="目录">
-                  <Text className="gct-mono" style={{ fontSize: 12 }}>{vault.directory ?? '—'}</Text>
-                </Descriptions.Item>
-              </Descriptions>
-              {vault.initialized && (
-                <>
-                  <Table<LlmVaultEntry>
-                    size="small" rowKey="ref" pagination={false}
-                    dataSource={vault.entries ?? []}
-                    columns={[
-                      { title: '引用', dataIndex: 'ref', render: (v: string) => <Text className="gct-mono" style={{ fontSize: 11 }}>{v}</Text> },
-                      { title: '类别', dataIndex: 'kind', width: 80 },
-                      { title: '指纹', dataIndex: 'fingerprint', width: 180, render: (v?: string) => <Text className="gct-mono" style={{ fontSize: 11 }}>{v ?? '—'}</Text> },
-                      { title: '建立于', dataIndex: 'createdAt', width: 190 },
-                    ]}
-                    locale={{ emptyText: <span className="gct-dim">还没有任何密钥</span> }}
-                  />
-                  <Form form={vaultForm} layout="inline" size="small" style={{ marginTop: 8, rowGap: 8 }}>
-                    <Form.Item name="kind" rules={[{ required: true, message: '选择类别' }]}>
-                      <Select style={{ width: 110 }} placeholder="类别" options={[{ value: 'llm', label: 'llm' }, { value: 'jev', label: 'jev' }]} />
-                    </Form.Item>
-                    <Form.Item name="secret" rules={[{ required: true, message: '输入密钥' }]}>
-                      <Input.Password style={{ width: 320 }} placeholder="密钥明文（write-only，不回显）" autoComplete="new-password" />
-                    </Form.Item>
-                    <Form.Item>
-                      <Button loading={addingSecret} onClick={() => void onAddSecret()}>录入密钥</Button>
-                    </Form.Item>
-                  </Form>
-                  {lastSecret && (
-                    <Alert
-                      type="success" showIcon style={{ marginTop: 8 }}
-                      message={`已录入：${lastSecret.ref}`}
-                      description={`指纹 ${lastSecret.fingerprint}——把「引用 + 指纹」填进档案修订版（明文不落库、不回显，可核对不泄密）。`}
-                    />
-                  )}
-                </>
-              )}
-            </>
-          ) : <Text type="secondary">读取中…</Text>}
-          <Paragraph className="gct-dim" style={{ fontSize: 11, marginTop: 8, marginBottom: 0 }}>
-            密钥保管纪律（09 §5）：创建后<b>永不重新生成</b>（再次初始化只会原样打开——不会铸新钥匙、不会丢旧密钥）；明文只经一次录入、只落 RSA 包裹的密文；
-            界面从此只见「引用 + 指纹」。写操作受代理 <code>GCT_ALLOW_WRITES</code> 闸门。
-          </Paragraph>
-        </Card>
-      </Col>
 
       <Col xs={24} lg={12}>
         <Card size="small" title={<span className="gct-panel-title">LLM 档案编辑表单契约（W4-02）</span>}>
@@ -466,6 +390,33 @@ export default function ProvidersPage() {
         </Card>
       </Col>
 
+      <Modal
+        open={creating}
+        title="新建 Provider 档案"
+        okText="创建"
+        confirmLoading={createState.isLoading}
+        onCancel={() => setCreating(false)}
+        onOk={() => void onCreate()}
+      >
+        <Form layout="vertical" form={createForm} initialValues={{ kind: 'LLM_OPENAI_COMPAT', actor: 'webui-operator' }}>
+          <Form.Item label="类型" name="kind" rules={[{ required: true }]}>
+            <Select options={[
+              { value: 'LLM_OPENAI_COMPAT', label: 'LLM（OpenAI 兼容）' },
+              { value: 'JEV', label: 'Jev（TypeSafe System One）' },
+            ]} />
+          </Form.Item>
+          <Form.Item label="显示名" name="displayName" rules={[{ required: true }]}>
+            <Input placeholder="如 DeepSeek 生产 / TypeSafe Prod" />
+          </Form.Item>
+          <Form.Item label="操作者" name="actor" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+        </Form>
+        <Text type="secondary" style={{ fontSize: 12 }}>
+          创建后会自动打开编辑抽屉：填写 Base URL、模型 ID、API Key（明文）等，即追加第一个修订版。
+        </Text>
+      </Modal>
+
       <Drawer
         title={`编辑 Provider 档案：${editing?.displayName ?? ''}`}
         width={560}
@@ -482,31 +433,28 @@ export default function ProvidersPage() {
         <Alert
           type="warning" showIcon style={{ marginBottom: 12 }}
           message="提交 = 追加新修订版，不是就地修改"
-          description="修订版不可变；若被取代的版本正是活化配对指向的版本，配对指针会被清空、pair_epoch++、readiness 转 INCOMPLETE——直到重新激活配对。密钥录入在 vault（W4-06）：这里只填引用与指纹。"
+          description="修订版不可变；若被取代的版本正是活化配对指向的版本，配对指针会被清空、pair_epoch++、readiness 转 INCOMPLETE——直到重新激活配对。API Key 为明文直存（本地库，2026-10-15 简化）。"
         />
         <Form form={form} layout="vertical" size="small">
           <Form.Item name="actor" label="操作者（审计留痕）" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
           <Form.Item name="baseUrl" label="Base URL" rules={[{ required: true }]}>
-            <Input placeholder="https://api.example.com/v1（本地 http 仅限回环 + 显式豁免）" />
+            <Input placeholder={editing?.kind === 'JEV' ? 'https://api.typesafe.ai（只填站点；/v1/systemone 自动拼、已带也可）' : 'https://api.example.com/v1（本地 http 仅限回环 + 显式豁免）'} />
           </Form.Item>
           <Form.Item name="modelId" label="模型 ID" rules={[{ required: true }]}>
-            <Input placeholder={editing?.kind === 'JEV' ? 'jev-1.0.0（必须打点版本）' : '如 deepseek-chat'} />
+            <Input placeholder={editing?.kind === 'JEV' ? '如 jev-1.13.0（打点版本）或 jev-latest' : '如 deepseek-chat'} />
           </Form.Item>
-          <Form.Item name="apiKeyRef" label="密钥引用（vault）" rules={[{ required: true }]}>
-            <Input placeholder="secret://llm/<id>" />
-          </Form.Item>
-          <Form.Item name="apiKeyFingerprint" label="密钥指纹（16 hex，只核对不回显）" rules={[{ required: true, pattern: /^[0-9a-f]{16}$/, message: '需 16 位小写 hex' }]}>
-            <Input />
+          <Form.Item name="apiKey" label="API Key（明文）" rules={[{ required: true, message: '填入提供方的 API Key' }]}>
+            <Input.Password placeholder="直接粘贴 API Key（仅存本地数据库）" autoComplete="new-password" />
           </Form.Item>
           <Form.Item name="timeoutSeconds" label="超时（秒）" rules={[{ required: true }]}>
             <InputNumber min={1} max={120} style={{ width: '100%' }} />
           </Form.Item>
           {editing?.kind === 'JEV' ? (
-            <Form.Item name="questionTemplateVersion" label="问题模板版本（Jev）" rules={[{ required: true }]}>
-              <Input placeholder="jev-review-v2" />
-            </Form.Item>
+            <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 16 }}>
+              问题模板版本由系统自动记录（当前为 jev-review-v2），无需填写。
+            </Text>
           ) : (
             <>
               <Form.Item name="maxOutputTokens" label="最大输出 token（LLM，留空=默认）">
@@ -587,7 +535,7 @@ export default function ProvidersPage() {
       >
         <Alert
           type="warning" showIcon style={{ marginBottom: 12 }}
-          message="切换会改写全局决策模型（两侧一起换）"
+          message={pair.data?.found ? '切换会改写全局决策模型（两侧一起换）' : '首次激活：把两侧选定的 live 修订版设为全局决策模型'}
           description="激活成功后 pair_epoch+1；旧配对下运行中的策略将暂停、其有效审批将被撤销（影响面登记在切换命令里）。请确认两侧修订版都通过了探针（readiness 由最新探针判决推导）。"
         />
         <Form form={switchForm} layout="vertical" size="small">

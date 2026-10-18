@@ -17,16 +17,15 @@ import (
 	"github.com/thrasher-corp/gocryptotrader/gctrpc"
 	"github.com/thrasher-corp/gocryptotrader/llm/chat"
 	"github.com/thrasher-corp/gocryptotrader/llm/openai"
-	"github.com/thrasher-corp/gocryptotrader/llm/secrets"
 )
 
 // M6-08 备份恢复演练（docs 11 §8）：一台“机器”的全部持久化状态就是三样
-// 文件——vault 目录（RSA 包裹钥匙对 + 会话加密钥匙 + 逐条密钥）、SQLite
-// 数据库文件、配置文件。演练按文件级备份走两跳（A → 备份介质 → B），
-// 然后在一个**全新的进程**里以机器 B 的目录重开：库行可读、密钥可解密、
-// 会话密文可开、用量读面可汇总、配置可加载迁移。两个负例同时钉死：
-// 只有数据库没有 vault = 什么都解不开（保密主张跨机器成立）；vault 漏拷
-// conversation-key.bin = 旧会话永久不可读（备份完整性不是可选项）。
+// 文件——chat 键目录（会话加密钥匙）、SQLite 数据库文件、配置文件。演练按
+// 文件级备份走两跳（A → 备份介质 → B），然后在一个**全新的进程**里以机器 B
+// 的目录重开：库行可读、provider 明文 key 可回读、会话密文可开、用量读面
+// 可汇总、配置可加载迁移。两个负例同时钉死：缺 conversation-key.bin =
+// 旧会话永久不可读（备份完整性不是可选项）；库按设计含**明文 provider key**（2026-10-15
+// vault 移除——如实钉死新安全态势），但**会话正文必须保持密文**。
 
 const (
 	drillRestoreDirEnv = "GCT_M6_RESTORE_DIR"
@@ -48,7 +47,7 @@ const (
 
 // TestM6BackupRestoreChild is the "machine B" half of the drill: it runs in a
 // fresh process with its data root pointed at the restored directory, and it
-// re-derives every handle from the restored files only (new vault, new
+// re-derives every handle from the restored files only (new chat key dir, new
 // database connection, cipher rebuilt from the restored key file).
 func TestM6BackupRestoreChild(t *testing.T) {
 	restoreDir := os.Getenv(drillRestoreDirEnv)
@@ -71,14 +70,8 @@ func TestM6BackupRestoreChild(t *testing.T) {
 		assert.NoError(t, testhelpers.CloseDatabase(conn))
 	}()
 
-	// Vault: opened from the restored directory; the references come from the
-	// database, so this is the half-A/half-B agreement check.
-	vault, err := secrets.Open(filepath.Join(restoreDir, "llm-vault"))
-	require.NoError(t, err)
-	entries, err := vault.List()
-	require.NoError(t, err)
-	assert.Len(t, entries, 2, "both restored secrets should be listed")
-
+	// Provider keys: stored plaintext since the vault removal (2026-10-15);
+	// the restored rows carry them back verbatim and fingerprints derive.
 	pair, err := llmstore.GetActiveModelPair(ctx)
 	require.NoError(t, err)
 	assert.Equal(t, LLMPairReady, pair.Readiness)
@@ -87,27 +80,19 @@ func TestM6BackupRestoreChild(t *testing.T) {
 
 	llmRevision, err := llmstore.GetProfileRevision(ctx, *pair.LLMProfileRevisionID)
 	require.NoError(t, err)
-	llmRef, err := secrets.ParseRef(llmRevision.APIKeyRef)
-	require.NoError(t, err)
-	recoveredLLM, err := vault.Reveal(llmRef)
-	require.NoError(t, err)
-	assert.Equal(t, drillLLMPlaintext, recoveredLLM, "the LLM key should decrypt on the restored machine")
-	assert.Equal(t, secrets.Fingerprint(drillLLMPlaintext), llmRevision.APIKeyFingerprint)
+	assert.Equal(t, drillLLMPlaintext, llmRevision.APIKeyRef, "the restored row carries the key back")
+	assert.Equal(t, deriveKeyFingerprint(drillLLMPlaintext), llmRevision.APIKeyFingerprint)
 
 	jevRevision, err := llmstore.GetProfileRevision(ctx, *pair.JevProfileRevisionID)
 	require.NoError(t, err)
-	jevRef, err := secrets.ParseRef(jevRevision.APIKeyRef)
-	require.NoError(t, err)
-	recoveredJev, err := vault.Reveal(jevRef)
-	require.NoError(t, err)
-	assert.Equal(t, drillJevPlaintext, recoveredJev, "the Jev token should decrypt on the restored machine")
+	assert.Equal(t, drillJevPlaintext, jevRevision.APIKeyRef, "the restored Jev token comes back the same way")
 
 	// Encrypted conversation: the cipher is rebuilt from the restored
 	// conversation-key.bin; every body must open byte for byte.
 	messages, err := llmstore.ListChatMessages(ctx, drillConversation, 0, 0)
 	require.NoError(t, err)
 	require.Len(t, messages, 2)
-	key, err := chat.LoadOrCreateConversationKey(filepath.Join(restoreDir, "llm-vault"))
+	key, err := chat.LoadOrCreateConversationKey(filepath.Join(restoreDir, "llm-chat-keys"))
 	require.NoError(t, err)
 	cipher, err := chat.NewConversationCipher(key)
 	require.NoError(t, err)
@@ -159,19 +144,12 @@ func TestM6BackupRestoreChild(t *testing.T) {
 	old.CheckLLMConfig()
 	assert.Equal(t, "READ_ONLY", old.LLM.RunMode)
 
-	// Negative 1: a database without the vault yields nothing -- opening a
-	// vault directory that was never in the backup set is refused instead of
-	// silently minting a fresh key pair.
-	_, err = secrets.Open(filepath.Join(restoreDir, "not-backed-up-vault"))
-	assert.ErrorIs(t, err, secrets.ErrVaultNotInitialised,
-		"a missing vault directory should be refused, not created")
-
-	// Negative 2: a vault copy that dropped conversation-key.bin re-mints a
+	// Negative: a chat-key copy that dropped conversation-key.bin re-mints a
 	// fresh key, and the old ciphertexts can never be opened again.
-	incompleteVault := filepath.Join(t.TempDir(), "llm-vault")
-	copyTree(t, filepath.Join(restoreDir, "llm-vault"), incompleteVault)
-	require.NoError(t, os.Remove(filepath.Join(incompleteVault, chat.ConversationKeyFile)))
-	newKey, err := chat.LoadOrCreateConversationKey(incompleteVault)
+	incompleteDir := filepath.Join(t.TempDir(), "llm-chat-keys")
+	copyTree(t, filepath.Join(restoreDir, "llm-chat-keys"), incompleteDir)
+	require.NoError(t, os.Remove(filepath.Join(incompleteDir, chat.ConversationKeyFile)))
+	newKey, err := chat.LoadOrCreateConversationKey(incompleteDir)
 	require.NoError(t, err)
 	assert.NotEqual(t, key, newKey, "a missing conversation key is re-minted, not recovered")
 	orphanCipher, err := chat.NewConversationCipher(newKey)
@@ -182,13 +160,13 @@ func TestM6BackupRestoreChild(t *testing.T) {
 	})
 	assert.ErrorIs(t, err, chat.ErrDecrypt, "without the backed-up key file the old messages are lost")
 
-	// The restored database must still leak nothing: no key or message
-	// plaintext may appear in its raw bytes.
+	// The restored database carries provider keys as plaintext by design
+	// (operator simplification, 2026-10-15); chat bodies, however, must stay
+	// encrypted: the conversation text must NOT appear in the clear.
 	raw, err := os.ReadFile(filepath.Join(restoreDir, os.Getenv(drillRestoreDBEnv)))
 	require.NoError(t, err)
-	for _, plaintext := range []string{drillLLMPlaintext, drillJevPlaintext, drillUserMessage} {
-		assert.NotContainsf(t, string(raw), plaintext, "the restored database should not carry %q in the clear", plaintext)
-	}
+	assert.Contains(t, string(raw), drillLLMPlaintext, "provider keys are stored plaintext by design")
+	assert.NotContainsf(t, string(raw), drillUserMessage, "chat bodies should stay encrypted at rest")
 
 	_, err = os.Stdout.WriteString(drillRestoreOK + "\n")
 	require.NoError(t, err)
@@ -204,18 +182,11 @@ func TestM6BackupRestoreDrill(t *testing.T) {
 	setupProviderAdminDB(t)
 	ctx := t.Context()
 
-	// Machine A: vault with wrapping pair, two secrets and the conversation key.
+	// Machine A: the chat key directory and the two provider revisions (keys
+	// are plaintext by design since the vault removal).
 	machineA := t.TempDir()
-	vaultDirA := filepath.Join(machineA, "llm-vault")
-	vault, err := secrets.Init(vaultDirA)
-	require.NoError(t, err)
-	// Both provider keys live under the vault's "llm" namespace -- the same
-	// reference shape the production admin path accepts for either kind.
-	llmRef, llmFingerprint, err := vault.Add("llm", drillLLMPlaintext)
-	require.NoError(t, err)
-	jevRef, jevFingerprint, err := vault.Add("llm", drillJevPlaintext)
-	require.NoError(t, err)
-	conversationKey, err := chat.LoadOrCreateConversationKey(vaultDirA)
+	chatDirA := filepath.Join(machineA, "llm-chat-keys")
+	conversationKey, err := chat.LoadOrCreateConversationKey(chatDirA)
 	require.NoError(t, err)
 	cipher, err := chat.NewConversationCipher(conversationKey)
 	require.NoError(t, err)
@@ -237,7 +208,7 @@ func TestM6BackupRestoreDrill(t *testing.T) {
 	budget := "5.00"
 	llmRevision, err := AddProviderRevision(ctx, &ProviderRevisionParams{
 		ProfileID: llmProfile.ID, Actor: "op-drill", BaseURL: "https://api.example.com/v1",
-		ModelID: "model-backup", APIKeyRef: llmRef.String(), APIKeyFingerprint: llmFingerprint,
+		ModelID: "model-backup", APIKey: drillLLMPlaintext,
 		TimeoutSeconds: 30, MaxOutputTokens: &maxTokens, PromptVersion: &promptVersion,
 		DailyBudgetUSD: &budget, ReservationCap24H: 3,
 	}, providerAdminNow)
@@ -245,7 +216,7 @@ func TestM6BackupRestoreDrill(t *testing.T) {
 	questionTemplate := "systemone-v1"
 	jevRevision, err := AddProviderRevision(ctx, &ProviderRevisionParams{
 		ProfileID: jevProfile.ID, Actor: "op-drill", BaseURL: "https://jev.example.com/v1",
-		ModelID: "jev-1.0.0", APIKeyRef: jevRef.String(), APIKeyFingerprint: jevFingerprint,
+		ModelID: "jev-1.0.0", APIKey: drillJevPlaintext,
 		TimeoutSeconds: 60, QuestionTemplateVersion: &questionTemplate, ReservationCap24H: 5,
 	}, providerAdminNow)
 	require.NoError(t, err)
@@ -303,11 +274,10 @@ func TestM6BackupRestoreDrill(t *testing.T) {
 	// first so its journal is checkpointed into the one file that is copied).
 	medium := t.TempDir()
 	require.NoError(t, testhelpers.CloseDatabase(conn))
-	copyTree(t, vaultDirA, filepath.Join(medium, "llm-vault"))
+	copyTree(t, chatDirA, filepath.Join(medium, "llm-chat-keys"))
 	copyTree(t, configDirA, medium)
 	copyTree(t, filepath.Join(testhelpers.TempDir, dbName), filepath.Join(medium, dbName))
-	assert.FileExists(t, filepath.Join(medium, "llm-vault", secrets.PrivateKeyFile))
-	assert.FileExists(t, filepath.Join(medium, "llm-vault", chat.ConversationKeyFile),
+	assert.FileExists(t, filepath.Join(medium, "llm-chat-keys", chat.ConversationKeyFile),
 		"the conversation key file is part of the backup set")
 
 	// Hop 2: backup medium -> machine B (a fresh root, nothing shared with A).

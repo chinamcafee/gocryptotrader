@@ -31,6 +31,7 @@ import (
 	"github.com/thrasher-corp/gocryptotrader/exchanges/orderbook"
 	"github.com/thrasher-corp/gocryptotrader/exchanges/sharedtestvalues"
 	"github.com/thrasher-corp/gocryptotrader/exchanges/subscription"
+	"github.com/thrasher-corp/gocryptotrader/exchanges/ticker"
 	testexch "github.com/thrasher-corp/gocryptotrader/internal/testing/exchange"
 	testsubs "github.com/thrasher-corp/gocryptotrader/internal/testing/subscriptions"
 	mockws "github.com/thrasher-corp/gocryptotrader/internal/testing/websocket"
@@ -156,6 +157,16 @@ func TestUpdateTickers(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
+	// The 24h change percent must survive the batch mapping: the chat screener
+	// ranks on it (docs 13 §2.1), and the stats payload carries it.
+	pairs, err := e.FetchTradablePairs(t.Context(), asset.USDTMarginedFutures)
+	require.NoError(t, err)
+	require.NotEmpty(t, pairs)
+	price, err := ticker.GetTicker(e.Name, pairs[0], asset.USDTMarginedFutures)
+	require.NoError(t, err)
+	require.NotNil(t, price)
+	assert.NotZero(t, price.PercentChange24Hour, "the batch ticker path should carry the 24h change percent")
 }
 
 func TestUpdateOrderbook(t *testing.T) {
